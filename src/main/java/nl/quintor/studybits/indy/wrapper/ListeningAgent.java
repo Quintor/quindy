@@ -5,14 +5,14 @@ public class ListeningAgent extends Agent {
     private int port;
 
     public String sendEndpoint() {
-
+        return null;
     }
 
     public String getClaimDefinition() {
-
+        return null;
     }
 
     public String processPost() {
-
+        return null;
     }
 }
