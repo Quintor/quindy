@@ -1,8 +1,8 @@
 package nl.quintor.studybits.indy.wrapper;
 
 import org.hyperledger.indy.sdk.IndyException;
-import org.hyperledger.indy.sdk.signus.Signus;
-import org.hyperledger.indy.sdk.signus.SignusResults;
+import org.hyperledger.indy.sdk.did.Did;
+import org.hyperledger.indy.sdk.did.DidResults;
 import org.hyperledger.indy.sdk.wallet.Wallet;
 
 import java.util.concurrent.ExecutionException;
@@ -23,7 +23,7 @@ public class IndyWallet implements AutoCloseable {
 
         IndyWallet indyWallet = new IndyWallet(name);
         String seedJSON = String.format("{'seed': '%s'}",seed);
-        SignusResults.CreateAndStoreMyDidResult result = Signus.createAndStoreMyDid(indyWallet.wallet, seedJSON).get();
+        DidResults.CreateAndStoreMyDidResult result = Did.createAndStoreMyDid(indyWallet.wallet, seedJSON).get();
 
         indyWallet.did = result.getDid();
         indyWallet.verKey = result.getVerkey();

@@ -9,7 +9,7 @@ public class IndyPool implements AutoCloseable {
     private Pool pool;
     private String poolName;
 
-    public IndyPool( String poolName ) throws IndyException, ExecutionException, InterruptedException {
+    public IndyPool(String poolName) throws IndyException, ExecutionException, InterruptedException {
         this.poolName = poolName;
         this.pool = Pool.openPoolLedger(poolName, "{}").get();
     }
