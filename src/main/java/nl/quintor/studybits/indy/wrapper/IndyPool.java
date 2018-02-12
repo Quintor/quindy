@@ -1,15 +1,17 @@
 package nl.quintor.studybits.indy.wrapper;
 
+import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.pool.Pool;
+
+import java.util.concurrent.ExecutionException;
 
 public class IndyPool implements AutoCloseable {
     private Pool pool;
     private String poolName;
-    private String handle;
-    private String genesisTxnPath;
 
-    public IndyPool open() {
-        return null;
+    public IndyPool( String poolName ) throws IndyException, ExecutionException, InterruptedException {
+        this.poolName = poolName;
+        this.pool = Pool.openPoolLedger(poolName, "{}").get();
     }
 
     public String getPoolName() {
