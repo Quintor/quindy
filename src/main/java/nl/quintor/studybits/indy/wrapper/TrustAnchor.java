@@ -22,6 +22,7 @@ public class TrustAnchor extends WalletOwner {
     private Map<String, ConnectionRequest> openConnectionRequests = new HashMap<>();
     public TrustAnchor(String name, IndyPool pool, IndyWallet wallet) {
         super(name, pool, wallet);
+        log.info("{}: Instantiated TrustAnchor: {}", name, name);
     }
 
     public CompletableFuture<ConnectionRequest> createConnectionRequest(String newcomerName, String role) throws IndyException {
@@ -43,16 +44,22 @@ public class TrustAnchor extends WalletOwner {
                 );
     }
 
-    public CompletableFuture<EncryptedMessage> registerVerinym(String targetDid) throws IndyException, JsonProcessingException {
+    public CompletableFuture<EncryptedMessage> createVerinymRequest(String targetDid) throws IndyException, JsonProcessingException {
+        log.info("{} Creating verinym request for targetDid: {}", name, targetDid);
+
         return authcrypt(Pairwise.getPairwise(wallet.getWallet(), targetDid)
                 .thenApply(wrapException((String getPairwiseResult) ->
                         JSONUtil.mapper.readValue(getPairwiseResult, GetPairwiseResult.class)
                 ))
                 .thenCompose(wrapException((GetPairwiseResult getPairwiseResult) ->
                         Did.keyForDid(pool.getPool(), wallet.getWallet(), getPairwiseResult.getMyDid())
-                                .thenApply(wrapException((myKey) ->
-                                        new Verinym(getPairwiseResult.getMyDid(), myKey, getPairwiseResult.getParsedMetadata().getMyKey(),
-                                                getPairwiseResult.getParsedMetadata().getTheirKey())
+                                .thenApply(wrapException((myKey) -> {
+
+                                            Verinym result = new Verinym(getPairwiseResult.getMyDid(), myKey, getPairwiseResult.getParsedMetadata().getMyKey(),
+                                                    getPairwiseResult.getParsedMetadata().getTheirKey());
+                                            log.debug("Created verinym {}", result);
+                                            return result;
+                                        }
                                 )))));
     }
 
@@ -63,7 +70,7 @@ public class TrustAnchor extends WalletOwner {
     public CompletableFuture<Void> acceptConnectionResponse(EncryptedMessage encryptedConnectionResponse) throws IndyException {
         return anonDecrypt(encryptedConnectionResponse, ConnectionResponse.class)
                 .thenCompose(wrapException(connectionResponse -> {
-                    log.debug("Accepting connection response: {}", connectionResponse);
+                    log.debug("{} Accepting connection response: {}", name, connectionResponse);
                     return acceptConnectionResponse(connectionResponse);
                 }));
     }
@@ -87,7 +94,7 @@ public class TrustAnchor extends WalletOwner {
     }
 
     private CompletableFuture<String> sendNym(String newDid, String newKey, String role) throws IndyException {
-        log.debug("Called sendNym with newDid: {}, newKey {}, role {}", newDid, newKey, role);
+        log.debug("{} Called sendNym with newDid: {}, newKey {}, role {}", name, newDid, newKey, role);
         return buildNymRequest(wallet.getMainDid(), newDid, newKey, null, role)
                 .thenCompose(wrapException(this::signAndSubmitRequest));
     }

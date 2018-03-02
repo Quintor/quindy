@@ -27,6 +27,6 @@ public class Main {
 
         steward.acceptConnectionResponse(governmentConnectionResponse).get();
 
-        EncryptedMessage verinym = government.registerVerinym(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class).getDid()).get();
+        EncryptedMessage verinym = government.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class).getDid()).get();
     }
 }

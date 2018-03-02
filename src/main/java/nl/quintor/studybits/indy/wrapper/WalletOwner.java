@@ -33,17 +33,22 @@ public class WalletOwner {
     }
 
     public CompletableFuture<EncryptedMessage> acceptConnectionRequest(ConnectionRequest connectionRequest) throws JsonProcessingException, IndyException, ExecutionException, InterruptedException {
-        log.debug("Calling keyForDid with {}, {}, {}", pool.getPool(), wallet.getWallet(), connectionRequest.getDid());
+        log.debug("{} Calling acceptConnectionRequest with {}, {}, {}", name, pool.getPool(), wallet.getWallet(), connectionRequest.getDid());
+
         return anoncrypt(wallet.newDid()
-                .thenCombineAsync(Did.keyForDid(pool.getPool(), wallet.getWallet(), connectionRequest.getDid()),
-                        (myDid, theirKey) -> new ConnectionResponse(myDid.getDid(), myDid.getVerkey(), connectionRequest.getNonce(), theirKey))
+                .thenCombineAsync(getKeyForDid(connectionRequest.getDid()),
+                                                (myDid, theirKey) -> {
+                                                        log.debug("{} Got theirKey {} with did {}", name, theirKey, connectionRequest.getDid());
+                                                        return new ConnectionResponse(myDid.getDid(), myDid.getVerkey(), connectionRequest.getNonce(), theirKey);
+                                                    })
+
                 .thenCompose(wrapException((ConnectionResponse connectionResponse) ->
                         storeDidAndPairwise(connectionResponse.getDid(), connectionRequest.getDid(), connectionResponse.getVerkey(), connectionResponse.getTheirKey())
                         .thenApply((_void) -> connectionResponse))));
     }
 
     CompletableFuture<Void> storeDidAndPairwise(String myDid, String theirDid, String myKey, String theirKey) throws JsonProcessingException, IndyException {
-        log.debug("Storing theirDid: {}", theirDid);
+        log.debug("{} Called storeDidAndPairwise: myDid: {}, theirDid: {}, myKey: {}, theirKey: {}", name, myDid, theirDid, myKey, theirKey);
         return Did.storeTheirDid(wallet.getWallet(), new TheirDidInfo(theirDid).toJSON())
                 .thenCompose(wrapException(
                         (storeDidResponse) -> {
@@ -53,10 +58,16 @@ public class WalletOwner {
                         }));
     }
 
+    CompletableFuture<String> getKeyForDid(String did) throws IndyException {
+                log.debug("{} Called getKeyForDid: {}", name, did);
+                return Did.keyForDid(pool.getPool(), wallet.getWallet(), did);
+    }
+
+
     private CompletableFuture<EncryptedMessage> anoncrypt(CompletableFuture<? extends AnonCryptable> messageFuture) throws JsonProcessingException, IndyException {
         return messageFuture.thenCompose(wrapException(
                 (AnonCryptable message) -> {
-                    log.debug("Anoncrypting message: {}", message.toJSON());
+                    log.debug("{} Anoncrypting message: {}, with key: {}", name, message.toJSON(), message.getTheirKey());
                     return Crypto.anonCrypt(message.getTheirKey(), message.toJSON().getBytes(Charset.forName("utf8")))
                             .thenApply(cryptedMessage -> new EncryptedMessage(cryptedMessage, message.getTheirKey()));
                 }
@@ -71,7 +82,7 @@ public class WalletOwner {
     CompletableFuture<EncryptedMessage> authcrypt(CompletableFuture<? extends AuthCryptable> messageFuture) throws JsonProcessingException, IndyException {
         return messageFuture.thenCompose(wrapException(
                 (message) -> {
-                    log.debug("Authcrypting message: {}", message.toJSON());
+                    log.debug("{} Authcrypting message: {}, myKey: {}, theirKey: {}", name, message.toJSON(), message.getMyKey(), message.getTheirKey());
                     return Crypto.authCrypt(wallet.getWallet(),message.getMyKey(), message.getTheirKey(), message.toJSON().getBytes(Charset.forName("utf8")))
                             .thenApply(cryptedMessage -> new EncryptedMessage(cryptedMessage, message.getTheirKey()));
                 }
