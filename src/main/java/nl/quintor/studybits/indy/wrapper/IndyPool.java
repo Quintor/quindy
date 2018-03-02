@@ -1,10 +1,12 @@
 package nl.quintor.studybits.indy.wrapper;
 
+import lombok.Getter;
 import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.pool.Pool;
 
 import java.util.concurrent.ExecutionException;
 
+@Getter
 public class IndyPool implements AutoCloseable {
     private Pool pool;
     private String poolName;
@@ -14,12 +16,9 @@ public class IndyPool implements AutoCloseable {
         this.pool = Pool.openPoolLedger(poolName, "{}").get();
     }
 
-    public String getPoolName() {
-        return poolName;
-    }
-
     @Override
     public void close() throws Exception {
         this.pool.closePoolLedger().get();
     }
 }
+
