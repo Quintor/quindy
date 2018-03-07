@@ -55,8 +55,7 @@ public class TrustAnchor extends WalletOwner {
                 .thenCompose(wrapException((GetPairwiseResult getPairwiseResult) ->
                         Did.keyForDid(pool.getPool(), wallet.getWallet(), getPairwiseResult.getMyDid())
                                 .thenApply(wrapException((myKey) -> {
-
-                                            Verinym result = new Verinym(getPairwiseResult.getMyDid(), myKey, getPairwiseResult.getParsedMetadata().getMyKey(),
+                                            Verinym result = new Verinym(wallet.getMainDid(), wallet.getMainKey(), getPairwiseResult.getParsedMetadata().getMyKey(),
                                                     getPairwiseResult.getParsedMetadata().getTheirKey());
                                             log.debug("Created verinym {}", result);
                                             return result;
@@ -69,8 +68,12 @@ public class TrustAnchor extends WalletOwner {
                 .thenCompose(wrapException(verinym -> {
                     log.debug("{}: Looking up pairwise by key to authenticate sender of verinym", name);
                     return findPairwiseByTheirKey(verinym.getTheirKey())
-                            .thenCompose(wrapException(getPairwiseResult ->
-                                    sendNym(verinym.getDid(), verinym.getVerkey(), rolesByKey.get(getPairwiseResult.getParsedMetadata().getTheirKey()))
+                            .thenCompose(wrapException(getPairwiseResult -> {
+//                                log.debug("Roles by key");
+//                                rolesByKey.forEach((String key, String value) -> log.debug(key  + ", " + value));
+//                                log.debug("Using key: {}", getPairwiseResult.getParsedMetadata().getTheirKey());
+                                        return sendNym(verinym.getDid(), verinym.getVerkey(), rolesByKey.get(getPairwiseResult.getParsedMetadata().getTheirKey()));
+                                    }
                             ));
                 }));
     }
@@ -96,7 +99,7 @@ public class TrustAnchor extends WalletOwner {
                         storeDidAndPairwise(connectionRequest.getDid(), connectionResponse.getDid(), connectionRequest.getVerkey(), connectionResponse.getVerkey())))
                 .thenApply((void_) -> {
                     log.debug("Removing connectionRequest with nonce {}", connectionRequest.getNonce());
-                    rolesByKey.put(connectionRequest.getVerkey(), connectionRequest.getRole());
+                    rolesByKey.put(connectionResponse.getVerkey(), connectionRequest.getRole());
                     openConnectionRequests.remove(connectionRequest.getNonce());
                     return void_;
                 });
@@ -104,6 +107,7 @@ public class TrustAnchor extends WalletOwner {
 
     CompletableFuture<String> sendNym(String newDid, String newKey, String role) throws IndyException {
         log.debug("{} Called sendNym with newDid: {}, newKey {}, role {}", name, newDid, newKey, role);
+        log.debug("{} Calling buildNymRequest with mainDid: {}", name, wallet.getMainDid());
         return buildNymRequest(wallet.getMainDid(), newDid, newKey, null, role)
                 .thenCompose(wrapException(this::signAndSubmitRequest));
     }

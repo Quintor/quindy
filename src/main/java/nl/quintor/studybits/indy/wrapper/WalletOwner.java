@@ -29,14 +29,18 @@ public class WalletOwner {
     @Getter
     String name;
 
-    WalletOwner(String name, IndyPool pool, IndyWallet wallet) {
+    public WalletOwner(String name, IndyPool pool, IndyWallet wallet) {
         this.name = name;
         this.pool = pool;
         this.wallet = wallet;
     }
 
     CompletableFuture<String> signAndSubmitRequest(String request) throws IndyException {
-        return Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), wallet.getMainDid(), request);
+        return signAndSubmitRequest(request, wallet.getMainDid());
+    }
+
+    CompletableFuture<String> signAndSubmitRequest(String request, String did) throws IndyException {
+        return Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), did, request);
     }
 
     public CompletableFuture<EncryptedMessage> acceptConnectionRequest(ConnectionRequest connectionRequest) throws JsonProcessingException, IndyException, ExecutionException, InterruptedException {
