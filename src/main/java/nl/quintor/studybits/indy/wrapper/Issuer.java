@@ -28,7 +28,10 @@ public class Issuer extends TrustAnchor {
 
     public static Issuer create(String name, IndyPool pool, IndyWallet wallet) throws JsonProcessingException, IndyException, ExecutionException, InterruptedException {
         Issuer issuer = new Issuer(name, pool, wallet);
-        DidResults.CreateAndStoreMyDidResult issuerDidAndKey = wallet.newDid().get();
+        DidResults.CreateAndStoreMyDidResult issuerDidAndKey = wallet.newDid()
+                .thenCompose(wrapException(createAndStoreMyDidResult ->
+                        issuer.sendNym(createAndStoreMyDidResult.getDid(), createAndStoreMyDidResult.getVerkey(), null)
+                        .thenApply(sendNymResult -> createAndStoreMyDidResult))).get();
         issuer.issuerDid = issuerDidAndKey.getDid();
         issuer.issuerKey = issuerDidAndKey.getVerkey();
 

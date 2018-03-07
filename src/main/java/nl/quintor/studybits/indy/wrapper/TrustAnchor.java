@@ -102,7 +102,7 @@ public class TrustAnchor extends WalletOwner {
                 });
     }
 
-    private CompletableFuture<String> sendNym(String newDid, String newKey, String role) throws IndyException {
+    CompletableFuture<String> sendNym(String newDid, String newKey, String role) throws IndyException {
         log.debug("{} Called sendNym with newDid: {}, newKey {}, role {}", name, newDid, newKey, role);
         return buildNymRequest(wallet.getMainDid(), newDid, newKey, null, role)
                 .thenCompose(wrapException(this::signAndSubmitRequest));
