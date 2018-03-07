@@ -1,12 +1,11 @@
 package nl.quintor.studybits;
 
-import nl.quintor.studybits.indy.wrapper.IndyPool;
-import nl.quintor.studybits.indy.wrapper.IndyWallet;
-import nl.quintor.studybits.indy.wrapper.TrustAnchor;
+import nl.quintor.studybits.indy.wrapper.*;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.indy.wrapper.dto.EncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
+import org.hyperledger.indy.sdk.IndyException;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -18,15 +17,31 @@ public class Main {
         TrustAnchor steward = new TrustAnchor("Steward", indyPool, IndyWallet.create(indyPool, "steward_wallet", "000000000000000000000000Steward1"));
 
 
-        // Connecting government with Steward
-        String governmentConnectionRequest = steward.createConnectionRequest("Government", "TRUST_ANCHOR").get().toJSON();
+        Issuer government = Issuer.create("Government", indyPool, IndyWallet.create(indyPool, "government_wallet",null));
+        onboardTrustAnchor(steward, government);
 
-        TrustAnchor government = new TrustAnchor("Government", indyPool, IndyWallet.create(indyPool, "government_wallet",null));
+        Issuer faber = Issuer.create("Faber", indyPool, IndyWallet.create(indyPool, "faber_wallet", null));
+        onboardTrustAnchor(steward, faber);
 
-        EncryptedMessage governmentConnectionResponse = government.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class)).get();
+        Issuer acme = Issuer.create("Acme", indyPool, IndyWallet.create(indyPool, "acme_wallet", null));
+        onboardTrustAnchor(steward, acme);
+
+        Issuer thrift = Issuer.create("Thrift", indyPool, IndyWallet.create(indyPool, "thrift_wallet", null));
+        onboardTrustAnchor(steward, thrift);
+
+
+    }
+
+    private static void onboardTrustAnchor(TrustAnchor steward, TrustAnchor newcomer) throws InterruptedException, java.util.concurrent.ExecutionException, IndyException, java.io.IOException {
+        // Connecting newcomer with Steward
+        String governmentConnectionRequest = steward.createConnectionRequest(newcomer.getName(), "TRUST_ANCHOR").get().toJSON();
+
+        EncryptedMessage governmentConnectionResponse = newcomer.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class)).get();
 
         steward.acceptConnectionResponse(governmentConnectionResponse).get();
 
-        EncryptedMessage verinym = government.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class).getDid()).get();
+        EncryptedMessage verinym = newcomer.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class).getDid()).get();
+
+        steward.acceptVerinymRequest(verinym).get();
     }
 }

@@ -1,6 +1,8 @@
 package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
@@ -11,15 +13,20 @@ import org.hyperledger.indy.sdk.ledger.Ledger;
 import org.hyperledger.indy.sdk.pairwise.Pairwise;
 
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
+import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapPredicateException;
 
 @Slf4j
 public class WalletOwner {
     IndyPool pool;
     IndyWallet wallet;
+    @Getter
     String name;
 
     WalletOwner(String name, IndyPool pool, IndyWallet wallet) {
@@ -56,6 +63,27 @@ public class WalletOwner {
                             return Pairwise.createPairwise(wallet.getWallet(), theirDid, myDid,
                                     new PairwiseMetadata(myKey, theirKey).toJSON());
                         }));
+    }
+
+    CompletableFuture<ListPairwiseResult> findPairwiseByTheirKey(String theirKey) throws IndyException {
+        return Pairwise.listPairwise(wallet.getWallet())
+                .thenApply(wrapException((allPairwise) -> {
+                    System.out.println(allPairwise);
+                    List<String> pairwiseResults = Arrays.asList(JSONUtil.mapper.readValue(allPairwise, String[].class));
+
+                    List<ListPairwiseResult> filteredPairwiseResults = pairwiseResults.stream()
+                            .map(wrapException(pairwiseResult -> JSONUtil.mapper.readValue(pairwiseResult, ListPairwiseResult.class)))
+                            .filter(wrapPredicateException((ListPairwiseResult result) -> result.getParsedMetadata().getTheirKey().equals(theirKey)))
+                            .collect(Collectors.toList());
+
+
+                    if (filteredPairwiseResults.size() == 1) {
+                        return filteredPairwiseResults.get(0);
+                    }
+                    else {
+                        throw new RuntimeException("Unexpected number of results when looking for pairwise by key");
+                    }
+                }));
     }
 
     CompletableFuture<String> getKeyForDid(String did) throws IndyException {

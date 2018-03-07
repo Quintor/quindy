@@ -20,6 +20,7 @@ import static org.hyperledger.indy.sdk.ledger.Ledger.buildNymRequest;
 @Slf4j
 public class TrustAnchor extends WalletOwner {
     private Map<String, ConnectionRequest> openConnectionRequests = new HashMap<>();
+    private Map<String, String> rolesByKey = new HashMap<>();
     public TrustAnchor(String name, IndyPool pool, IndyWallet wallet) {
         super(name, pool, wallet);
         log.info("{}: Instantiated TrustAnchor: {}", name, name);
@@ -63,9 +64,16 @@ public class TrustAnchor extends WalletOwner {
                                 )))));
     }
 
-//    public CompletableFuture<Void> acceptVerinym(byte[] verinym) {
-//
-//    }
+    public CompletableFuture<String> acceptVerinymRequest(EncryptedMessage encryptedVerinym) throws IndyException {
+       return  authDecrypt(encryptedVerinym, Verinym.class)
+                .thenCompose(wrapException(verinym -> {
+                    log.debug("{}: Looking up pairwise by key to authenticate sender of verinym", name);
+                    return findPairwiseByTheirKey(verinym.getTheirKey())
+                            .thenCompose(wrapException(getPairwiseResult ->
+                                    sendNym(verinym.getDid(), verinym.getVerkey(), rolesByKey.get(getPairwiseResult.getParsedMetadata().getTheirKey()))
+                            ));
+                }));
+    }
 
     public CompletableFuture<Void> acceptConnectionResponse(EncryptedMessage encryptedConnectionResponse) throws IndyException {
         return anonDecrypt(encryptedConnectionResponse, ConnectionResponse.class)
@@ -88,6 +96,7 @@ public class TrustAnchor extends WalletOwner {
                         storeDidAndPairwise(connectionRequest.getDid(), connectionResponse.getDid(), connectionRequest.getVerkey(), connectionResponse.getVerkey())))
                 .thenApply((void_) -> {
                     log.debug("Removing connectionRequest with nonce {}", connectionRequest.getNonce());
+                    rolesByKey.put(connectionRequest.getVerkey(), connectionRequest.getRole());
                     openConnectionRequests.remove(connectionRequest.getNonce());
                     return void_;
                 });

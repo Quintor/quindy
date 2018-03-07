@@ -3,6 +3,7 @@ package nl.quintor.studybits.indy.wrapper.util;
 import java.util.concurrent.CompletionException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class AsyncUtil {
@@ -21,6 +22,17 @@ public class AsyncUtil {
         return (T t, U u) -> {
             try {
                 return exceptionalBiFunction.apply(t, u);
+            }
+            catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        };
+    }
+
+    public static <T> Predicate<T> wrapPredicateException(ExceptionalPredicate<T> exceptionalPredicate) {
+        return (T t) -> {
+            try {
+                return exceptionalPredicate.test(t);
             }
             catch (Exception e) {
                 throw new CompletionException(e);
@@ -50,5 +62,9 @@ public class AsyncUtil {
 
     public interface ExceptionalSupplier<T> {
         public T supply() throws Exception;
+    }
+
+    public interface ExceptionalPredicate<T> {
+        public boolean test(T t) throws Exception;
     }
 }

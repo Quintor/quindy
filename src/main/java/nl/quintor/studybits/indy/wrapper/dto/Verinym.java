@@ -1,14 +1,12 @@
 package nl.quintor.studybits.indy.wrapper.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
-@AllArgsConstructor
 @Getter
-@ToString
+@AllArgsConstructor
+@Data
+@NoArgsConstructor
 public class Verinym implements Serializable, AuthCryptable {
     private String did;
     private String verkey;
