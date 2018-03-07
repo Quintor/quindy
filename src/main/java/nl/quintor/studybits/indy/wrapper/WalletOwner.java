@@ -66,9 +66,9 @@ public class WalletOwner {
     }
 
     CompletableFuture<ListPairwiseResult> findPairwiseByTheirKey(String theirKey) throws IndyException {
+        log.debug("{}: Finding pairwise by key {}", name, theirKey);
         return Pairwise.listPairwise(wallet.getWallet())
                 .thenApply(wrapException((allPairwise) -> {
-                    System.out.println(allPairwise);
                     List<String> pairwiseResults = Arrays.asList(JSONUtil.mapper.readValue(allPairwise, String[].class));
 
                     List<ListPairwiseResult> filteredPairwiseResults = pairwiseResults.stream()

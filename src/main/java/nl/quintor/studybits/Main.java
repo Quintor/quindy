@@ -3,6 +3,7 @@ package nl.quintor.studybits;
 import nl.quintor.studybits.indy.wrapper.*;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.indy.wrapper.dto.EncryptedMessage;
+import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
 import org.hyperledger.indy.sdk.IndyException;
@@ -29,6 +30,11 @@ public class Main {
         Issuer thrift = Issuer.create("Thrift", indyPool, IndyWallet.create(indyPool, "thrift_wallet", null));
         onboardTrustAnchor(steward, thrift);
 
+        SchemaKey jobCertificateSchemaKey = government.createAndSendSchema("Job-Certificate", "0.2",
+                "first_name", "last_name", "salary", "employee_status", "experience").get();
+
+        SchemaKey transcriptSchemaKey = government.createAndSendSchema("Transcript", "1.2",
+                "first_name", "last_name", "degree", "status", "year", "average", "ssn").get();
 
     }
 
