@@ -17,8 +17,4 @@ public class GetPairwiseResult implements Serializable {
     @JsonProperty("my_did")
     private String myDid;
     private String metadata;
-
-    public PairwiseMetadata getParsedMetadata() throws IOException {
-        return JSONUtil.mapper.readValue(metadata, PairwiseMetadata.class);
-    }
 }

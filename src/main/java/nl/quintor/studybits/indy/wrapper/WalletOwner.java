@@ -60,32 +60,10 @@ public class WalletOwner {
         return Did.storeTheirDid(wallet.getWallet(), new TheirDidInfo(theirDid, theirKey).toJSON())
                 .thenCompose(wrapException(
                         (storeDidResponse) -> {
-                            log.debug("{} Creating pairwise theirDid: {}, myDid: {}, metadata: {}", name, theirDid, myDid, new PairwiseMetadata(myKey, theirKey).toJSON());
-                            return Pairwise.createPairwise(wallet.getWallet(), theirDid, myDid,
-                                    new PairwiseMetadata(myKey, theirKey).toJSON());
+                            log.debug("{} Creating pairwise theirDid: {}, myDid: {}, metadata: {}", name, theirDid, myDid, "");
+                            return Pairwise.createPairwise(wallet.getWallet(), theirDid, myDid,"");
 
                         }));
-    }
-
-    CompletableFuture<ListPairwiseResult> findPairwiseByTheirKey(String theirKey) throws IndyException {
-        log.debug("{}: Finding pairwise by key {}", name, theirKey);
-        return Pairwise.listPairwise(wallet.getWallet())
-                .thenApply(wrapException((allPairwise) -> {
-                    List<String> pairwiseResults = Arrays.asList(JSONUtil.mapper.readValue(allPairwise, String[].class));
-
-                    List<ListPairwiseResult> filteredPairwiseResults = pairwiseResults.stream()
-                            .map(wrapException(pairwiseResult -> JSONUtil.mapper.readValue(pairwiseResult, ListPairwiseResult.class)))
-                            .filter(wrapPredicateException((ListPairwiseResult result) -> result.getParsedMetadata().getTheirKey().equals(theirKey)))
-                            .collect(Collectors.toList());
-
-
-                    if (filteredPairwiseResults.size() == 1) {
-                        return filteredPairwiseResults.get(0);
-                    }
-                    else {
-                        throw new RuntimeException("Unexpected number of results when looking for pairwise by key");
-                    }
-                }));
     }
 
     CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid(String theirDid) throws IndyException {
@@ -109,10 +87,10 @@ public class WalletOwner {
         return messageFuture.thenCompose(wrapException(
                 (AnonCryptable message) -> {
                     log.debug("{} Anoncrypting message: {}, with did: {}", name, message.toJSON(), message.getTheirDid());
-                    return getPairwiseByTheirDid(message.getTheirDid())
-                            .thenCompose(wrapException((pairwiseResult) -> {
-                                log.debug("{} Anoncrypting with metadata: {}", name, pairwiseResult.getParsedMetadata());
-                                return Crypto.anonCrypt(pairwiseResult.getParsedMetadata().getTheirKey(), message.toJSON().getBytes(Charset.forName("utf8")))
+                    return getKeyForDid(message.getTheirDid())
+                            .thenCompose(wrapException((key) -> {
+                                log.debug("{} Anoncrypting with key: {}", name, key);
+                                return Crypto.anonCrypt(key, message.toJSON().getBytes(Charset.forName("utf8")))
                                         .thenApply((byte[] cryptedMessage) -> new AnoncryptedMessage(cryptedMessage, message.getTheirDid()));
                             }))
                             ;
