@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class EncryptedMessage {
+public class AnoncryptedMessage {
     private byte[] message;
-    private String verkey;
+    private String targetDid;
 }

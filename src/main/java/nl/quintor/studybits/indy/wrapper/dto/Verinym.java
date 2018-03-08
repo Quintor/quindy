@@ -11,8 +11,8 @@ public class Verinym implements Serializable, AuthCryptable {
     private String did;
     private String verkey;
     @JsonIgnore
-    private String myKey;
+    private String myDid;
     @JsonIgnore
     @Setter
-    private String theirKey;
+    private String theirDid;
 }

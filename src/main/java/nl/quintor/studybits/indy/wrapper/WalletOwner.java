@@ -1,7 +1,6 @@
 package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.*;
@@ -43,29 +42,28 @@ public class WalletOwner {
         return Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), did, request);
     }
 
-    public CompletableFuture<EncryptedMessage> acceptConnectionRequest(ConnectionRequest connectionRequest) throws JsonProcessingException, IndyException, ExecutionException, InterruptedException {
-        log.debug("{} Calling acceptConnectionRequest with {}, {}, {}", name, pool.getPool(), wallet.getWallet(), connectionRequest.getDid());
+    public CompletableFuture<AnoncryptedMessage> acceptConnectionRequest(ConnectionRequest connectionRequest) throws JsonProcessingException, IndyException, ExecutionException, InterruptedException {
+        log.debug("{} Called acceptConnectionRequest with {}, {}, {}", name, pool.getPool(), wallet.getWallet(), connectionRequest);
 
         return anoncrypt(wallet.newDid()
-                .thenCombineAsync(getKeyForDid(connectionRequest.getDid()),
-                                                (myDid, theirKey) -> {
-                                                        log.debug("{} Got theirKey {} with did {}", name, theirKey, connectionRequest.getDid());
-                                                        return new ConnectionResponse(myDid.getDid(), myDid.getVerkey(), connectionRequest.getNonce(), theirKey);
-                                                    })
-
+                .thenApply(
+                        (myDid) -> new ConnectionResponse(myDid.getDid(), myDid.getVerkey(), connectionRequest.getNonce(), connectionRequest.getDid()))
                 .thenCompose(wrapException((ConnectionResponse connectionResponse) ->
-                        storeDidAndPairwise(connectionResponse.getDid(), connectionRequest.getDid(), connectionResponse.getVerkey(), connectionResponse.getTheirKey())
+                        getKeyForDid(connectionRequest.getDid())
+                        .thenCompose(wrapException(key -> storeDidAndPairwise(connectionResponse.getDid(), connectionRequest.getDid(), connectionResponse.getVerkey(), key)))
                         .thenApply((_void) -> connectionResponse))));
     }
 
-    CompletableFuture<Void> storeDidAndPairwise(String myDid, String theirDid, String myKey, String theirKey) throws JsonProcessingException, IndyException {
-        log.debug("{} Called storeDidAndPairwise: myDid: {}, theirDid: {}, myKey: {}, theirKey: {}", name, myDid, theirDid, myKey, theirKey);
-        return Did.storeTheirDid(wallet.getWallet(), new TheirDidInfo(theirDid).toJSON())
+    CompletableFuture<Void> storeDidAndPairwise(String myDid, String theirDid, String myKey, String theirKey)  throws JsonProcessingException, IndyException {
+        log.debug("{} Called storeDidAndPairwise: myDid: {}, theirDid: {}", name, myDid, theirDid);
+
+        return Did.storeTheirDid(wallet.getWallet(), new TheirDidInfo(theirDid, theirKey).toJSON())
                 .thenCompose(wrapException(
                         (storeDidResponse) -> {
-                            log.debug("Creating pairwise theirDid: {}, myDid: {}, metadata: {}", theirDid, myDid, new PairwiseMetadata(myKey, theirKey).toJSON());
+                            log.debug("{} Creating pairwise theirDid: {}, myDid: {}, metadata: {}", name, theirDid, myDid, new PairwiseMetadata(myKey, theirKey).toJSON());
                             return Pairwise.createPairwise(wallet.getWallet(), theirDid, myDid,
                                     new PairwiseMetadata(myKey, theirKey).toJSON());
+
                         }));
     }
 
@@ -90,43 +88,73 @@ public class WalletOwner {
                 }));
     }
 
+    CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid(String theirDid) throws IndyException {
+        log.debug("{} Called getPairwise by their did: {}", name, theirDid);
+        return Pairwise.getPairwise(wallet.getWallet(), theirDid)
+                .thenApply(wrapException(json -> JSONUtil.mapper.readValue(json, GetPairwiseResult.class)));
+    }
+
     CompletableFuture<String> getKeyForDid(String did) throws IndyException {
                 log.debug("{} Called getKeyForDid: {}", name, did);
-                return Did.keyForDid(pool.getPool(), wallet.getWallet(), did);
+                return Did.keyForDid(pool.getPool(), wallet.getWallet(), did)
+                        .thenApply(key -> {
+                            log.debug("{} Got key for did {} key {}", name, did, key);
+                            return key;
+                        });
+
     }
 
 
-    private CompletableFuture<EncryptedMessage> anoncrypt(CompletableFuture<? extends AnonCryptable> messageFuture) throws JsonProcessingException, IndyException {
+    private CompletableFuture<AnoncryptedMessage> anoncrypt(CompletableFuture<? extends AnonCryptable> messageFuture) throws JsonProcessingException, IndyException {
         return messageFuture.thenCompose(wrapException(
                 (AnonCryptable message) -> {
-                    log.debug("{} Anoncrypting message: {}, with key: {}", name, message.toJSON(), message.getTheirKey());
-                    return Crypto.anonCrypt(message.getTheirKey(), message.toJSON().getBytes(Charset.forName("utf8")))
-                            .thenApply(cryptedMessage -> new EncryptedMessage(cryptedMessage, message.getTheirKey()));
+                    log.debug("{} Anoncrypting message: {}, with did: {}", name, message.toJSON(), message.getTheirDid());
+                    return getPairwiseByTheirDid(message.getTheirDid())
+                            .thenCompose(wrapException((pairwiseResult) -> {
+                                log.debug("{} Anoncrypting with metadata: {}", name, pairwiseResult.getParsedMetadata());
+                                return Crypto.anonCrypt(pairwiseResult.getParsedMetadata().getTheirKey(), message.toJSON().getBytes(Charset.forName("utf8")))
+                                        .thenApply((byte[] cryptedMessage) -> new AnoncryptedMessage(cryptedMessage, message.getTheirDid()));
+                            }))
+                            ;
                 }
         ));
     }
 
-    <T extends AnonCryptable> CompletableFuture<T> anonDecrypt(EncryptedMessage message, Class<T> valueType) throws IndyException {
-        return Crypto.anonDecrypt(wallet.getWallet(), message.getVerkey(), message.getMessage())
+    <T extends AnonCryptable> CompletableFuture<T> anonDecrypt(AnoncryptedMessage message, Class<T> valueType) throws IndyException {
+        return getKeyForDid(message.getTargetDid())
+                .thenCompose(wrapException(key -> Crypto.anonDecrypt(wallet.getWallet(), key, message.getMessage())))
                 .thenApply(wrapException((decryptedMessage) -> JSONUtil.mapper.readValue(new String(decryptedMessage, Charset.forName("utf8")), valueType)));
     }
 
-    CompletableFuture<EncryptedMessage> authcrypt(CompletableFuture<? extends AuthCryptable> messageFuture) throws JsonProcessingException, IndyException {
+    CompletableFuture<AuthcryptedMessage> authcrypt(CompletableFuture<? extends AuthCryptable> messageFuture) throws JsonProcessingException, IndyException {
         return messageFuture.thenCompose(wrapException(
-                (message) -> {
-                    log.debug("{} Authcrypting message: {}, myKey: {}, theirKey: {}", name, message.toJSON(), message.getMyKey(), message.getTheirKey());
-                    return Crypto.authCrypt(wallet.getWallet(),message.getMyKey(), message.getTheirKey(), message.toJSON().getBytes(Charset.forName("utf8")))
-                            .thenApply(cryptedMessage -> new EncryptedMessage(cryptedMessage, message.getTheirKey()));
+                (AuthCryptable message) -> {
+                    log.debug("{} Authcrypting message: {}, myDid: {}, theirDid: {}", name, message.toJSON(), message.getMyDid(), message.getTheirDid());
+                    return getKeyForDid(message.getMyDid())
+                            .thenCompose(wrapException(myKey -> {
+                                return getKeyForDid(message.getTheirDid())
+                                        .thenCompose(wrapException((String theirKey) -> {
+                                                    log.debug("{} Authcrypting with keys myKey {}, theirKey {}", name, myKey, theirKey);
+                                                    return Crypto.authCrypt(wallet.getWallet(), myKey, theirKey, message.toJSON().getBytes(Charset.forName("utf8")))
+                                                            .thenApply(cryptedMessage -> new AuthcryptedMessage(cryptedMessage, message.getMyDid()));
+                                                })
+                                        );
+                            }));
+
+
                 }
         ));
     }
 
-    <T extends AuthCryptable> CompletableFuture<T> authDecrypt(EncryptedMessage message, Class<T> valueType) throws IndyException {
-        return Crypto.authDecrypt(wallet.getWallet(), message.getVerkey(), message.getMessage())
+    <T extends AuthCryptable> CompletableFuture<T> authDecrypt(AuthcryptedMessage message, Class<T> valueType) throws IndyException {
+        return getPairwiseByTheirDid(message.getDid())
+                .thenCompose(wrapException(pairwiseResult -> getKeyForDid(pairwiseResult.getMyDid())))
+                .thenCompose(wrapException(key -> Crypto.authDecrypt(wallet.getWallet(), key, message.getMessage())
                 .thenApply(wrapException((decryptedMessage) -> {
+                    assert decryptedMessage.getVerkey().equals(key);
                     T decryptedObject = JSONUtil.mapper.readValue(new String(decryptedMessage.getDecryptedMessage(), Charset.forName("utf8")), valueType);
-                    decryptedObject.setTheirKey(decryptedMessage.getVerkey());
+                    decryptedObject.setTheirDid(message.getDid());
                     return decryptedObject;
-                }));
+                }))));
     }
 }

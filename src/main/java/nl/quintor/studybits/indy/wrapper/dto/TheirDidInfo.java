@@ -9,4 +9,5 @@ import lombok.ToString;
 @ToString
 public class TheirDidInfo implements Serializable {
     private String did;
+    private String verkey;
 }

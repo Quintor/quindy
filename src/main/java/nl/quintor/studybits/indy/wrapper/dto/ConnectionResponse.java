@@ -13,5 +13,5 @@ public class ConnectionResponse implements AnonCryptable, Serializable {
     private String verkey;
     private String nonce;
     @JsonIgnore
-    private String theirKey;
+    private String theirDid;
 }
