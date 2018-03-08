@@ -1,7 +1,7 @@
 package nl.quintor.studybits.indy.wrapper.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,10 +11,14 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Schema implements Serializable {
-    private String name;
-    private String version;
-    @JsonProperty("attr_names")
-    private List<String> attrNames;
+    private String identifier;
+    private String type;
+    private long txnTime;
+    @JsonProperty("state_proof")
+    private JsonNode stateProof;
+    private long reqId;
+    private SchemaDefinition data;
+    private int seqNo;
+    private String dest;
 }
