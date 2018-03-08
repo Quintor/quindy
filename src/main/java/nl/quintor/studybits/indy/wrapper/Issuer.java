@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import nl.quintor.studybits.indy.wrapper.dto.GetSchema;
-import nl.quintor.studybits.indy.wrapper.dto.Schema;
-import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
+import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.anoncreds.Anoncreds;
@@ -17,6 +15,7 @@ import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapBiFunctionException;
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
 @Slf4j
@@ -81,7 +80,17 @@ public class Issuer extends TrustAnchor {
                 }));
     }
 
-//    CompletableFuture<String> sendClaimDef(String claimDefJson) {
-//
-//    }
+    public CompletableFuture<AuthcryptedMessage> createClaimOffer(SchemaKey schemaKey, String targetDid) throws JsonProcessingException, IndyException {
+        return authcrypt(getSchema(schemaKey)
+                .thenCompose(wrapException(schema -> Anoncreds.issuerCreateClaimOffer(wallet.getWallet(), schema, issuerDid, targetDid)))
+                .thenCombine(getPairwiseByTheirDid(targetDid),
+                        wrapBiFunctionException((claimOfferJson, pairwiseResult) -> {
+                            log.debug("{} Created claimOffer: {}", name, claimOfferJson);
+                            ClaimOffer claimOffer = JSONUtil.mapper.readValue(claimOfferJson, ClaimOffer.class);
+                            claimOffer.setMyDid(pairwiseResult.getMyDid());
+                            claimOffer.setTheirDid(targetDid);
+                            log.debug("{} Created claimOffer object (toJSON()): {}", name, claimOffer.toJSON());
+                            return claimOffer;
+                        })));
+    }
 }

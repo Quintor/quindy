@@ -49,9 +49,10 @@ public class Main {
 
         acme.defineClaim(jobCertificateSchemaKey).get();
 
-        WalletOwner alice = new WalletOwner("Alice", indyPool, IndyWallet.create(indyPool, "alice_wallet", null));
-        onboardWalletOwner(faber, alice);
+        Prover alice = new Prover("Alice", indyPool, IndyWallet.create(indyPool, "alice_wallet", null));
+        String aliceFaberDid = onboardWalletOwner(faber, alice);
 
+        AuthcryptedMessage transcriptClaimOffer = faber.createClaimOffer(transcriptSchemaKey, aliceFaberDid).get();
 
 
     }
@@ -71,11 +72,13 @@ public class Main {
         newcomer.init();
     }
 
-    private static void onboardWalletOwner(TrustAnchor trustAnchor, WalletOwner newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {
+    private static String onboardWalletOwner(TrustAnchor trustAnchor, WalletOwner newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {
         String governmentConnectionRequest = trustAnchor.createConnectionRequest(newcomer.getName(), null).get().toJSON();
 
         AnoncryptedMessage newcomerConnectionResponse = newcomer.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class)).get();
 
-        trustAnchor.acceptConnectionResponse(newcomerConnectionResponse).get();
+        String newcomerDid = trustAnchor.acceptConnectionResponse(newcomerConnectionResponse).get();
+
+        return newcomerDid;
     }
 }

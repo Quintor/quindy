@@ -71,11 +71,12 @@ public class TrustAnchor extends WalletOwner {
                 }));
     }
 
-    public CompletableFuture<Void> acceptConnectionResponse(AnoncryptedMessage encryptedConnectionResponse) throws IndyException {
+    public CompletableFuture<String> acceptConnectionResponse(AnoncryptedMessage encryptedConnectionResponse) throws IndyException {
         return anonDecrypt(encryptedConnectionResponse, ConnectionResponse.class)
-                .thenCompose(wrapException(connectionResponse -> {
+                .thenCompose(wrapException((ConnectionResponse connectionResponse) -> {
                     log.debug("{} Accepting connection response: {}", name, connectionResponse);
-                    return acceptConnectionResponse(connectionResponse);
+                    return acceptConnectionResponse(connectionResponse)
+                            .thenApply((_void) -> connectionResponse.getDid());
                 }));
     }
 
