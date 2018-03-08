@@ -2,7 +2,7 @@ version: '2.3'
 services:
   studybits:
     build:
-      context: ../
+      context: .
       args:
         LIBINDY_VERSION: ${LIBINDY_VERSION}
     network_mode: "host"
