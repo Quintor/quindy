@@ -30,12 +30,12 @@ public class Prover extends WalletOwner {
     public CompletableFuture<AuthcryptedMessage> storeClaimOfferAndCreateClaimRequest(AuthcryptedMessage authcryptedClaimoffer) throws IndyException {
         return authDecrypt(authcryptedClaimoffer, ClaimOffer.class)
                 .thenCompose(wrapException(claimOffer -> storeClaimOffer(claimOffer)
-                        .thenCompose(wrapException((_void) -> proveClaimOffer(authcryptedClaimoffer.getDid(), claimOffer)))
+                        .thenCompose(wrapException((_void) -> createClaimRequest(authcryptedClaimoffer.getDid(), claimOffer)))
                 ));
 
     }
 
-    CompletableFuture<AuthcryptedMessage> proveClaimOffer(String theirDid, ClaimOffer claimOffer) throws IndyException, JsonProcessingException {
+    CompletableFuture<AuthcryptedMessage> createClaimRequest(String theirDid, ClaimOffer claimOffer) throws IndyException, JsonProcessingException {
         return authcrypt(getPairwiseByTheirDid(theirDid)
                 .thenCompose(wrapException(pairwiseResult -> getSchema(pairwiseResult.getMyDid(), claimOffer.getSchemaKey())
                                 .thenCompose(wrapException(schema -> getClaimDef(pairwiseResult.getMyDid(), schema, claimOffer.getIssuerDid())))
