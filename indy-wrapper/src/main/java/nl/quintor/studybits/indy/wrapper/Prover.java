@@ -37,16 +37,16 @@ public class Prover extends WalletOwner {
     CompletableFuture<String> proveClaimOffer(String theirDid, ClaimOffer claimOffer) throws IndyException {
         return getPairwiseByTheirDid(theirDid)
                 .thenCompose(wrapException(pairwiseResult -> getSchema(pairwiseResult.getMyDid(), claimOffer.getSchemaKey())
-                        .thenCompose(wrapException(schema -> getClaimDef(pairwiseResult.getMyDid(), schema, claimOffer.getIssuerDid())))
-                        .thenCompose(wrapException(claimDef -> {
-                            log.debug("{} creating claim request with claimDef {}", name, claimDef);
-                            return Anoncreds.proverCreateAndStoreClaimReq(wallet.getWallet(), pairwiseResult.getMyDid(),
-                                    claimOffer.toJSON(), claimDef, this.masterSecretName);
-                        }))
-                        .thenApply(claimReq -> {
-                            log.debug(claimReq);
-                            return claimReq;
-                        })
+                                .thenCompose(wrapException(schema -> getClaimDef(pairwiseResult.getMyDid(), schema, claimOffer.getIssuerDid())))
+                                .thenCompose(wrapException(claimDef -> {
+                                    log.debug("{} creating claim request with claimDef {}", name, claimDef);
+                                    return Anoncreds.proverCreateAndStoreClaimReq(wallet.getWallet(), pairwiseResult.getMyDid(),
+                                            claimOffer.toJSON(), claimDef, this.masterSecretName);
+                                }))
+                                .thenApply(claimReq -> {
+                                    log.debug(claimReq);
+                                    return claimReq;
+                                })
                         )
                 );
     }

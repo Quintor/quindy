@@ -62,15 +62,19 @@ public class Issuer extends TrustAnchor {
         return getSchema(issuerDid, schemaKey)
                 .thenCompose(wrapException(schema ->
                         Anoncreds.issuerCreateAndStoreClaimDef(wallet.getWallet(), issuerDid, schema.toJSON(), "CL", false)))
-        .thenCompose(wrapException(claimDefJson -> {
-            JsonNode claimDef = JSONUtil.mapper.readTree(claimDefJson);
-            log.debug("{}: building claim def txn with submitterDid {} xref {} signatureType {} data {}", name, issuerDid, claimDef.get("ref").asInt(), claimDef.get("signature_type").toString(), claimDef.get("data").toString());
-            return Ledger.buildClaimDefTxn(issuerDid, claimDef.get("ref").asInt(), claimDef.get("signature_type").toString(), claimDef.get("data").toString())
-                    .thenCompose(wrapException(claimDefTxn -> {
-                        log.debug("{} Signing and sending claimDefTx: {}", name, claimDefTxn);
-                        return Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), issuerDid, claimDefTxn);
-                    }));
-        }));
+                .thenCompose(wrapException(claimDefJson -> {
+                    JsonNode claimDef = JSONUtil.mapper.readTree(claimDefJson);
+                    log.debug("{}: building claim def txn with submitterDid {} xref {} signatureType {} data {}", name, issuerDid, claimDef.get("ref").asInt(), claimDef.get("signature_type").asText(), claimDef.get("data").toString());
+                    return Ledger.buildClaimDefTxn(issuerDid, claimDef.get("ref").asInt(), claimDef.get("signature_type").asText(), claimDef.get("data").toString());
+                })).thenCompose(wrapException(claimDefTxn -> {
+                    log.debug("{} Signing and sending claimDefTx: {}", name, claimDefTxn);
+                    return Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), issuerDid, claimDefTxn)
+                            ;
+                })).thenApply((response) -> {
+                            log.debug("{} Got ClaimDefTxn response: {}", name, response);
+                            return response;
+                        }
+                );
     }
 
     public CompletableFuture<AuthcryptedMessage> createClaimOffer(SchemaKey schemaKey, String targetDid) throws JsonProcessingException, IndyException {

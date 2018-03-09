@@ -12,6 +12,8 @@ import org.hyperledger.indy.sdk.IndyException;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
+import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
+
 public class Main {
     public static void main(String[] args) throws Exception {
         Runtime.getRuntime().exec("rm -rf /home/potte/.indy_client");
@@ -40,8 +42,8 @@ public class Main {
         alice.init("alice_master_secret");
 
         // Create schemas
-//        SchemaKey jobCertificateSchemaKey = government.createAndSendSchema("Job-Certificate", "0.2",
-//                "first_name", "last_name", "salary", "employee_status", "experience").get();
+        SchemaKey jobCertificateSchemaKey = government.createAndSendSchema("Job-Certificate", "0.2",
+                "first_name", "last_name", "salary", "employee_status", "experience").get();
 
         SchemaKey transcriptSchemaKey = government.createAndSendSchema("Transcript", "1.2",
                 "first_name", "last_name", "degree", "status", "year", "average", "ssn").get();
