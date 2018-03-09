@@ -8,7 +8,7 @@ services:
     network_mode: "host"
   pool:
     build:
-      context: ./ci
+      context: ci
       dockerfile: indy-pool.dockerfile
     ports:
     - "9701-9708:9701-9708"
