@@ -2,8 +2,8 @@ package nl.quintor.studybits;
 
 import nl.quintor.studybits.indy.wrapper.*;
 import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
-import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
+import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
@@ -11,8 +11,6 @@ import org.hyperledger.indy.sdk.IndyException;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
-
-import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
 public class Main {
     public static void main(String[] args) throws Exception {
