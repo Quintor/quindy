@@ -63,9 +63,10 @@ public class Issuer extends TrustAnchor {
                 .thenCompose(wrapException(schema ->
                         Anoncreds.issuerCreateAndStoreClaimDef(wallet.getWallet(), issuerDid, schema.toJSON(), "CL", false)))
                 .thenCompose(wrapException(claimDefJson -> {
-                    JsonNode claimDef = JSONUtil.mapper.readTree(claimDefJson);
-                    log.debug("{}: building claim def txn with submitterDid {} xref {} signatureType {} data {}", name, issuerDid, claimDef.get("ref").asInt(), claimDef.get("signature_type").asText(), claimDef.get("data").toString());
-                    return Ledger.buildClaimDefTxn(issuerDid, claimDef.get("ref").asInt(), claimDef.get("signature_type").asText(), claimDef.get("data").toString());
+                    log.debug("{}: got claim def json {}", name, claimDefJson);
+                    ClaimDefinition claimDefinition = JSONUtil.mapper.readValue(claimDefJson, ClaimDefinition.class);
+                    log.debug("{}: building claim def txn with submitterDid {} xref {} signatureType {} data {}", name, issuerDid, claimDefinition.getRef(), claimDefinition.getSignatureType(), claimDefinition.getData().toString());
+                    return Ledger.buildClaimDefTxn(issuerDid, claimDefinition.getRef(), claimDefinition.getSignatureType(), claimDefinition.getData().toString());
                 })).thenCompose(wrapException(claimDefTxn -> {
                     log.debug("{} Signing and sending claimDefTx: {}", name, claimDefTxn);
                     return Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), issuerDid, claimDefTxn)
