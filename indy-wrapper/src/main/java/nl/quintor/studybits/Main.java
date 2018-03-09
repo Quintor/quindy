@@ -52,11 +52,11 @@ public class Main {
         // Create claim definitions
         faber.defineClaim(transcriptSchemaKey).get();
 
-        //acme.defineClaim(jobCertificateSchemaKey).get();
+        acme.defineClaim(jobCertificateSchemaKey).get();
 
         AuthcryptedMessage transcriptClaimOffer = faber.createClaimOffer(transcriptSchemaKey, aliceFaberDid).get();
 
-        alice.storeClaimOfferAndCreateClaimRequest(transcriptClaimOffer).get();
+        AuthcryptedMessage transcriptClaimRequest = alice.storeClaimOfferAndCreateClaimRequest(transcriptClaimOffer).get();
 
     }
 
