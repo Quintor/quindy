@@ -1,16 +1,20 @@
 package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.*;
+import nl.quintor.studybits.indy.wrapper.util.IntegerEncodingUtil;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.anoncreds.Anoncreds;
 import org.hyperledger.indy.sdk.did.DidResults;
 import org.hyperledger.indy.sdk.ledger.Ledger;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -91,4 +95,19 @@ public class Issuer extends TrustAnchor {
                             return claimOffer;
                         }));
     }
+
+    public CompletableFuture<Claim> createClaim(ClaimRequest claimRequest, Map<String, Object> values) throws UnsupportedEncodingException, JsonProcessingException, IndyException {
+        JsonNode claimValueJson = IntegerEncodingUtil.claimValuesFromMap(values);
+
+        return Anoncreds.issuerCreateClaim(wallet.getWallet(), claimRequest.toJSON(), claimValueJson.toString(), -1)
+                .thenApply(wrapException((issuerCreateClaimResult) -> {
+                    log.debug("{} Created claim json: {}", name, issuerCreateClaimResult.getClaimJson());
+                    Claim claim = JSONUtil.mapper.readValue(issuerCreateClaimResult.getClaimJson(), Claim.class);
+                    claim.setMyDid(claimRequest.getMyDid());
+                    claim.setTheirDid(claimRequest.getTheirDid());
+                    return claim;
+                }));
+    }
+
+
 }

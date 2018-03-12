@@ -135,13 +135,15 @@ public class WalletOwner {
 
     public <T extends AuthCryptable> CompletableFuture<T> authDecrypt(AuthcryptedMessage message, Class<T> valueType) throws IndyException {
         return getPairwiseByTheirDid(message.getDid())
-                .thenCompose(wrapException(pairwiseResult -> getKeyForDid(pairwiseResult.getMyDid())))
-                .thenCompose(wrapException(key -> Crypto.authDecrypt(wallet.getWallet(), key, message.getMessage())
-                .thenApply(wrapException((decryptedMessage) -> {
-                    assert decryptedMessage.getVerkey().equals(key);
-                    T decryptedObject = JSONUtil.mapper.readValue(new String(decryptedMessage.getDecryptedMessage(), Charset.forName("utf8")), valueType);
-                    decryptedObject.setTheirDid(message.getDid());
-                    return decryptedObject;
-                }))));
+                .thenCompose(wrapException(pairwiseResult -> getKeyForDid(pairwiseResult.getMyDid())
+                        .thenCompose(wrapException(key -> Crypto.authDecrypt(wallet.getWallet(), key, message.getMessage())
+                        .thenApply(wrapException((decryptedMessage) -> {
+                            assert decryptedMessage.getVerkey().equals(key);
+                            T decryptedObject = JSONUtil.mapper.readValue(new String(decryptedMessage.getDecryptedMessage(), Charset.forName("utf8")), valueType);
+                            decryptedObject.setMyDid(pairwiseResult.getMyDid());
+                            decryptedObject.setTheirDid(message.getDid());
+                            return decryptedObject;
+                        }))))))
+                ;
     }
 }
