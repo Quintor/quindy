@@ -77,6 +77,8 @@ public class Main {
                 .thenCompose(AsyncUtil.wrapException(faber::authcrypt)).get();
 
 
+        alice.authDecrypt(claim, Claim.class)
+                .thenCompose(AsyncUtil.wrapException(alice::storeClaim)).get();
     }
 
     private static void onboardIssuer(TrustAnchor steward, Issuer newcomer) throws InterruptedException, java.util.concurrent.ExecutionException, IndyException, java.io.IOException {

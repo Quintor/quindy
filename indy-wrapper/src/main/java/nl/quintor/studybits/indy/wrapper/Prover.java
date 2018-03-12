@@ -2,6 +2,7 @@ package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
+import nl.quintor.studybits.indy.wrapper.dto.Claim;
 import nl.quintor.studybits.indy.wrapper.dto.ClaimOffer;
 import nl.quintor.studybits.indy.wrapper.dto.ClaimRequest;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
@@ -29,8 +30,7 @@ public class Prover extends WalletOwner {
 
     public CompletableFuture<ClaimRequest> storeClaimOfferAndCreateClaimRequest(ClaimOffer claimOffer) throws IndyException, JsonProcessingException {
         return storeClaimOffer(claimOffer)
-                        .thenCompose(wrapException((_void) -> createClaimRequest(claimOffer.getTheirDid(), claimOffer)))
-                ;
+                        .thenCompose(wrapException((_void) -> createClaimRequest(claimOffer.getTheirDid(), claimOffer)));
 
     }
 
@@ -59,5 +59,9 @@ public class Prover extends WalletOwner {
 
     CompletableFuture<Void> storeClaimOffer(ClaimOffer claimOffer) throws IndyException, JsonProcessingException {
         return Anoncreds.proverStoreClaimOffer(wallet.getWallet(), claimOffer.toJSON());
+    }
+
+    public CompletableFuture<Void> storeClaim(Claim claim) throws JsonProcessingException, IndyException {
+        return Anoncreds.proverStoreClaim(wallet.getWallet(), claim.toJSON(), null);
     }
 }
