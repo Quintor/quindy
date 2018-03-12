@@ -6,6 +6,7 @@ import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
+import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -31,7 +32,8 @@ public class Student {
         payloadInit.put("name", email);
 
         ResponseEntity<ConnectionRequest> requestInitResponse = requestInit.getForEntity(uniEndpoint, ConnectionRequest.class, payloadInit);
-        AnoncryptedMessage responseInit = prover.acceptConnectionRequest(requestInitResponse.getBody()).get();
+        AnoncryptedMessage responseInit = prover.acceptConnectionRequest(requestInitResponse.getBody())
+                .thenCompose(AsyncUtil.wrapException(prover::anoncrypt)).get();
 
         RestTemplate requestConfirmation = new RestTemplate();
         Map<String, Object> payloadConfirmation = new HashMap<>();
