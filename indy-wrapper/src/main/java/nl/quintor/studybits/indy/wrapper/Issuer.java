@@ -1,7 +1,6 @@
 package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.*;
@@ -44,12 +43,12 @@ public class Issuer extends TrustAnchor {
     }
 
     public CompletableFuture<SchemaKey> createAndSendSchema(String name, String version, String... attrNames) throws IndyException, JsonProcessingException {
-        Schema schema = new Schema(name, version, Arrays.asList(attrNames));
-        SchemaKey schemaKey = SchemaKey.fromSchema(schema, issuerDid);
+        SchemaDefinition schemaDefinition = new SchemaDefinition(name, version, Arrays.asList(attrNames));
+        SchemaKey schemaKey = SchemaKey.fromSchema(schemaDefinition, issuerDid);
 
-        log.debug("{}: Creating schema: {} with did: {}", this.name, schema.toJSON(), issuerDid);
+        log.debug("{}: Creating schemaDefinition: {} with did: {}", this.name, schemaDefinition.toJSON(), issuerDid);
 
-        return Ledger.buildSchemaRequest(issuerDid, schema.toJSON())
+        return Ledger.buildSchemaRequest(issuerDid, schemaDefinition.toJSON())
                 .thenCompose(wrapException(request -> {
                     log.debug("{}: Submitting buildSchema request {}", this.name, request);
                     return signAndSubmitRequest(request, issuerDid);
@@ -59,30 +58,28 @@ public class Issuer extends TrustAnchor {
 
     public CompletableFuture<String> defineClaim(SchemaKey schemaKey) throws JsonProcessingException, IndyException {
         log.debug("{}: Defining claim for schemaKey {}", name, schemaKey);
-        return getSchema(schemaKey)
+        return getSchema(issuerDid, schemaKey)
                 .thenCompose(wrapException(schema ->
-                        Anoncreds.issuerCreateAndStoreClaimDef(wallet.getWallet(), issuerDid, schema, "CL", false)))
-        .thenCompose(wrapException(claimDefJson -> {
-            JsonNode claimDef = JSONUtil.mapper.readTree(claimDefJson);
-
-            return Ledger.buildClaimDefTxn(issuerDid, claimDef.get("ref").asInt(), claimDef.get("signature_type").toString(), claimDef.get("data").toString())
-                    .thenCompose(wrapException(claimDefTxn -> Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), issuerDid, claimDefTxn)));
-        }));
-    }
-
-    CompletableFuture<String> getSchema(SchemaKey schemaKey) throws JsonProcessingException, IndyException {
-        log.debug("{}: Calling buildGetSchemaRequest with submitter: {} destination {} GetSchema {}", name, issuerDid, schemaKey.getDid(), GetSchema.fromSchemaKey(schemaKey).toJSON());
-        return Ledger.buildGetSchemaRequest(issuerDid, schemaKey.getDid(), GetSchema.fromSchemaKey(schemaKey).toJSON())
-                .thenCompose(wrapException(request -> Ledger.submitRequest(pool.getPool(), request)))
-                .thenApply(wrapException(getSchemaResponse -> {
-                    log.debug("{}: Got schema {} for schemaKey {}", name, getSchemaResponse, schemaKey);
-                    return JSONUtil.mapper.readTree(getSchemaResponse).at("/result").toString();
-                }));
+                        Anoncreds.issuerCreateAndStoreClaimDef(wallet.getWallet(), issuerDid, schema.toJSON(), "CL", false)))
+                .thenCompose(wrapException(claimDefJson -> {
+                    log.debug("{}: got claim def json {}", name, claimDefJson);
+                    ClaimDefinition claimDefinition = JSONUtil.mapper.readValue(claimDefJson, ClaimDefinition.class);
+                    log.debug("{}: building claim def txn with submitterDid {} xref {} signatureType {} data {}", name, issuerDid, claimDefinition.getRef(), claimDefinition.getSignatureType(), claimDefinition.getData().toString());
+                    return Ledger.buildClaimDefTxn(issuerDid, claimDefinition.getRef(), claimDefinition.getSignatureType(), claimDefinition.getData().toString());
+                })).thenCompose(wrapException(claimDefTxn -> {
+                    log.debug("{} Signing and sending claimDefTx: {}", name, claimDefTxn);
+                    return Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), issuerDid, claimDefTxn)
+                            ;
+                })).thenApply((response) -> {
+                            log.debug("{} Got ClaimDefTxn response: {}", name, response);
+                            return response;
+                        }
+                );
     }
 
     public CompletableFuture<AuthcryptedMessage> createClaimOffer(SchemaKey schemaKey, String targetDid) throws JsonProcessingException, IndyException {
-        return authcrypt(getSchema(schemaKey)
-                .thenCompose(wrapException(schema -> Anoncreds.issuerCreateClaimOffer(wallet.getWallet(), schema, issuerDid, targetDid)))
+        return authcrypt(getSchema(issuerDid, schemaKey)
+                .thenCompose(wrapException(schema -> Anoncreds.issuerCreateClaimOffer(wallet.getWallet(), schema.toJSON(), issuerDid, targetDid)))
                 .thenCombine(getPairwiseByTheirDid(targetDid),
                         wrapBiFunctionException((claimOfferJson, pairwiseResult) -> {
                             log.debug("{} Created claimOffer: {}", name, claimOfferJson);

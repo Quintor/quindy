@@ -12,7 +12,7 @@ public class SchemaKey {
     private String version;
     private String did;
 
-    public static SchemaKey fromSchema(Schema schema, String did) {
-        return new SchemaKey(schema.getName(), schema.getVersion(), did);
+    public static SchemaKey fromSchema(SchemaDefinition schemaDefinition, String did) {
+        return new SchemaKey(schemaDefinition.getName(), schemaDefinition.getVersion(), did);
     }
 }
