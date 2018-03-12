@@ -33,6 +33,9 @@ public class Main {
         Issuer thrift = new Issuer("Thrift", indyPool, IndyWallet.create(indyPool, "thrift_wallet", null));
         onboardIssuer(steward, thrift);
 
+        Prover alice = new Prover("Alice", indyPool, IndyWallet.create(indyPool, "alice_wallet", null));
+        String aliceFaberDid = onboardWalletOwner(faber, alice);
+        alice.init("alice_master_secret");
 
         // Create schemas
         SchemaKey jobCertificateSchemaKey = government.createAndSendSchema("Job-Certificate", "0.2",
@@ -47,12 +50,15 @@ public class Main {
 
         acme.defineClaim(jobCertificateSchemaKey).get();
 
-        Prover alice = new Prover("Alice", indyPool, IndyWallet.create(indyPool, "alice_wallet", null));
-        String aliceFaberDid = onboardWalletOwner(faber, alice);
+
 
         AuthcryptedMessage transcriptClaimOffer = faber.createClaimOffer(transcriptSchemaKey, aliceFaberDid)
                                                     .thenCompose(AsyncUtil.wrapException(faber::authcrypt)).get();
 
+
+        AuthcryptedMessage transcriptClaimRequest = alice.authDecrypt(transcriptClaimOffer, ClaimOffer.class)
+        .thenCompose(AsyncUtil.wrapException(alice::storeClaimOfferAndCreateClaimRequest))
+                .thenCompose(AsyncUtil.wrapException(alice::authcrypt)).get();
 
     }
 

@@ -30,6 +30,10 @@ public class WalletOwner {
         this.wallet = wallet;
     }
 
+    CompletableFuture<String> submitRequest(String request) throws IndyException {
+        return Ledger.submitRequest(pool.getPool(), request);
+    }
+
     CompletableFuture<String> signAndSubmitRequest(String request) throws IndyException {
         return signAndSubmitRequest(request, wallet.getMainDid());
     }
@@ -76,6 +80,26 @@ public class WalletOwner {
                             return key;
                         });
 
+    }
+
+    CompletableFuture<Schema> getSchema(String did, SchemaKey schemaKey) throws JsonProcessingException, IndyException {
+        log.debug("{}: Calling buildGetSchemaRequest with submitter: {} destination {} GetSchema {}", name, did, schemaKey.getDid(), GetSchema.fromSchemaKey(schemaKey).toJSON());
+        return Ledger.buildGetSchemaRequest(did, schemaKey.getDid(), GetSchema.fromSchemaKey(schemaKey).toJSON())
+                .thenCompose(wrapException(this::submitRequest))
+                .thenApply(wrapException(getSchemaResponse -> {
+                    log.debug("{}: Got schema {} for schemaKey {}", name, getSchemaResponse, schemaKey);
+                    return JSONUtil.readObjectByPointer(getSchemaResponse, "/result", Schema.class);
+                }));
+    }
+
+    CompletableFuture<String> getClaimDef(String did, Schema schema, String issuerDid) throws IndyException {
+        log.debug("{} Getting claim def with did {} schema with seqNo {} and issuerDid {}", name, did, schema.getSeqNo(), issuerDid);
+        return Ledger.buildGetClaimDefTxn(did, schema.getSeqNo(), "CL", issuerDid)
+                .thenCompose(wrapException(request -> {
+                    log.debug("{} Submitting GetClaimDefTxn {}", name, request);
+                    return submitRequest(request);
+                }))
+                .thenApply(wrapException(response -> JSONUtil.mapper.readTree(response).at("/result").toString()));
     }
 
 

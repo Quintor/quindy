@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @AllArgsConstructor
 @RestController
@@ -25,10 +26,18 @@ public class Student {
 
     @RequestMapping(value = "/onboard", method = RequestMethod.POST)
     public ResponseEntity<String> onboard(@RequestParam(value = "endpoint") String uniEndpoint) throws Exception {
-        ResponseEntity<ConnectionRequest> connectionRequest = new RestTemplate().getForEntity(uniEndpoint, ConnectionRequest.class, new HashMap<>().put("name", email));
-        AnoncryptedMessage connectionResponse = prover.acceptConnectionRequest(connectionRequest.getBody()).get();
+        RestTemplate requestInit = new RestTemplate();
+        Map<String, Object> payloadInit = new HashMap<>();
+        payloadInit.put("name", email);
 
-        return new RestTemplate().getForEntity(uniEndpoint, String.class, new HashMap<>().put("response", connectionResponse));
+        ResponseEntity<ConnectionRequest> requestInitResponse = requestInit.getForEntity(uniEndpoint, ConnectionRequest.class, payloadInit);
+        AnoncryptedMessage responseInit = prover.acceptConnectionRequest(requestInitResponse.getBody()).get();
+
+        RestTemplate requestConfirmation = new RestTemplate();
+        Map<String, Object> payloadConfirmation = new HashMap<>();
+        payloadConfirmation.put("response", responseInit);
+
+        return new RestTemplate().getForEntity(uniEndpoint, String.class, payloadConfirmation);
     }
 
 
