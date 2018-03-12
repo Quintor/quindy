@@ -1,10 +1,8 @@
 package nl.quintor.studybits;
 
 import nl.quintor.studybits.indy.wrapper.*;
-import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
-import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
-import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
-import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
+import nl.quintor.studybits.indy.wrapper.dto.*;
+import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
 import org.hyperledger.indy.sdk.IndyException;
@@ -52,9 +50,15 @@ public class Main {
 
         acme.defineClaim(jobCertificateSchemaKey).get();
 
-        AuthcryptedMessage transcriptClaimOffer = faber.createClaimOffer(transcriptSchemaKey, aliceFaberDid).get();
 
-        AuthcryptedMessage transcriptClaimRequest = alice.storeClaimOfferAndCreateClaimRequest(transcriptClaimOffer).get();
+
+        AuthcryptedMessage transcriptClaimOffer = faber.createClaimOffer(transcriptSchemaKey, aliceFaberDid)
+                                                    .thenCompose(AsyncUtil.wrapException(faber::authcrypt)).get();
+
+
+        AuthcryptedMessage transcriptClaimRequest = alice.authDecrypt(transcriptClaimOffer, ClaimOffer.class)
+        .thenCompose(AsyncUtil.wrapException(alice::storeClaimOfferAndCreateClaimRequest))
+                .thenCompose(AsyncUtil.wrapException(alice::authcrypt)).get();
 
     }
 
@@ -62,13 +66,18 @@ public class Main {
         // Connecting newcomer with Steward
         String governmentConnectionRequest = steward.createConnectionRequest(newcomer.getName(), "TRUST_ANCHOR").get().toJSON();
 
-        AnoncryptedMessage newcomerConnectionResponse = newcomer.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class)).get();
+        AnoncryptedMessage newcomerConnectionResponse = newcomer.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class))
+                .thenCompose(AsyncUtil.wrapException(newcomer::anoncrypt))
+                .get();
 
-        steward.acceptConnectionResponse(newcomerConnectionResponse).get();
+        steward.anonDecrypt(newcomerConnectionResponse, ConnectionResponse.class)
+                .thenCompose(AsyncUtil.wrapException(steward::acceptConnectionResponse)).get();
 
-        AuthcryptedMessage verinym = newcomer.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class).getDid()).get();
+        AuthcryptedMessage verinym = newcomer.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class).getDid())
+                .thenCompose(AsyncUtil.wrapException(newcomer::authcrypt)).get();
 
-        steward.acceptVerinymRequest(verinym).get();
+        steward.authDecrypt(verinym, Verinym.class)
+                .thenCompose(AsyncUtil.wrapException(steward::acceptVerinymRequest)).get();
 
         newcomer.init();
     }
@@ -76,9 +85,11 @@ public class Main {
     private static String onboardWalletOwner(TrustAnchor trustAnchor, WalletOwner newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {
         String governmentConnectionRequest = trustAnchor.createConnectionRequest(newcomer.getName(), null).get().toJSON();
 
-        AnoncryptedMessage newcomerConnectionResponse = newcomer.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class)).get();
+        AnoncryptedMessage newcomerConnectionResponse = newcomer.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class))
+                .thenCompose(AsyncUtil.wrapException(newcomer::anoncrypt)).get();
 
-        String newcomerDid = trustAnchor.acceptConnectionResponse(newcomerConnectionResponse).get();
+        String newcomerDid = trustAnchor.anonDecrypt(newcomerConnectionResponse, ConnectionResponse.class)
+                .thenCompose(AsyncUtil.wrapException(trustAnchor::acceptConnectionResponse)).get();
 
         return newcomerDid;
     }
