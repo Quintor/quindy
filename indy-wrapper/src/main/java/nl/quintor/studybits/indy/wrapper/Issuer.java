@@ -80,8 +80,8 @@ public class Issuer extends TrustAnchor {
                 }));
     }
 
-    public CompletableFuture<AuthcryptedMessage> createClaimOffer(SchemaKey schemaKey, String targetDid) throws JsonProcessingException, IndyException {
-        return authcrypt(getSchema(schemaKey)
+    public CompletableFuture<ClaimOffer> createClaimOffer(SchemaKey schemaKey, String targetDid) throws JsonProcessingException, IndyException {
+        return getSchema(schemaKey)
                 .thenCompose(wrapException(schema -> Anoncreds.issuerCreateClaimOffer(wallet.getWallet(), schema, issuerDid, targetDid)))
                 .thenCombine(getPairwiseByTheirDid(targetDid),
                         wrapBiFunctionException((claimOfferJson, pairwiseResult) -> {
@@ -91,6 +91,6 @@ public class Issuer extends TrustAnchor {
                             claimOffer.setTheirDid(targetDid);
                             log.debug("{} Created claimOffer object (toJSON()): {}", name, claimOffer.toJSON());
                             return claimOffer;
-                        })));
+                        }));
     }
 }

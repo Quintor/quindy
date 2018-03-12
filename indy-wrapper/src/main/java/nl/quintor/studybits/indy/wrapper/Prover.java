@@ -23,12 +23,7 @@ public class Prover extends WalletOwner {
         Anoncreds.proverCreateMasterSecret(wallet.getWallet(), masterSecretName).get();
     }
 
-    public CompletableFuture<Void> storeAndProveClaimOffer(AuthcryptedMessage authcryptedClaimoffer) throws IndyException {
-        return authDecrypt(authcryptedClaimoffer, ClaimOffer.class)
-                .thenCompose(wrapException(claimOffer -> storeClaimOffer(claimOffer)));
-    }
-
-    CompletableFuture<Void> storeClaimOffer(ClaimOffer claimOffer) throws IndyException, JsonProcessingException {
+    public CompletableFuture<Void> storeClaimOffer(ClaimOffer claimOffer) throws IndyException, JsonProcessingException {
         return Anoncreds.proverStoreClaimOffer(wallet.getWallet(), claimOffer.toJSON());
     }
 }

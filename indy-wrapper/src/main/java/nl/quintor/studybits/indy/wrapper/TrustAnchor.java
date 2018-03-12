@@ -45,10 +45,10 @@ public class TrustAnchor extends WalletOwner {
                 );
     }
 
-    public CompletableFuture<AuthcryptedMessage> createVerinymRequest(String targetDid) throws IndyException, JsonProcessingException {
+    public CompletableFuture<Verinym> createVerinymRequest(String targetDid) throws IndyException, JsonProcessingException {
         log.info("{} Creating verinym request for targetDid: {}", name, targetDid);
 
-        return authcrypt(Pairwise.getPairwise(wallet.getWallet(), targetDid)
+        return Pairwise.getPairwise(wallet.getWallet(), targetDid)
                 .thenApply(wrapException((String getPairwiseResult) ->
                         JSONUtil.mapper.readValue(getPairwiseResult, GetPairwiseResult.class)
                 ))
@@ -59,28 +59,16 @@ public class TrustAnchor extends WalletOwner {
                                             log.debug("Created verinym {}", result);
                                             return result;
                                         }
-                                )))));
+                                ))
+                ));
     }
 
-    public CompletableFuture<String> acceptVerinymRequest(AuthcryptedMessage encryptedVerinym) throws IndyException {
-        log.debug("{} accepting verinym encrypted with did {}", name, encryptedVerinym.getDid());
-       return  authDecrypt(encryptedVerinym, Verinym.class)
-                .thenCompose(wrapException(verinym -> {
-                    log.debug("{}: Sending nym using decrypted verinym for {}", name, verinym.getDid());
-                    return sendNym(verinym.getDid(), verinym.getVerkey(), rolesByDid.get(verinym.getTheirDid()));
-                }));
+    public CompletableFuture<String> acceptVerinymRequest(Verinym verinym) throws IndyException {
+        log.debug("{} accepting verinym encrypted with did {}", name, verinym.getDid());
+       return sendNym(verinym.getDid(), verinym.getVerkey(), rolesByDid.get(verinym.getTheirDid()));
     }
 
-    public CompletableFuture<String> acceptConnectionResponse(AnoncryptedMessage encryptedConnectionResponse) throws IndyException {
-        return anonDecrypt(encryptedConnectionResponse, ConnectionResponse.class)
-                .thenCompose(wrapException((ConnectionResponse connectionResponse) -> {
-                    log.debug("{} Accepting connection response: {}", name, connectionResponse);
-                    return acceptConnectionResponse(connectionResponse)
-                            .thenApply((_void) -> connectionResponse.getDid());
-                }));
-    }
-
-    private CompletableFuture<Void> acceptConnectionResponse(ConnectionResponse connectionResponse) throws IndyException {
+    public CompletableFuture<String> acceptConnectionResponse(ConnectionResponse connectionResponse) throws IndyException {
         if (!openConnectionRequests.containsKey(connectionResponse.getNonce())) {
             log.info("No open connection request for nonce {}", connectionResponse.getNonce());
             throw new IndyWrapperException("Nonce not found");
@@ -95,7 +83,7 @@ public class TrustAnchor extends WalletOwner {
                     log.debug("Removing connectionRequest with nonce {}", connectionRequest.getNonce());
                     rolesByDid.put(connectionResponse.getDid(), connectionRequest.getRole());
                     openConnectionRequests.remove(connectionRequest.getNonce());
-                    return void_;
+                    return connectionResponse.getDid();
                 });
     }
 
