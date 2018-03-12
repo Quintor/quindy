@@ -92,8 +92,7 @@ public class Main {
         steward.anonDecrypt(newcomerConnectionResponse, ConnectionResponse.class)
                 .thenCompose(AsyncUtil.wrapException(steward::acceptConnectionResponse)).get();
 
-        AuthcryptedMessage verinym = newcomer.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class).getDid())
-                .thenCompose(AsyncUtil.wrapException(newcomer::authcrypt)).get();
+        AuthcryptedMessage verinym = newcomer.authcrypt(newcomer.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class).getDid())).get();
 
         steward.authDecrypt(verinym, Verinym.class)
                 .thenCompose(AsyncUtil.wrapException(steward::acceptVerinymRequest)).get();

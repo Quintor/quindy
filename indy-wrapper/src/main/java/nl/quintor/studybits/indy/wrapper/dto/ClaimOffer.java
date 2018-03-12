@@ -20,8 +20,7 @@ public class ClaimOffer implements Serializable, AuthCryptable {
     private JsonNode keyCorrectnessProof;
 
     private String nonce;
-    @JsonIgnore
-    private String myDid;
+
     @JsonIgnore
     @Setter
     private String theirDid;

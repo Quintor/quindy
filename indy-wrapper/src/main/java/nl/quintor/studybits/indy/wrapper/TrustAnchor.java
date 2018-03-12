@@ -4,13 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionResponse;
-import nl.quintor.studybits.indy.wrapper.dto.GetPairwiseResult;
 import nl.quintor.studybits.indy.wrapper.dto.Verinym;
 import nl.quintor.studybits.indy.wrapper.exception.IndyWrapperException;
-import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import org.hyperledger.indy.sdk.IndyException;
-import org.hyperledger.indy.sdk.did.Did;
-import org.hyperledger.indy.sdk.pairwise.Pairwise;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,22 +44,10 @@ public class TrustAnchor extends WalletOwner {
                 );
     }
 
-    public CompletableFuture<Verinym> createVerinymRequest(String targetDid) throws IndyException, JsonProcessingException {
+    public Verinym createVerinymRequest(String targetDid) throws IndyException, JsonProcessingException {
         log.info("{} Creating verinym request for targetDid: {}", name, targetDid);
 
-        return Pairwise.getPairwise(wallet.getWallet(), targetDid)
-                .thenApply(wrapException((String getPairwiseResult) ->
-                        JSONUtil.mapper.readValue(getPairwiseResult, GetPairwiseResult.class)
-                ))
-                .thenCompose(wrapException((GetPairwiseResult getPairwiseResult) ->
-                        Did.keyForDid(pool.getPool(), wallet.getWallet(), getPairwiseResult.getMyDid())
-                                .thenApply(wrapException((myKey) -> {
-                                            Verinym result = new Verinym(wallet.getMainDid(), wallet.getMainKey(), getPairwiseResult.getMyDid(), targetDid);
-                                            log.debug("Created verinym {}", result);
-                                            return result;
-                                        }
-                                ))
-                ));
+        return new Verinym(wallet.getMainDid(), wallet.getMainKey(), targetDid);
     }
 
     public CompletableFuture<String> acceptVerinymRequest(Verinym verinym) throws IndyException {

@@ -10,8 +10,7 @@ import lombok.*;
 public class Verinym implements Serializable, AuthCryptable {
     private String did;
     private String verkey;
-    @JsonIgnore
-    private String myDid;
+
     @JsonIgnore
     @Setter
     private String theirDid;

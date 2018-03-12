@@ -49,7 +49,6 @@ public class Prover extends WalletOwner {
                                     }));
                         })).thenApply(wrapException(claimRequestJson -> {
                             ClaimRequest claimRequest = JSONUtil.mapper.readValue(claimRequestJson, ClaimRequest.class);
-                            claimRequest.setMyDid(pairwiseResult.getMyDid());
                             claimRequest.setTheirDid(theirDid);
                             return claimRequest;
                         })))

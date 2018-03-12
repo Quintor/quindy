@@ -89,7 +89,6 @@ public class Issuer extends TrustAnchor {
                         wrapBiFunctionException((claimOfferJson, pairwiseResult) -> {
                             log.debug("{} Created claimOffer: {}", name, claimOfferJson);
                             ClaimOffer claimOffer = JSONUtil.mapper.readValue(claimOfferJson, ClaimOffer.class);
-                            claimOffer.setMyDid(pairwiseResult.getMyDid());
                             claimOffer.setTheirDid(targetDid);
                             log.debug("{} Created claimOffer object (toJSON()): {}", name, claimOffer.toJSON());
                             return claimOffer;
@@ -103,7 +102,6 @@ public class Issuer extends TrustAnchor {
                 .thenApply(wrapException((issuerCreateClaimResult) -> {
                     log.debug("{} Created claim json: {}", name, issuerCreateClaimResult.getClaimJson());
                     Claim claim = JSONUtil.mapper.readValue(issuerCreateClaimResult.getClaimJson(), Claim.class);
-                    claim.setMyDid(claimRequest.getMyDid());
                     claim.setTheirDid(claimRequest.getTheirDid());
                     return claim;
                 }));
