@@ -12,14 +12,10 @@ import org.hyperledger.indy.sdk.ledger.Ledger;
 import org.hyperledger.indy.sdk.pairwise.Pairwise;
 
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
-import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapPredicateException;
 
 @Slf4j
 public class WalletOwner {

@@ -2,7 +2,10 @@ package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
-import nl.quintor.studybits.indy.wrapper.dto.*;
+import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
+import nl.quintor.studybits.indy.wrapper.dto.ConnectionResponse;
+import nl.quintor.studybits.indy.wrapper.dto.GetPairwiseResult;
+import nl.quintor.studybits.indy.wrapper.dto.Verinym;
 import nl.quintor.studybits.indy.wrapper.exception.IndyWrapperException;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import org.hyperledger.indy.sdk.IndyException;

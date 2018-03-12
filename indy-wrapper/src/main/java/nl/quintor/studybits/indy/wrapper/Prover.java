@@ -1,15 +1,12 @@
 package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.ClaimOffer;
 import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.anoncreds.Anoncreds;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-
-import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
 public class Prover extends WalletOwner {
     private String masterSecretName;
