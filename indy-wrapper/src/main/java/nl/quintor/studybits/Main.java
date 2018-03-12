@@ -8,6 +8,8 @@ import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
 import org.hyperledger.indy.sdk.IndyException;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public class Main {
@@ -60,6 +62,23 @@ public class Main {
         .thenCompose(AsyncUtil.wrapException(alice::storeClaimOfferAndCreateClaimRequest))
                 .thenCompose(AsyncUtil.wrapException(alice::authcrypt)).get();
 
+
+        Map<String, Object> claimValues  = new HashMap<>();
+        claimValues.put("first_name", "Alice");
+        claimValues.put("last_name", "Garcia");
+        claimValues.put("degree", "Bachelor of Science, Marketing");
+        claimValues.put("status", "graduated");
+        claimValues.put("ssn", "123-45-6789");
+        claimValues.put("year", 2015);
+        claimValues.put("average", 5);
+
+        AuthcryptedMessage claim = faber.authDecrypt(transcriptClaimRequest, ClaimRequest.class)
+                .thenCompose(AsyncUtil.wrapException(claimRequest -> faber.createClaim(claimRequest, claimValues)))
+                .thenCompose(AsyncUtil.wrapException(faber::authcrypt)).get();
+
+
+        alice.authDecrypt(claim, Claim.class)
+                .thenCompose(AsyncUtil.wrapException(alice::storeClaim)).get();
     }
 
     private static void onboardIssuer(TrustAnchor steward, Issuer newcomer) throws InterruptedException, java.util.concurrent.ExecutionException, IndyException, java.io.IOException {
