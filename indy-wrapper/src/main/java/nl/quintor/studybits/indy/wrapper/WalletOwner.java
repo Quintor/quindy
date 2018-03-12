@@ -12,14 +12,10 @@ import org.hyperledger.indy.sdk.ledger.Ledger;
 import org.hyperledger.indy.sdk.pairwise.Pairwise;
 
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
-import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapPredicateException;
 
 @Slf4j
 public class WalletOwner {
@@ -32,6 +28,10 @@ public class WalletOwner {
         this.name = name;
         this.pool = pool;
         this.wallet = wallet;
+    }
+
+    CompletableFuture<String> submitRequest(String request) throws IndyException {
+        return Ledger.submitRequest(pool.getPool(), request);
     }
 
     CompletableFuture<String> signAndSubmitRequest(String request) throws IndyException {
@@ -80,6 +80,26 @@ public class WalletOwner {
                             return key;
                         });
 
+    }
+
+    CompletableFuture<Schema> getSchema(String did, SchemaKey schemaKey) throws JsonProcessingException, IndyException {
+        log.debug("{}: Calling buildGetSchemaRequest with submitter: {} destination {} GetSchema {}", name, did, schemaKey.getDid(), GetSchema.fromSchemaKey(schemaKey).toJSON());
+        return Ledger.buildGetSchemaRequest(did, schemaKey.getDid(), GetSchema.fromSchemaKey(schemaKey).toJSON())
+                .thenCompose(wrapException(this::submitRequest))
+                .thenApply(wrapException(getSchemaResponse -> {
+                    log.debug("{}: Got schema {} for schemaKey {}", name, getSchemaResponse, schemaKey);
+                    return JSONUtil.readObjectByPointer(getSchemaResponse, "/result", Schema.class);
+                }));
+    }
+
+    CompletableFuture<String> getClaimDef(String did, Schema schema, String issuerDid) throws IndyException {
+        log.debug("{} Getting claim def with did {} schema with seqNo {} and issuerDid {}", name, did, schema.getSeqNo(), issuerDid);
+        return Ledger.buildGetClaimDefTxn(did, schema.getSeqNo(), "CL", issuerDid)
+                .thenCompose(wrapException(request -> {
+                    log.debug("{} Submitting GetClaimDefTxn {}", name, request);
+                    return submitRequest(request);
+                }))
+                .thenApply(wrapException(response -> JSONUtil.mapper.readTree(response).at("/result").toString()));
     }
 
 
