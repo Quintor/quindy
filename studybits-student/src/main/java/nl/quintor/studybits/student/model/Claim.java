@@ -13,14 +13,13 @@ public class Claim {
     @Id
     @GeneratedValue
     private Long id;
-    private String values;
     @OneToOne
     private SchemaKey schemaKey;
+    private Integer revReqSeqNo;
+    private String values;
     private String signature;
     private String signatureCorrectnessProof;
     private String issuerDid;
-    private Integer revReqSeqNo;
-
     private String myDid;
     private String theirDid;
 }

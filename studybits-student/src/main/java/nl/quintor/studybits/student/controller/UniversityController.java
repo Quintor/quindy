@@ -19,7 +19,7 @@ public class UniversityController {
         if (universityRepository.getByName(name) != null)
             throw new IllegalArgumentException("University with name exists already.");
 
-        University university = new University(name, endpoint);
+        University university = new University(null, name, endpoint);
         universityRepository.save(university);
 
         return university;
