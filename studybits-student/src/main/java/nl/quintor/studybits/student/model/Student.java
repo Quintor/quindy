@@ -10,6 +10,8 @@ import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import java.util.List;
 
 @Getter
 @Entity
@@ -22,6 +24,8 @@ public class Student {
     @Setter
     private University originUniversity;
     private Prover prover;
+    @OneToMany
+    private List<ClaimOfferRecord> claims;
 
     public Student(String username, University originUniversity) throws Exception {
         this.username = username;

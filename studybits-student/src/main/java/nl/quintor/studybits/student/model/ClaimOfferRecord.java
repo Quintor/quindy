@@ -10,7 +10,7 @@ import javax.persistence.Id;
 @Entity
 @Getter
 @AllArgsConstructor
-public class Claim {
+public class ClaimOfferRecord {
     @Id
     private Long id;
     private Student owner;

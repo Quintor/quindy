@@ -1,10 +1,10 @@
 package nl.quintor.studybits.student.controller;
 
 import javassist.NotFoundException;
-import nl.quintor.studybits.student.interfaces.ClaimRepository;
+import nl.quintor.studybits.student.interfaces.ClaimOfferRecordRepository;
 import nl.quintor.studybits.student.interfaces.StudentRepository;
 import nl.quintor.studybits.student.interfaces.UniversityRepository;
-import nl.quintor.studybits.student.model.Claim;
+import nl.quintor.studybits.student.model.ClaimOfferRecord;
 import nl.quintor.studybits.student.model.Student;
 import nl.quintor.studybits.student.model.University;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +21,12 @@ public class StudentController {
     @Autowired
     private UniversityRepository universityRepository;
     @Autowired
-    private ClaimRepository claimRepository;
+    private ClaimOfferRecordRepository claimOfferRecordRepository;
 
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     public Student register(@RequestParam(value = "username") String username, @RequestParam(value = "university") String uniName) throws Exception {
         if (studentRepository.getByUsername(username) != null)
-            throw new NotFoundException("Student with username exists already.");
+            throw new IllegalArgumentException("Student with username exists already.");
 
         University university = universityRepository.getByName(uniName);
         if (university == null)
@@ -39,20 +39,20 @@ public class StudentController {
     }
 
     @RequestMapping(value = "/{studentId}/claims", method = RequestMethod.GET)
-    public List<Claim> getClaims(@PathVariable Long studentId) throws Exception {
+    public List<ClaimOfferRecord> getClaims(@PathVariable Long studentId) throws Exception {
         Student student = studentRepository.getById(studentId);
         if (student == null)
             throw new NotFoundException("Student with username not found. Maybe register first.");
 
-        return claimRepository.findAllByOwner(student);
+        return claimOfferRecordRepository.findAllByOwner(student);
     }
 
     @RequestMapping(value = "/{studentId}/claims/{claimId}", method = RequestMethod.GET)
-    public Claim getClaimById(@PathVariable Long studentId, @PathVariable Long claimId) throws Exception {
-        Claim claim = claimRepository.getById(claimId);
-        if (claim.getOwner().getId().equals(studentId))
+    public ClaimOfferRecord getClaimById(@PathVariable Long studentId, @PathVariable Long claimId) throws Exception {
+        ClaimOfferRecord claimOfferRecord = claimOfferRecordRepository.getById(claimId);
+        if (claimOfferRecord.getOwner().getId().equals(studentId))
             throw new NotFoundException("Claim with id not found for student.");
 
-        return claim;
+        return claimOfferRecord;
     }
 }

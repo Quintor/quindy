@@ -6,13 +6,12 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+@Getter
 @Entity
 @NoArgsConstructor
 public class University {
     @Id
     private Long id;
-    @Getter
     private String name;
-    @Getter
     private String endpoint;
 }
