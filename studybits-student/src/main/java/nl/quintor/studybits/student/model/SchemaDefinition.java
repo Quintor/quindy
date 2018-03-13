@@ -1,20 +1,21 @@
 package nl.quintor.studybits.student.model;
 
 import lombok.Data;
-import lombok.NonNull;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import java.util.List;
 
 @Data
 @Entity
-public class University {
+public class SchemaDefinition {
     @Id
     @GeneratedValue
     private Long id;
-    @NonNull
     private String name;
-    @NonNull
-    private String endpoint;
+    private String version;
+    @ElementCollection
+    private List<String> attrNames;
 }

@@ -1,40 +1,36 @@
 package nl.quintor.studybits.student.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 import nl.quintor.studybits.indy.wrapper.IndyPool;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import java.util.List;
+import javax.persistence.OneToOne;
 
-@Getter
+@Data
 @Entity
-@NoArgsConstructor
 public class Student {
     @Id
+    @GeneratedValue
     private Long id;
-    @Setter
     private String username;
-    @Setter
+    @OneToOne
     private University originUniversity;
-    private Prover prover;
-    @OneToMany
-    private List<ClaimOfferRecord> claims;
+    @OneToOne
+    private MetaWallet metaWallet;
 
     public Student(String username, University originUniversity) throws Exception {
         this.username = username;
         this.originUniversity = originUniversity;
-        this.prover = createProver(username);
+        this.metaWallet = new MetaWallet(username);
     }
 
-    private Prover createProver(String username) throws Exception {
-        IndyWallet indyWallet = new IndyWallet(username);
+    public Prover getProver() throws Exception {
+        IndyWallet indyWallet = metaWallet.getWallet();
         IndyPool indyPool = new IndyPool(PoolUtils.createPoolLedgerConfig());
         return new Prover(username, indyPool, indyWallet);
     }

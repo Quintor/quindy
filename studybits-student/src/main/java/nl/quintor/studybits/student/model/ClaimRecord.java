@@ -1,20 +1,20 @@
 package nl.quintor.studybits.student.model;
 
 import lombok.Data;
-import lombok.NonNull;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 
 @Data
 @Entity
-public class University {
+public class ClaimRecord {
     @Id
     @GeneratedValue
     private Long id;
-    @NonNull
-    private String name;
-    @NonNull
-    private String endpoint;
+    @OneToOne
+    private final Student owner;
+    @OneToOne
+    private final Claim claim;
 }

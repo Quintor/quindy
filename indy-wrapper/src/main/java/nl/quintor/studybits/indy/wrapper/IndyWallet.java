@@ -2,6 +2,7 @@ package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.MyDidInfo;
 import org.apache.commons.lang3.StringUtils;
@@ -19,8 +20,10 @@ public class IndyWallet implements AutoCloseable {
     private Wallet wallet;
     private String name;
     @Getter
+    @Setter
     private String mainDid;
     @Getter
+    @Setter
     private String mainKey;
 
     public IndyWallet( String name ) throws IndyException, ExecutionException, InterruptedException {
@@ -28,7 +31,13 @@ public class IndyWallet implements AutoCloseable {
         this.name = name;
     }
 
-    public static IndyWallet create( IndyPool pool, String name, String seed ) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
+    public IndyWallet(String name, String mainDid, String mainKey) throws InterruptedException, ExecutionException, IndyException {
+        this(name);
+        this.mainDid = mainDid;
+        this.mainKey = mainKey;
+    }
+
+    public static IndyWallet create(IndyPool pool, String name, String seed) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
         Wallet.createWallet(pool.getPoolName(), name, "default", null, null).get();
 
         IndyWallet indyWallet = new IndyWallet(name);
