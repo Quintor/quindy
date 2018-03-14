@@ -77,8 +77,8 @@ public class Main {
     }
 
     private static void removeIndyClientDirectory() throws Exception {
-        String user = System.getenv("USER");
-        File indyClientDir = Paths.get("home", user, ".indy_client").toFile();
+        String homeDir = System.getProperty("user.home");
+        File indyClientDir = Paths.get(homeDir, ".indy_client").toFile();
         FileUtils.deleteDirectory(indyClientDir);
     }
 
