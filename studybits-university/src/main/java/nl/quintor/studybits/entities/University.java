@@ -21,10 +21,7 @@ public class University {
 
     private String name;
 
-    @OneToOne
-    private IndyConnection connection;
-
-    @OneToMany(mappedBy = "university")
+    @OneToMany(mappedBy = "university", cascade = CascadeType.MERGE)
     public Set<Student> students;
 
 }

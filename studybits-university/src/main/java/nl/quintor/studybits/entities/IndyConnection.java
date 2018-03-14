@@ -19,17 +19,16 @@ public class IndyConnection {
     @GeneratedValue
     private Long id;
 
-    private String myDid;
+    private String did;
 
-    private String myVerKey;
-
-    private String theirDid;
-
-    private String theirVerKey;
-
-    private String nonce;
-
-    @OneToOne(mappedBy = "connection")
-    private Student student;
+//    private String myDid;
+//
+//    private String myVerKey;
+//
+//    private String theirDid;
+//
+//    private String theirVerKey;
+//
+//    private String nonce;
 
 }

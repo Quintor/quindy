@@ -2,6 +2,7 @@ package nl.quintor.studybits;
 
 import nl.quintor.studybits.entities.Student;
 import nl.quintor.studybits.entities.University;
+import nl.quintor.studybits.indy.wrapper.Issuer;
 import nl.quintor.studybits.indy.wrapper.TrustAnchor;
 import nl.quintor.studybits.repositories.StudentRepository;
 import nl.quintor.studybits.repositories.UniversityRepository;
@@ -25,17 +26,13 @@ public class Seeder {
     private UniversityRepository universityRepository;
 
     @Autowired
-    @Qualifier("universityTrustAnchor")
-    private TrustAnchor rug;
+    private Issuer[] issuers;
 
     @EventListener
     public void seed(ContextRefreshedEvent event) {
         if(isEmpty()) {
             List<University> universities = seedUniversities();
-            Map<String, University> univerityMap = universities
-                    .stream()
-                    .collect(Collectors.toMap(x -> x.getName(),x -> x ));
-            seedStudents(univerityMap);
+            seedStudents(universities);
             studentRepository.flush();
         }
     }
@@ -45,14 +42,15 @@ public class Seeder {
     }
 
     private List<University> seedUniversities() {
-        University u1 = createUniversity("rug");
-        University u2 = createUniversity("gent");
-        List<University> universities = Arrays.asList(u1, u2);
+        List<University> universities = Arrays
+                .stream(issuers)
+                .map(x -> createUniversity(x.getName()))
+                .collect(Collectors.toList());
         return universityRepository.saveAll(universities);
     }
 
-    private List<Student> seedStudents(Map<String, University> universities) {
-        University rug = universities.get("rug");
+    private List<Student> seedStudents(List<University> universities) {
+        University rug = universities.get(0);
         Student s1 = createStudent("student1", "Cor", "Nuiten", rug, "2017/18");
         Student s2 = createStudent("student2", "Connie", "Veren", rug, "2016/17", "2017/18");
         Student s3 = createStudent("student2", "Fokje", "Modder", rug, "2016/17", "2017/18");
@@ -61,7 +59,7 @@ public class Seeder {
     }
 
     private University createUniversity(String name) {
-        return new University(null, name, null, new HashSet<>());
+        return new University(null, name, new HashSet<>());
     }
 
     private Student createStudent(String userName, String firstName, String lastName, University university, String... academicYears) {

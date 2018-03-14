@@ -5,6 +5,7 @@ import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.indy.wrapper.Issuer;
 import nl.quintor.studybits.indy.wrapper.TrustAnchor;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
+import org.apache.commons.io.FileUtils;
 import org.hyperledger.indy.sdk.IndyException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,9 @@ import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import javax.sql.DataSource;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 
 
@@ -31,22 +35,22 @@ import java.util.concurrent.ExecutionException;
 @EnableSwagger2
 public class Main {
 
-    @Value("${datasource.url}")
-    private String url;
-
-    @Value("${datasource.username}")
-    private String username;
-
-    @Value("${datasource.password}")
-    private String  password;
+//    @Value("${datasource.url}")
+//    private String url;
+//
+//    @Value("${datasource.username}")
+//    private String username;
+//
+//    @Value("${datasource.password}")
+//    private String  password;
 
     @Value("${indy.poolname}")
     private String poolName;
 
-    @Bean
-    private DataSource dataSource() {
-        return new DriverManagerDataSource(url, username, password);
-    }
+//    @Bean
+//    private DataSource dataSource() {
+//        return new DriverManagerDataSource(url, username, password);
+//    }
 
     @Bean
     public Docket productApi() {
@@ -68,8 +72,14 @@ public class Main {
     }
 
     public static void main(String[] args) throws Exception {
-        Issuer issues = new Issuer("", null, null);
+        removeIndyClientDirectory();
         SpringApplication.run(Main.class, args);
+    }
+
+    private static void removeIndyClientDirectory() throws Exception {
+        String user = System.getenv("USER");
+        File indyClientDir = Paths.get("home", user, ".indy_client").toFile();
+        FileUtils.deleteDirectory(indyClientDir);
     }
 
 }

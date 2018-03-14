@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 public class IndyWallet implements AutoCloseable {
     @Getter
     private Wallet wallet;
+    @Getter
     private String name;
     @Getter
     private String mainDid;

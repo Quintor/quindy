@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@BackOfficeRestController
-@RequestMapping("/students")
+@RestController
+@RequestMapping("/backoffice/students")
 public class StudentController {
 
     @Autowired
