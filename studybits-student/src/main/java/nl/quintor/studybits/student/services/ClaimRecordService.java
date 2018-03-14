@@ -1,11 +1,10 @@
 package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
-import nl.quintor.studybits.student.interfaces.ClaimOfferRecordRepository;
 import nl.quintor.studybits.student.model.Claim;
 import nl.quintor.studybits.student.model.ClaimRecord;
 import nl.quintor.studybits.student.model.Student;
+import nl.quintor.studybits.student.repositories.ClaimOfferRecordRepository;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,10 +25,12 @@ public class ClaimRecordService {
     }
 
     public List<ClaimRecord> findAllClaims(Long studentId) {
-        studentService.checkIfPresentOrElseThrow(studentId);
+        Student owner = studentService
+                .findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
 
         return claimOfferRecordRepository
-                .findAll()
+                .findAllByOwner(owner)
                 .stream()
                 .map(this::toModel)
                 .collect(Collectors.toList());
@@ -39,7 +40,6 @@ public class ClaimRecordService {
         return claimOfferRecordRepository.findById(claimId);
     }
 
-    @SneakyThrows
     public ClaimRecord createAndSave(Long studentId, Claim claim) {
         Student student = studentService
                 .findById(studentId)
@@ -49,7 +49,6 @@ public class ClaimRecordService {
         return claimOfferRecordRepository.save(claimRecord);
     }
 
-    @SneakyThrows
     public ClaimRecord updateClaimById(Long studentId, Long claimId, ClaimRecord claimRecord) {
         claimRecord.setId(claimId);
         return claimOfferRecordRepository.save(claimRecord);

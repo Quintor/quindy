@@ -2,8 +2,8 @@ package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
-import nl.quintor.studybits.student.interfaces.MetaWalletRepository;
 import nl.quintor.studybits.student.model.MetaWallet;
+import nl.quintor.studybits.student.repositories.MetaWalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package nl.quintor.studybits.student.interfaces;
+package nl.quintor.studybits.student.repositories;
 
 import nl.quintor.studybits.student.model.ClaimRecord;
 import nl.quintor.studybits.student.model.Student;

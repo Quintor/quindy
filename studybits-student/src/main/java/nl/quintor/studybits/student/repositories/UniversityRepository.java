@@ -1,9 +1,12 @@
-package nl.quintor.studybits.student.interfaces;
+package nl.quintor.studybits.student.repositories;
 
 import nl.quintor.studybits.student.model.University;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
 
 public interface UniversityRepository extends JpaRepository<University, Long> {
-    University getByName(@Param("name") String name);
+    boolean existsByName(String name);
+
+    Optional<University> findByName(String name);
 }

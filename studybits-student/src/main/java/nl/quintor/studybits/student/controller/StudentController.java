@@ -3,22 +3,33 @@ package nl.quintor.studybits.student.controller;
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.student.model.Student;
 import nl.quintor.studybits.student.services.StudentService;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
-@AllArgsConstructor
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 @RestController
 @RequestMapping("/student")
 public class StudentController {
-
     private final StudentService studentService;
 
-    @RequestMapping(value = "/register", method = RequestMethod.POST)
+    @PostMapping("/register")
     Student register(@RequestParam(value = "username") String username, @RequestParam(value = "university") String uniName) {
         return studentService.createAndSave(username, uniName);
     }
+
+    @GetMapping("/{studentId}")
+    Student findById(@PathVariable Long studentId) {
+        return studentService
+                .findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
+    }
+
+    @PostMapping("/{studentId}")
+    Student updateById(@PathVariable Long studentId, @RequestParam("student") Student student) {
+        return studentService.updateById(studentId, student);
+    }
+
+
 
 //    // TODO: Adapt this function to the University backend and check whether this needs to be an own endpoint at all.
 //    @RequestMapping(value = "/onboard", method = RequestMethod.POST)
