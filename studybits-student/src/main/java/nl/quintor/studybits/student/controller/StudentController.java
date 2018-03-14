@@ -1,26 +1,22 @@
 package nl.quintor.studybits.student.controller;
 
-import nl.quintor.studybits.student.model.ClaimRecord;
+import lombok.AllArgsConstructor;
 import nl.quintor.studybits.student.model.Student;
-import nl.quintor.studybits.student.services.ClaimRecordService;
 import nl.quintor.studybits.student.services.StudentService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
+@AllArgsConstructor
 @RestController
 @RequestMapping("/student")
 public class StudentController {
 
-    @Autowired
-    private StudentService studentService;
-
-    @Autowired
-    private ClaimRecordService claimRecordService;
+    private final StudentService studentService;
 
     @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public Student register(@RequestParam(value = "username") String username, @RequestParam(value = "university") String uniName) throws Exception {
+    Student register(@RequestParam(value = "username") String username, @RequestParam(value = "university") String uniName) {
         return studentService.createAndSave(username, uniName);
     }
 
@@ -52,13 +48,5 @@ public class StudentController {
 //        return ResponseEntity.ok().build();
 //    }
 
-    @RequestMapping(value = "/{studentId}/claims", method = RequestMethod.GET)
-    public List<ClaimRecord> getClaims(@PathVariable Long studentId) throws Exception {
-        return claimRecordService.getAllClaimsForStudent(studentId);
-    }
 
-    @RequestMapping(value = "/{studentId}/claims/{claimId}", method = RequestMethod.GET)
-    public ClaimRecord getClaimForStudent(@PathVariable Long studentId, @PathVariable Long claimId) throws Exception {
-        return claimRecordService.getClaimForStudent(claimId, studentId);
-    }
 }

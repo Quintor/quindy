@@ -1,34 +1,41 @@
 package nl.quintor.studybits.student.services;
 
 import javassist.NotFoundException;
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import nl.quintor.studybits.student.interfaces.StudentRepository;
 import nl.quintor.studybits.student.model.MetaWallet;
 import nl.quintor.studybits.student.model.Student;
 import nl.quintor.studybits.student.model.University;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+import java.util.Optional;
+
+
+@Service
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class StudentService {
-    @Autowired
     private StudentRepository studentRepository;
-
-    @Autowired
     private UniversityService universityService;
-
-    @Autowired
     private MetaWalletService metaWalletService;
 
-    public Boolean exists(String username) {
-        return studentRepository.getByUsername(username) != null;
+    @SneakyThrows
+    public Optional<Student> findById(Long studentId) {
+        return studentRepository
+                .findById(studentId);
     }
 
-    public Student getById(Long studentId) {
-        return studentRepository.getById(studentId);
+    @SneakyThrows
+    void checkIfPresentOrElseThrow(Long studentId) {
+        studentRepository
+                .findById(studentId)
+                .orElseThrow(() -> new NotFoundException("Student with username not found."));
     }
 
-    public Student createAndSave(String username, String uniName) throws Exception {
-        if (exists(username))
+    @SneakyThrows
+    public Student createAndSave(String username, String uniName) {
+        if (studentRepository.findByUsername(username).isPresent())
             throw new IllegalArgumentException("Student with username exists already.");
 
         if (!universityService.exists(uniName))
@@ -41,3 +48,4 @@ public class StudentService {
         return studentRepository.save(student);
     }
 }
+

@@ -1,18 +1,18 @@
 package nl.quintor.studybits.student.services;
 
+import lombok.AllArgsConstructor;
 import nl.quintor.studybits.indy.wrapper.IndyPool;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class IndyWalletService {
-    @Autowired
-    private IndyPoolService indyPoolService;
+    private IndyPool indyPool;
 
     public IndyWallet create(String username) throws Exception {
-        IndyPool indyPool = indyPoolService.create();
         String seed = createSeed(username);
 
         return IndyWallet.create(indyPool, username, seed);

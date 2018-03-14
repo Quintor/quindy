@@ -1,13 +1,14 @@
 package nl.quintor.studybits.student.services;
 
+import lombok.AllArgsConstructor;
 import nl.quintor.studybits.student.interfaces.UniversityRepository;
 import nl.quintor.studybits.student.model.University;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class UniversityService {
-    @Autowired
     private UniversityRepository universityRepository;
 
     public Boolean exists(String name) {

@@ -1,39 +1,57 @@
 package nl.quintor.studybits.student.services;
 
-import javassist.NotFoundException;
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import nl.quintor.studybits.student.interfaces.ClaimOfferRecordRepository;
+import nl.quintor.studybits.student.model.Claim;
 import nl.quintor.studybits.student.model.ClaimRecord;
 import nl.quintor.studybits.student.model.Student;
+import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-@Component
+@Service
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class ClaimRecordService {
-    @Autowired
     private ClaimOfferRecordRepository claimOfferRecordRepository;
-
-    @Autowired
     private StudentService studentService;
+    private Mapper mapper;
 
-    public List<ClaimRecord> getAllClaimsForStudent(Long studentId) throws Exception {
-        Student student = studentService.getById(studentId);
-        if (student == null)
-            throw new NotFoundException("Student with username not found.");
-
-        return claimOfferRecordRepository.findAllByOwner(student);
+    private ClaimRecord toModel(Object claimRecord) {
+        return mapper.map(claimRecord, ClaimRecord.class);
     }
 
-    public ClaimRecord getClaimForStudent(Long claimId, Long studentId) throws Exception {
-        ClaimRecord claimRecord = claimOfferRecordRepository.getById(claimId);
-        ensureOwnership(claimRecord, studentId);
+    public List<ClaimRecord> findAllClaims(Long studentId) {
+        studentService.checkIfPresentOrElseThrow(studentId);
 
-        return claimRecord;
+        return claimOfferRecordRepository
+                .findAll()
+                .stream()
+                .map(this::toModel)
+                .collect(Collectors.toList());
     }
 
-    public void ensureOwnership(ClaimRecord claimRecord, long studentId) throws Exception {
-        if (claimRecord.getOwner().getId().equals(studentId))
-            throw new NotFoundException("Claim with id not found for student.");
+    public Optional<ClaimRecord> findById(Long claimId) {
+        return claimOfferRecordRepository.findById(claimId);
+    }
+
+    @SneakyThrows
+    public ClaimRecord createAndSave(Long studentId, Claim claim) {
+        Student student = studentService
+                .findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
+        ClaimRecord claimRecord = new ClaimRecord(student, claim);
+
+        return claimOfferRecordRepository.save(claimRecord);
+    }
+
+    @SneakyThrows
+    public ClaimRecord updateClaimById(Long studentId, Long claimId, ClaimRecord claimRecord) {
+        claimRecord.setId(claimId);
+        return claimOfferRecordRepository.save(claimRecord);
     }
 }
