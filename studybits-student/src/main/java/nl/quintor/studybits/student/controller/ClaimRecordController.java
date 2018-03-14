@@ -34,9 +34,9 @@ public class ClaimRecordController {
                 .orElseThrow(() -> new IllegalArgumentException("Claim with id not found."));
     }
 
-    @PostMapping("/claims/{claimId}")
-    ClaimRecord updateClaimById(@PathVariable Long studentId, @PathVariable Long claimId, @RequestParam("claim") ClaimRecord claimRecord) {
-        return claimRecordService.updateClaimById(studentId, claimId, claimRecord);
+    @PutMapping("/claims/{claimId}")
+    void updateClaimById(@PathVariable Long studentId, @PathVariable Long claimId, @RequestParam("claim") ClaimRecord claimRecord) {
+        claimRecordService.updateClaimById(studentId, claimId, claimRecord);
     }
 }
 

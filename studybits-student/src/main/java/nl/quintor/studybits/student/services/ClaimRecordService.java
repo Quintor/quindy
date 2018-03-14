@@ -24,6 +24,21 @@ public class ClaimRecordService {
         return mapper.map(claimRecord, ClaimRecord.class);
     }
 
+    public ClaimRecord createAndSave(Long studentId, Claim claim) {
+        Student student = studentService
+                .findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
+        ClaimRecord claimRecord = new ClaimRecord(student, claim);
+
+        return claimOfferRecordRepository.save(claimRecord);
+    }
+
+    public Optional<ClaimRecord> findById(Long claimId) {
+        return claimOfferRecordRepository
+                .findById(claimId)
+                .map(this::toModel);
+    }
+
     public List<ClaimRecord> findAllClaims(Long studentId) {
         Student owner = studentService
                 .findById(studentId)
@@ -36,21 +51,13 @@ public class ClaimRecordService {
                 .collect(Collectors.toList());
     }
 
-    public Optional<ClaimRecord> findById(Long claimId) {
-        return claimOfferRecordRepository.findById(claimId);
-    }
+    public void updateClaimById(Long studentId, Long claimId, ClaimRecord claimRecord) {
+        if (!claimOfferRecordRepository.existsById(claimId))
+            throw new IllegalArgumentException("ClaimRecord with id not found.");
 
-    public ClaimRecord createAndSave(Long studentId, Claim claim) {
-        Student student = studentService
-                .findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
-        ClaimRecord claimRecord = new ClaimRecord(student, claim);
+        // TODO: Add ownership check
 
-        return claimOfferRecordRepository.save(claimRecord);
-    }
-
-    public ClaimRecord updateClaimById(Long studentId, Long claimId, ClaimRecord claimRecord) {
         claimRecord.setId(claimId);
-        return claimOfferRecordRepository.save(claimRecord);
+        claimOfferRecordRepository.save(claimRecord);
     }
 }

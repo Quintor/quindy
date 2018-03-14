@@ -6,10 +6,13 @@ import nl.quintor.studybits.student.model.MetaWallet;
 import nl.quintor.studybits.student.model.Student;
 import nl.quintor.studybits.student.model.University;
 import nl.quintor.studybits.student.repositories.StudentRepository;
+import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -18,6 +21,11 @@ public class StudentService {
     private StudentRepository studentRepository;
     private UniversityService universityService;
     private MetaWalletService metaWalletService;
+    private Mapper mapper;
+
+    private Student toModel(Object student) {
+        return mapper.map(student, Student.class);
+    }
 
     @SneakyThrows
     public Student createAndSave(String username, String uniName) {
@@ -35,19 +43,31 @@ public class StudentService {
 
     public Optional<Student> findById(Long studentId) {
         return studentRepository
-                .findById(studentId);
+                .findById(studentId)
+                .map(this::toModel);
     }
 
-    public Optional<Student> findByUsername(String username) {
-        return studentRepository.findByUsername(username);
+    public List<Student> findAll() {
+        return studentRepository
+                .findAll()
+                .stream()
+                .map(this::toModel)
+                .collect(Collectors.toList());
     }
 
-    public Student updateById(Long studentId, Student student) {
+    public void updateById(Long studentId, Student student) {
         if (!studentRepository.existsById(studentId))
             throw new IllegalArgumentException("Student with id not found.");
 
         student.setId(studentId);
-        return studentRepository.save(student);
+        studentRepository.save(student);
+    }
+
+    public void deleteById(Long studentId) {
+        if (!studentRepository.existsById(studentId))
+            throw new IllegalArgumentException("University with id not found.");
+
+        studentRepository.deleteById(studentId);
     }
 }
 

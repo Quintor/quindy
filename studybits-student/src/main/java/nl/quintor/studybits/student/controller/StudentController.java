@@ -6,6 +6,8 @@ import nl.quintor.studybits.student.services.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 @RestController
 @RequestMapping("/student")
@@ -24,12 +26,20 @@ public class StudentController {
                 .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
     }
 
-    @PostMapping("/{studentId}")
-    Student updateById(@PathVariable Long studentId, @RequestParam("student") Student student) {
-        return studentService.updateById(studentId, student);
+    @GetMapping("")
+    List<Student> findAll() {
+        return studentService.findAll();
     }
 
+    @PutMapping("/{studentId}")
+    void updateById(@PathVariable Long studentId, @RequestParam("student") Student student) {
+        studentService.updateById(studentId, student);
+    }
 
+    @DeleteMapping("/{studentId}")
+    void deleteById(@PathVariable Long studentId) {
+        studentService.deleteById(studentId);
+    }
 
 //    // TODO: Adapt this function to the University backend and check whether this needs to be an own endpoint at all.
 //    @RequestMapping(value = "/onboard", method = RequestMethod.POST)

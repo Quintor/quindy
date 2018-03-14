@@ -21,10 +21,6 @@ public class UniversityService {
         return mapper.map(university, University.class);
     }
 
-    public boolean existsByName(String name) {
-        return universityRepository.existsByName(name);
-    }
-
     public University createAndSave(String name, String endpoint) {
         if (universityRepository.existsByName(name))
             throw new IllegalArgumentException("University with name exists already.");
@@ -34,11 +30,15 @@ public class UniversityService {
     }
 
     public Optional<University> findById(Long uniId) {
-        return universityRepository.findById(uniId);
+        return universityRepository
+                .findById(uniId)
+                .map(this::toModel);
     }
 
     public Optional<University> findByName(String name) {
-        return universityRepository.findByName(name);
+        return universityRepository
+                .findByName(name)
+                .map(this::toModel);
     }
 
     public List<University> findAll() {
