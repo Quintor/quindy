@@ -4,5 +4,6 @@ import lombok.Data;
 
 @Data
 public class OnboardFinalize {
-    private String encryptedHexData;
+    private byte[] message;
+    private String targetDid;
 }

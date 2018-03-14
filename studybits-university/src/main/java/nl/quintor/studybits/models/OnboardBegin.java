@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class OnboardBegin {
-    private final String did;
-    private final String nonce;
+    private String did;
+    private String nonce;
 }

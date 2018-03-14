@@ -8,9 +8,12 @@ import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionResponse;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
+import nl.quintor.studybits.models.OnboardBegin;
+import nl.quintor.studybits.models.OnboardFinalize;
 import nl.quintor.studybits.repositories.StudentRepository;
 import nl.quintor.studybits.repositories.UniversityRepository;
 import org.apache.commons.lang3.Validate;
+import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,31 +25,32 @@ import java.util.stream.Collectors;
 @Service
 public class OnboardingService {
 
+    @Autowired
+    private Mapper mapper;
+
+    @Autowired
     private StudentRepository studentRepository;
 
     private Map<String, Issuer> issuers;
 
     @Autowired
-    public OnboardingService(StudentRepository studentRepository, Issuer[] issuers) {
-        this.studentRepository = studentRepository;
+    public OnboardingService(Issuer[] issuers) {
         this.issuers = Arrays
                 .stream(issuers)
                 .collect(Collectors.toMap(x -> x.getName().toLowerCase(), x -> x));
     }
 
     @SneakyThrows
-    public ConnectionRequest onboardBegin(String universityName, String userName) throws Exception  {
+    public OnboardBegin onboardBegin(String universityName, String userName) throws Exception  {
         return withIssuerAndStudent(universityName, userName, (issuer, student) -> {
-            Validate.isTrue(student.getConnection() == null, "Onboarding already completed!");
-            return createConnectionRequest(issuer, student);
+            return createOnboardBegin(issuer, student);
         });
     }
 
     @SneakyThrows
-    public Boolean onboardFinalize(String universityName, String userName, AnoncryptedMessage anoncryptedMessage) {
+    public Boolean onboardFinalize(String universityName, String userName, OnboardFinalize onboardFinalize) {
         return withIssuerAndStudent(universityName, userName, (issuer, student) -> {
-            Validate.isTrue(student.getConnection() == null, "Onboarding already completed!");
-            String newcomerDid = processAnoncryptedMessage(issuer, anoncryptedMessage);
+            String newcomerDid = processOnboardFinalize(issuer, onboardFinalize);
             student.setConnection(new IndyConnection(null, newcomerDid));
             studentRepository.saveAndFlush(student);
             return true;
@@ -57,18 +61,21 @@ public class OnboardingService {
         Issuer issuer = issuers.get(universityName.toLowerCase());
         Student student = studentRepository.findByUserName(userName)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found!"));
+        Validate.isTrue(student.getConnection() == null, "Onboarding already completed!");
         Validate.isTrue(student.university.getName().equalsIgnoreCase(universityName), "Onboarding failed because this is not a student of the university!");
         return func.apply(issuer, student);
     }
 
     @SneakyThrows
-    private ConnectionRequest createConnectionRequest(Issuer issuer, Student student) {
-        return issuer.createConnectionRequest(student.getUserName(), null).get();
+    private OnboardBegin createOnboardBegin(Issuer issuer, Student student) {
+        ConnectionRequest connect = issuer.createConnectionRequest(student.getUserName(), null).get();
+        return mapper.map(connect, OnboardBegin.class);
     }
 
     @SneakyThrows
-    private String processAnoncryptedMessage(Issuer issuer, AnoncryptedMessage anoncryptedMessage) {
-        return issuer.anonDecrypt(anoncryptedMessage, ConnectionResponse.class)
+    private String processOnboardFinalize(Issuer issuer, OnboardFinalize onboardFinalize) {
+        AnoncryptedMessage message = mapper.map(onboardFinalize, AnoncryptedMessage.class);
+        return issuer.anonDecrypt(message, ConnectionResponse.class)
                 .thenCompose(AsyncUtil.wrapException(issuer::acceptConnectionResponse)).get();
     }
 
