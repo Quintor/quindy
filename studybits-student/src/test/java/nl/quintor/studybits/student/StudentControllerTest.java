@@ -51,6 +51,7 @@ public class StudentControllerTest {
         // Arrange
         Student testObject = new Student(randLong(), randString(), null, null);
         when(studentService.createAndSave(anyString(), anyString())).thenReturn(testObject);
+
         // Act
         MvcResult response = mockMvc.perform(
                 post("/student/register")
@@ -59,6 +60,7 @@ public class StudentControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
+        // Assert
         ObjectMapper mapper = new ObjectMapper();
         Student result = mapper.readValue(response.getResponse().getContentAsString(), Student.class);
         assertEquals(testObject, result);

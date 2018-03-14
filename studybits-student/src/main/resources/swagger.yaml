@@ -1,0 +1,14 @@
+swagger: "2.0"
+info:
+  version: 0.1.0
+  title: StudyBits Student Backend API
+
+host: api.studybits.nl
+basePath: /v1
+schemes:
+  - http
+
+paths:
+  /claims:
+    get:
+     summary: Returns a list
