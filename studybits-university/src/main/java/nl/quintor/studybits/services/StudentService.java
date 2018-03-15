@@ -23,9 +23,17 @@ public class StudentService {
         return mapper.map(student, Student.class);
     }
 
-    public List<Student> getAllStudents() {
+    public List<Student> findAllStudents() {
         return studentRepository
                 .findAll()
+                .stream()
+                .map(this::toModel)
+                .collect(Collectors.toList());
+    }
+
+    public List<Student> findAllForUniversity(String universityName) {
+        return studentRepository
+                .findAllByUniversityNameIgnoreCase(universityName)
                 .stream()
                 .map(this::toModel)
                 .collect(Collectors.toList());
@@ -37,12 +45,11 @@ public class StudentService {
                 .map(this::toModel);
     }
 
-    public Optional<Student> findByUserName(String userName) {
+    public Optional<Student> findByUniversityAndUserName(String universityName, String userName) {
         return studentRepository
-                .findByUserName(userName)
+                .findByUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName)
                 .map(this::toModel);
     }
-
 
 
 }

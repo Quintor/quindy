@@ -48,6 +48,10 @@ public class Issuer extends TrustAnchor {
 
     public CompletableFuture<SchemaKey> createAndSendSchema(String name, String version, String... attrNames) throws IndyException, JsonProcessingException {
         SchemaDefinition schemaDefinition = new SchemaDefinition(name, version, Arrays.asList(attrNames));
+        return createAndSendSchema(schemaDefinition);
+    }
+
+    public CompletableFuture<SchemaKey> createAndSendSchema(SchemaDefinition schemaDefinition) throws IndyException, JsonProcessingException {
         SchemaKey schemaKey = SchemaKey.fromSchema(schemaDefinition, issuerDid);
 
         log.debug("{}: Creating schemaDefinition: {} with did: {}", this.name, schemaDefinition.toJSON(), issuerDid);

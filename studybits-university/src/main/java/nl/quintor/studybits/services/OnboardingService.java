@@ -11,7 +11,6 @@ import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.models.OnboardBegin;
 import nl.quintor.studybits.models.OnboardFinalize;
 import nl.quintor.studybits.repositories.StudentRepository;
-import nl.quintor.studybits.repositories.UniversityRepository;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,10 +40,8 @@ public class OnboardingService {
     }
 
     @SneakyThrows
-    public OnboardBegin onboardBegin(String universityName, String userName) throws Exception  {
-        return withIssuerAndStudent(universityName, userName, (issuer, student) -> {
-            return createOnboardBegin(issuer, student);
-        });
+    public OnboardBegin onboardBegin(String universityName, String userName) {
+        return withIssuerAndStudent(universityName, userName, this::createOnboardBegin);
     }
 
     @SneakyThrows
@@ -59,10 +56,10 @@ public class OnboardingService {
 
     private <R> R withIssuerAndStudent(String universityName, String userName, BiFunction<Issuer, Student, R> func) {
         Issuer issuer = issuers.get(universityName.toLowerCase());
-        Student student = studentRepository.findByUserName(userName)
+        Student student = studentRepository
+                .findByUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found!"));
         Validate.isTrue(student.getConnection() == null, "Onboarding already completed!");
-        Validate.isTrue(student.university.getName().equalsIgnoreCase(universityName), "Onboarding failed because this is not a student of the university!");
         return func.apply(issuer, student);
     }
 

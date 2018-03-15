@@ -25,12 +25,12 @@ public class UniversitiesBeanConfig {
     private TrustAnchor steward;
 
     @Bean("RugUniversity")
-    public Issuer rugUniversity() throws Exception {
+    public Issuer rugUniversity() {
         return ensureIssuer("Rug");
     }
 
     @Bean("GentUniversity")
-    public Issuer gentUniversity() throws Exception {
+    public Issuer gentUniversity() {
         return ensureIssuer("Gent");
     }
 

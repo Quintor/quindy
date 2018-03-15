@@ -22,6 +22,6 @@ public class University {
     private String name;
 
     @OneToMany(mappedBy = "university", cascade = CascadeType.MERGE)
-    public Set<Student> students;
+    private Set<Student> students;
 
 }

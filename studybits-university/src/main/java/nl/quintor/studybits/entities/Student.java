@@ -22,12 +22,12 @@ public class Student {
     private String lastName;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    public University university;
+    private University university;
 
     @OneToOne
     private IndyConnection connection;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Column(nullable = false)
-    private Set<String> AcademicYears;
+    private Set<String> academicYears;
 }
