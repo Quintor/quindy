@@ -4,22 +4,23 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
 
 @Data
-@Entity
-@NoArgsConstructor
 @AllArgsConstructor
-public class Student {
+@NoArgsConstructor
+public class ConnectionRecord {
     @Id
     @GeneratedValue
     private Long id;
-    private String username;
-    @OneToOne
-    private University originUniversity;
-    @OneToOne
-    private MetaWallet metaWallet;
+
+    private Student student;
+    private University university;
+
+    private String did;
+    private String nonce;
+    private String role;
+    private String newcomerName;
+    private String verkey;
 }

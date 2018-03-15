@@ -1,5 +1,6 @@
 package nl.quintor.studybits.services;
 
+import lombok.AllArgsConstructor;
 import nl.quintor.studybits.models.Student;
 import nl.quintor.studybits.repositories.StudentRepository;
 import org.dozer.Mapper;
@@ -11,6 +12,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class StudentService {
 
     @Autowired

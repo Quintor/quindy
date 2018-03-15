@@ -1,6 +1,5 @@
 package nl.quintor.studybits.student.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import javax.persistence.Entity;
@@ -9,11 +8,11 @@ import javax.persistence.Id;
 
 @Data
 @Entity
-@AllArgsConstructor
-public class University {
+public class SchemaKey {
     @Id
     @GeneratedValue
     private Long id;
     private String name;
-    private String endpoint;
+    private String version;
+    private String did;
 }

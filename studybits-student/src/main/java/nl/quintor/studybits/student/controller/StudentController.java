@@ -1,58 +1,51 @@
 package nl.quintor.studybits.student.controller;
 
-import javassist.NotFoundException;
-import nl.quintor.studybits.student.interfaces.ClaimOfferRecordRepository;
-import nl.quintor.studybits.student.interfaces.StudentRepository;
-import nl.quintor.studybits.student.interfaces.UniversityRepository;
-import nl.quintor.studybits.student.model.ClaimOfferRecord;
+import lombok.AllArgsConstructor;
 import nl.quintor.studybits.student.model.Student;
 import nl.quintor.studybits.student.model.University;
+import nl.quintor.studybits.student.services.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 @RestController
 @RequestMapping("/student")
 public class StudentController {
+    private final StudentService studentService;
 
-    @Autowired
-    private StudentRepository studentRepository;
-    @Autowired
-    private UniversityRepository universityRepository;
-    @Autowired
-    private ClaimOfferRecordRepository claimOfferRecordRepository;
-
-    @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public Student register(@RequestParam(value = "username") String username, @RequestParam(value = "university") String uniName) throws Exception {
-        if (studentRepository.getByUsername(username) != null)
-            throw new IllegalArgumentException("Student with username exists already.");
-
-        University university = universityRepository.getByName(uniName);
-        if (university == null)
-            throw new NotFoundException("University does not exist (yet).");
-
-        Student student = new Student(username, university);
-        studentRepository.save(student);
-
-        return student;
+    @PostMapping("/onboard")
+    void onboard(@RequestParam Student student, @RequestParam University university) {
+        studentService.onboard(student, university);
     }
 
-    @RequestMapping(value = "/{studentId}/claims", method = RequestMethod.GET)
-    public List<ClaimOfferRecord> getClaims(@PathVariable Long studentId) throws Exception {
-        Student student = studentRepository.getById(studentId);
-        if (student == null)
-            throw new NotFoundException("Student with username not found. Maybe register first.");
-
-        return claimOfferRecordRepository.findAllByOwner(student);
+    @PostMapping("/register")
+    Student register(@RequestParam String username, @RequestParam(value = "university") String uniName) {
+        return studentService.createAndSave(username, uniName);
     }
 
-    @RequestMapping(value = "/{studentId}/claims/{claimId}", method = RequestMethod.GET)
-    public ClaimOfferRecord getClaimById(@PathVariable Long studentId, @PathVariable Long claimId) throws Exception {
-        ClaimOfferRecord claimOfferRecord = claimOfferRecordRepository.getById(claimId);
-        if (claimOfferRecord.getOwner().getId().equals(studentId))
-            throw new NotFoundException("Claim with id not found for student.");
-
-        return claimOfferRecord;
+    @GetMapping("/{studentId}")
+    Student findById(@PathVariable Long studentId) {
+        return studentService
+                .findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
     }
+
+    @GetMapping("")
+    List<Student> findAll() {
+        return studentService.findAll();
+    }
+
+    @PutMapping("/{studentId}")
+    void updateById(@PathVariable Long studentId, @RequestParam Student student) {
+        studentService.updateById(studentId, student);
+    }
+
+    @DeleteMapping("/{studentId}")
+    void deleteById(@PathVariable Long studentId) {
+        studentService.deleteById(studentId);
+    }
+
+
 }
