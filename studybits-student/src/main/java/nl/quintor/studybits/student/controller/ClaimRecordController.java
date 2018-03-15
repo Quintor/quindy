@@ -16,7 +16,7 @@ public class ClaimRecordController {
     private final ClaimRecordService claimRecordService;
 
     @PostMapping("/claims")
-    ClaimRecord createClaimRecord(@PathVariable Long studentId, @RequestParam("claim") Claim claim) {
+    ClaimRecord createClaimRecord(@PathVariable Long studentId, @RequestParam Claim claim) {
         return claimRecordService.createAndSave(studentId, claim);
     }
 
@@ -35,7 +35,7 @@ public class ClaimRecordController {
     }
 
     @PutMapping("/claims/{claimId}")
-    void updateClaimById(@PathVariable Long studentId, @PathVariable Long claimId, @RequestParam("claim") ClaimRecord claimRecord) {
+    void updateClaimById(@PathVariable Long studentId, @PathVariable Long claimId, @RequestParam ClaimRecord claimRecord) {
         claimRecordService.updateClaimById(studentId, claimId, claimRecord);
     }
 }

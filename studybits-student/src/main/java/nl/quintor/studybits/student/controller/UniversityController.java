@@ -16,7 +16,7 @@ public class UniversityController {
     private UniversityService universityService;
 
     @PostMapping("/register")
-    University register(@RequestParam("name") String name, @RequestParam("endpoint") String endpoint) {
+    University register(@RequestParam String name, @RequestParam String endpoint) {
         return universityService.createAndSave(name, endpoint);
     }
 
@@ -33,7 +33,7 @@ public class UniversityController {
     }
 
     @PutMapping("/{uniId}")
-    void updateById(@PathVariable Long uniId, @RequestParam("university") University university) {
+    void updateById(@PathVariable Long uniId, @RequestParam University university) {
         universityService.updateById(uniId, university);
     }
 

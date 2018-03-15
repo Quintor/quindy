@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import nl.quintor.studybits.student.model.Claim;
 import nl.quintor.studybits.student.model.ClaimRecord;
 import nl.quintor.studybits.student.model.Student;
-import nl.quintor.studybits.student.repositories.ClaimOfferRecordRepository;
+import nl.quintor.studybits.student.repositories.ClaimRecordRepository;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class ClaimRecordService {
-    private ClaimOfferRecordRepository claimOfferRecordRepository;
+    private ClaimRecordRepository claimRecordRepository;
     private StudentService studentService;
     private Mapper mapper;
 
@@ -30,11 +30,11 @@ public class ClaimRecordService {
                 .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
         ClaimRecord claimRecord = new ClaimRecord(student, claim);
 
-        return claimOfferRecordRepository.save(claimRecord);
+        return claimRecordRepository.save(claimRecord);
     }
 
     public Optional<ClaimRecord> findById(Long claimId) {
-        return claimOfferRecordRepository
+        return claimRecordRepository
                 .findById(claimId)
                 .map(this::toModel);
     }
@@ -44,7 +44,7 @@ public class ClaimRecordService {
                 .findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
 
-        return claimOfferRecordRepository
+        return claimRecordRepository
                 .findAllByOwner(owner)
                 .stream()
                 .map(this::toModel)
@@ -52,12 +52,12 @@ public class ClaimRecordService {
     }
 
     public void updateClaimById(Long studentId, Long claimId, ClaimRecord claimRecord) {
-        if (!claimOfferRecordRepository.existsById(claimId))
+        if (!claimRecordRepository.existsById(claimId))
             throw new IllegalArgumentException("ClaimRecord with id not found.");
 
         // TODO: Add ownership check
 
         claimRecord.setId(claimId);
-        claimOfferRecordRepository.save(claimRecord);
+        claimRecordRepository.save(claimRecord);
     }
 }

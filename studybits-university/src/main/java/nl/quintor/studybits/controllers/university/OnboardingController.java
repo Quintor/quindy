@@ -19,7 +19,7 @@ public class OnboardingController {
         return onboardingService.onboardBegin(universityName, userName);
     }
 
-    @PostMapping("finalize/{userName}")
+    @PostMapping("/finalize/{userName}")
     void finalize(@PathVariable("universityName") String universityName, @PathVariable("userName") String userName, @RequestBody AnoncryptedMessage anoncryptedMessage) {
         onboardingService.onboardFinalize(universityName, userName, anoncryptedMessage);
     }

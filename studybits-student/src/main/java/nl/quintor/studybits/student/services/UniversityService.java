@@ -1,12 +1,15 @@
 package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
+import nl.quintor.studybits.student.model.Student;
 import nl.quintor.studybits.student.model.University;
 import nl.quintor.studybits.student.repositories.UniversityRepository;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -62,5 +65,21 @@ public class UniversityService {
             throw new IllegalArgumentException("University with id not found.");
 
         universityRepository.deleteById(uniId);
+    }
+
+    private URI buildOnboardingUri(University university, String endpoint, Student student) {
+        return UriComponentsBuilder
+                .fromPath(university.getEndpoint())
+                .path("/university/{universityName}/onboarding")
+                .path("/{endpoint}/{userName}")
+                .build(university.getName(), endpoint, student.getUsername());
+    }
+
+    public URI buildOnboardingBeginUri(University university, Student student) {
+        return buildOnboardingUri(university, "begin", student);
+    }
+
+    public URI buildOnboardingFinalizeUri(University university, Student student) {
+        return buildOnboardingUri(university, "finalize", student);
     }
 }

@@ -2,14 +2,24 @@ package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import nl.quintor.studybits.indy.wrapper.IndyPool;
+import nl.quintor.studybits.indy.wrapper.IndyWallet;
+import nl.quintor.studybits.indy.wrapper.WalletOwner;
+import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
+import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
+import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.student.model.MetaWallet;
 import nl.quintor.studybits.student.model.Student;
 import nl.quintor.studybits.student.model.University;
 import nl.quintor.studybits.student.repositories.StudentRepository;
+import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -21,6 +31,8 @@ public class StudentService {
     private StudentRepository studentRepository;
     private UniversityService universityService;
     private MetaWalletService metaWalletService;
+    private ConnectionRecordService connectionRecordService;
+    private IndyPool indyPool;
     private Mapper mapper;
 
     private Student toModel(Object student) {
@@ -68,6 +80,33 @@ public class StudentService {
             throw new IllegalArgumentException("University with id not found.");
 
         studentRepository.deleteById(studentId);
+    }
+
+    @SneakyThrows
+    public void onboard(Student student, University university) {
+        URI uriBegin = universityService.buildOnboardingBeginUri(university, student);
+        URI uriFinalize = universityService.buildOnboardingFinalizeUri(university, student);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ConnectionRequest beginRequest = restTemplate.getForObject(uriBegin, ConnectionRequest.class);
+        connectionRecordService.saveConnectionRequest(beginRequest, university, student);
+
+        AnoncryptedMessage beginResponse = acceptConnectionRequest(student, beginRequest);
+        ResponseEntity<Void> finalizeResponse = restTemplate.postForEntity(uriFinalize, beginResponse, Void.class);
+        Validate.isTrue(finalizeResponse.getStatusCode().is2xxSuccessful());
+    }
+
+    @SneakyThrows
+    private AnoncryptedMessage acceptConnectionRequest(Student student, ConnectionRequest connectionRequest) {
+        WalletOwner walletOwner = getWalletOwnerForStudent(student);
+        return walletOwner.acceptConnectionRequest(connectionRequest)
+                .thenCompose(AsyncUtil.wrapException(walletOwner::anoncrypt)).get();
+    }
+
+    private WalletOwner getWalletOwnerForStudent(Student student) {
+        IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
+        return new WalletOwner(student.getUsername(), indyPool, indyWallet);
+
     }
 }
 

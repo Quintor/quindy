@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface ClaimOfferRecordRepository extends JpaRepository<ClaimRecord, Long> {
+public interface ClaimRecordRepository extends JpaRepository<ClaimRecord, Long> {
     List<ClaimRecord> findAllByOwner(Student owner);
 }
