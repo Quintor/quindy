@@ -9,6 +9,9 @@ import java.util.List;
 
 public interface ConnectionRecordRepository extends JpaRepository<ConnectionRecord, Long> {
     List<ConnectionRecord> findAllByStudent(Student student);
-
     List<ConnectionRecord> findAllByUniversity(University university);
+
+    List<ConnectionRecord> findAllByStudent_Id(Long studentId);
+
+    List<ConnectionRecord> findAllByUniversity_Name(String name);
 }
