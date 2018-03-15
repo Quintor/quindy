@@ -19,28 +19,13 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 
-
 @EnableAutoConfiguration
 @ComponentScan
 @EnableSwagger2
 public class Main {
 
-//    @Value("${datasource.url}")
-//    private String url;
-//
-//    @Value("${datasource.username}")
-//    private String username;
-//
-//    @Value("${datasource.password}")
-//    private String  password;
-
     @Value("${indy.poolname}")
     private String poolName;
-
-//    @Bean
-//    private DataSource dataSource() {
-//        return new DriverManagerDataSource(url, username, password);
-//    }
 
     @Bean
     public Docket productApi() {
@@ -71,5 +56,4 @@ public class Main {
         File indyClientDir = Paths.get(homeDir, ".indy_client").toFile();
         FileUtils.deleteDirectory(indyClientDir);
     }
-
 }

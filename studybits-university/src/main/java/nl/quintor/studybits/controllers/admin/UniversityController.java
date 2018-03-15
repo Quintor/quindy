@@ -20,5 +20,4 @@ public class UniversityController {
     List<University> findAll() {
         return universityService.findAll();
     }
-
 }

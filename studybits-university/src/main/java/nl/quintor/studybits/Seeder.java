@@ -103,5 +103,4 @@ public class Seeder {
         Set<String> years = academicYears == null ? new HashSet<>() :new HashSet<>(Arrays.asList(academicYears));
         return new Student(null, userName, firstName, lastName, university, null, years);
     }
-
 }

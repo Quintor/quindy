@@ -12,7 +12,4 @@ public interface StudentRepository extends JpaRepository<Student, Long>{
     Optional<Student> findByUniversityNameIgnoreCaseAndUserNameIgnoreCase(String universityName, String userName);
 
     List<Student> findAllByUniversityNameIgnoreCase(String universityName);
-
-
-
 }

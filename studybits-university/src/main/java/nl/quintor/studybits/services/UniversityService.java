@@ -30,5 +30,4 @@ public class UniversityService {
                 .map(this::toModel)
                 .collect(Collectors.toList());
     }
-
 }

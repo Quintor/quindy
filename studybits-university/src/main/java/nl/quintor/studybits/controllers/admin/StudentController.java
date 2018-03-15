@@ -27,6 +27,4 @@ public class StudentController {
         return studentService.findByUniversityAndUserName(universityName, userName)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found for university."));
     }
-
-
 }

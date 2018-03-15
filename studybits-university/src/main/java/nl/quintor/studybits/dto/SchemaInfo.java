@@ -12,6 +12,4 @@ public @interface SchemaInfo {
     String name();
 
     String version();
-
-
 }

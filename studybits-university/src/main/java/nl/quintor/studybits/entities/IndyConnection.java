@@ -5,8 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.*;
-import java.util.Set;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 @Entity
 @NoArgsConstructor
@@ -20,15 +21,4 @@ public class IndyConnection {
     private Long id;
 
     private String did;
-
-//    private String myDid;
-//
-//    private String myVerKey;
-//
-//    private String theirDid;
-//
-//    private String theirVerKey;
-//
-//    private String nonce;
-
 }

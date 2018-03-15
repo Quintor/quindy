@@ -23,5 +23,4 @@ public class University {
 
     @OneToMany(mappedBy = "university", cascade = CascadeType.MERGE)
     private Set<Student> students;
-
 }

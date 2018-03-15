@@ -7,5 +7,4 @@ public class University {
     private Long id;
 
     private String name;
-
 }

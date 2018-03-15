@@ -92,9 +92,5 @@ public class UniversitiesBeanConfig {
 
     }
 
-
-    private String createSeed(String s) {
-        return StringUtils.leftPad(s, 32, '0');
-    }
-
+    private String createSeed(String s) { return StringUtils.leftPad(s, 32, '0'); }
 }

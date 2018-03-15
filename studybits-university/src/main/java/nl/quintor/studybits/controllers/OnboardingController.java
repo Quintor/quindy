@@ -23,6 +23,4 @@ public class OnboardingController {
     void finalize(@PathVariable String universityName, @PathVariable String userName, @RequestBody OnboardFinalize onboardFinalize) {
         onboardingService.onboardFinalize(universityName, userName, onboardFinalize);
     }
-
-
 }

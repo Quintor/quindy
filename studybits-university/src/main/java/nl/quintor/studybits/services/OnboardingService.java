@@ -75,5 +75,4 @@ public class OnboardingService {
         return issuer.anonDecrypt(message, ConnectionResponse.class)
                 .thenCompose(AsyncUtil.wrapException(issuer::acceptConnectionResponse)).get();
     }
-
 }
