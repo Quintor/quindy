@@ -5,22 +5,24 @@ import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
+import org.apache.commons.io.FileUtils;
 import org.hyperledger.indy.sdk.IndyException;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        Runtime.getRuntime().exec("rm -rf /home/potte/.indy_client");
+        removeIndyClientDirectory();
 
         String poolName = PoolUtils.createPoolLedgerConfig();
-
         IndyPool indyPool = new IndyPool(poolName);
         TrustAnchor steward = new TrustAnchor("Steward", indyPool, IndyWallet.create(indyPool, "steward_wallet", "000000000000000000000000Steward1"));
-
 
         // Onboard the issuers (onboard -> verinym -> issuerDids)
         Issuer government = new Issuer("Government", indyPool, IndyWallet.create(indyPool, "government_wallet",null));
@@ -79,6 +81,10 @@ public class Main {
 
         alice.authDecrypt(claim, Claim.class)
                 .thenCompose(AsyncUtil.wrapException(alice::storeClaim)).get();
+
+        List<ClaimInfo> claims = alice.findAllClaims().get();
+
+        System.out.println(claims);
     }
 
     private static void onboardIssuer(TrustAnchor steward, Issuer newcomer) throws InterruptedException, java.util.concurrent.ExecutionException, IndyException, java.io.IOException {
@@ -111,5 +117,11 @@ public class Main {
                 .thenCompose(AsyncUtil.wrapException(trustAnchor::acceptConnectionResponse)).get();
 
         return newcomerDid;
+    }
+
+    private static void removeIndyClientDirectory() throws Exception {
+        String homeDir = System.getProperty("user.home");
+        File indyClientDir = Paths.get(homeDir, ".indy_client").toFile();
+        FileUtils.deleteDirectory(indyClientDir);
     }
 }
