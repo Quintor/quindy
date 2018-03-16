@@ -4,6 +4,7 @@ ADD pom.xml /
 RUN mvn package
 
 ADD . /
+ADD . /tmp/indy/
 
 RUN mvn install
 
@@ -21,6 +22,6 @@ ARG LIBINDY_VERSION
 # Split off libindy command for fast builds on version bump
 RUN apt-get update && apt-get install -y libindy=$LIBINDY_VERSION
 
-COPY --from=0 /target/studybits-*-jar-with-dependencies.jar /studybits.jar
+#COPY --from=0 /target/studybits-*-jar-with-dependencies.jar /studybits.jar
 
-CMD java -cp /studybits.jar nl.quintor.studybits.Main
+#CMD java -cp /studybits.jar nl.quintor.studybits.Main
