@@ -66,7 +66,7 @@ public class WalletOwner {
                         }));
     }
 
-    CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid(String theirDid) throws IndyException {
+    public CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid(String theirDid) throws IndyException {
         log.debug("{} Called getPairwise by their did: {}", name, theirDid);
         return Pairwise.getPairwise(wallet.getWallet(), theirDid)
                 .thenApply(wrapException(json -> JSONUtil.mapper.readValue(json, GetPairwiseResult.class)));
