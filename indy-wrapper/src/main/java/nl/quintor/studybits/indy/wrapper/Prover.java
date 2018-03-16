@@ -2,7 +2,6 @@ package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.Claim;
 import nl.quintor.studybits.indy.wrapper.dto.ClaimInfo;
@@ -12,6 +11,7 @@ import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.anoncreds.Anoncreds;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -71,11 +71,11 @@ public class Prover extends WalletOwner {
     public CompletableFuture<List<ClaimInfo>> findAllClaims() throws IndyException {
         String filter = "{}";
         return Anoncreds.proverGetClaims(wallet.getWallet(), filter)
-                .thenApply(this::deserializeClaimInfo);
+                .thenApply(wrapException(this::deserializeClaimInfo));
     }
 
-    @SneakyThrows
-    private List<ClaimInfo> deserializeClaimInfo(String json) {
+
+    private List<ClaimInfo> deserializeClaimInfo(String json) throws IOException {
         return JSONUtil.mapper.readValue(json, new TypeReference<List<ClaimInfo>>(){});
     }
 
