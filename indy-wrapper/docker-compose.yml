@@ -1,6 +1,6 @@
 version: '2.3'
 services:
-  studybits:
+  wrapper:
     build:
       context: .
       args:
