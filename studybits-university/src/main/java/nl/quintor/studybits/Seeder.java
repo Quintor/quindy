@@ -2,8 +2,8 @@ package nl.quintor.studybits;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import nl.quintor.studybits.dto.ClaimUtils;
 import nl.quintor.studybits.dto.Enrolment;
-import nl.quintor.studybits.dto.SchemaUtils;
 import nl.quintor.studybits.entities.Student;
 import nl.quintor.studybits.entities.University;
 import nl.quintor.studybits.indy.wrapper.Issuer;
@@ -66,7 +66,7 @@ public class Seeder {
     private void seedClaimDefinitions(String universityName, Class<?>... claimTypes) {
         Issuer issuer = getIssuerByName(universityName)
                .orElseThrow(() -> new IllegalStateException(String.format("Issuer for %s university not found!", universityName)));
-        Arrays.stream(claimTypes).map(SchemaUtils::getSchemaDefinition)
+        Arrays.stream(claimTypes).map(ClaimUtils::getSchemaDefinition)
                 .forEach(schemaDefinition -> defineSchema(issuer, schemaDefinition));
     }
 
@@ -101,6 +101,6 @@ public class Seeder {
     private Student createStudent(String userName, String firstName, String lastName, University university, String... academicYears) {
         log.info("Creating student {} for university {}...", userName, university.getName());
         Set<String> years = academicYears == null ? new HashSet<>() :new HashSet<>(Arrays.asList(academicYears));
-        return new Student(null, userName, firstName, lastName, university, null, years);
+        return new Student(null, userName, firstName, lastName, university, null, years, new ArrayList<>());
     }
 }

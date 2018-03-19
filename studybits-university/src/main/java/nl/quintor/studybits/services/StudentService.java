@@ -52,4 +52,5 @@ public class StudentService {
                 .findByUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName)
                 .map(this::toModel);
     }
+
 }
