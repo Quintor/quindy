@@ -2,7 +2,6 @@ package nl.quintor.studybits.indy.wrapper.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,8 +26,6 @@ public class ClaimRequest implements Serializable, AuthCryptable {
 
     private String nonce;
 
-    @JsonIgnore
-    private String myDid;
     @JsonIgnore
     private String theirDid;
 }
