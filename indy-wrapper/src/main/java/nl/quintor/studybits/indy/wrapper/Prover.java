@@ -77,7 +77,11 @@ public class Prover extends WalletOwner {
                 .thenApply(wrapException(claimsForProofRequestJson -> {
                     return JSONUtil.mapper.readValue(claimsForProofRequestJson, ClaimsForRequest.class);
                 }))
-                .thenCompose(wrapException(claimsForRequest -> createProofFromClaims(proofRequest, claimsForRequest, attributes, proofRequest.getTheirDid())));
+                .thenCompose(wrapException(claimsForRequest -> createProofFromClaims(proofRequest, claimsForRequest, attributes, proofRequest.getTheirDid())))
+                .thenApply(wrapException(proof -> {
+                    log.debug("{}: Created proof {}", name, proof.toJSON());
+                    return proof;
+                }));
 
     }
 
