@@ -112,13 +112,12 @@ public class WalletOwner {
                                 .thenCompose(wrapException((Schema schema) ->
                                         getClaimDef(wallet.getMainDid(), schema, stringClaimReferentEntry.getValue().getIssuerDid())
                                                 .thenApply(claimDef -> new EntityFromLedger(schema, claimDef, stringClaimReferentEntry.getKey()))
-
                                 ))))
                 .collect(Collectors.toList());
 
         return CompletableFuture.allOf(entityFutures.toArray(new CompletableFuture[0]))
                 .thenApply(_void -> entityFutures.stream().map(CompletableFuture::join)
-                .collect(EntitiesFromLedger.collector()));
+                        .collect(EntitiesFromLedger.collector()));
     }
 
     public CompletableFuture<AnoncryptedMessage> anoncrypt(AnonCryptable message) throws JsonProcessingException, IndyException {

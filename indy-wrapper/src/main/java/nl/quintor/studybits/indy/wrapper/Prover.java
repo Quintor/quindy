@@ -119,8 +119,6 @@ public class Prover extends WalletOwner {
                 .entrySet().stream()
                 .filter(stringAttributeInfoEntry -> !stringAttributeInfoEntry.getValue().getRestrictions().isPresent())
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
-                    log.debug("Entry: {}", entry);
-                    log.debug("Attributes {}", attributes);
                     String value = attributes.get(entry.getValue().getName());
                     if (value == null) {
                         throw new IllegalArgumentException("Self attested attribute was not provided");
