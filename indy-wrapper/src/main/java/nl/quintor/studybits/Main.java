@@ -105,8 +105,17 @@ public class Main {
 
         AuthcryptedMessage authcryptedJobApplicationProofRequest = acme.authcrypt(jobApplicationProofRequest).get();
 
-        alice.authDecrypt(authcryptedJobApplicationProofRequest, ProofRequest.class)
-                .thenCompose(AsyncUtil.wrapException(proofRequest -> alice.proofRequestToProof(proofRequest, Collections.emptyMap()))).get();
+
+        Map<String, String> selfAttestedAttributes = new HashMap<>();
+        selfAttestedAttributes.put("first_name", "Alice");
+        selfAttestedAttributes.put("last_name", "Garcia");
+        selfAttestedAttributes.put("phone_number", "123phonenumber");
+
+        AuthcryptedMessage proof = alice.authDecrypt(authcryptedJobApplicationProofRequest, ProofRequest.class)
+                .thenCompose(AsyncUtil.wrapException(proofRequest -> alice.proofRequestToProof(proofRequest, selfAttestedAttributes)))
+                .thenCompose(AsyncUtil.wrapException(alice::authcrypt))
+                .get();
+
     }
 
     private static void onboardIssuer(TrustAnchor steward, Issuer newcomer) throws InterruptedException, java.util.concurrent.ExecutionException, IndyException, java.io.IOException {

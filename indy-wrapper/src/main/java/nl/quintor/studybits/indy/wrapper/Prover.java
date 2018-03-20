@@ -72,20 +72,22 @@ public class Prover extends WalletOwner {
      * @param attributes This map is used to get the correct claim, if multiple referents are present, or to provide self-attested attributes
      * @return
      */
-    public CompletableFuture<String> proofRequestToProof(ProofRequest proofRequest, Map<String, String> attributes) throws JsonProcessingException, IndyException {
+    public CompletableFuture<Proof> proofRequestToProof(ProofRequest proofRequest, Map<String, String> attributes) throws JsonProcessingException, IndyException {
         return Anoncreds.proverGetClaimsForProofReq(wallet.getWallet(), proofRequest.toJSON())
                 .thenApply(wrapException(claimsForProofRequestJson -> {
                     return JSONUtil.mapper.readValue(claimsForProofRequestJson, ClaimsForRequest.class);
                 }))
-                .thenCompose(claimsForRequest -> createProofFromClaims(proofRequest, claimsForRequest, attributes));
+                .thenCompose(wrapException(claimsForRequest -> createProofFromClaims(proofRequest, claimsForRequest, attributes, proofRequest.getTheirDid())));
 
     }
 
-    CompletableFuture<String> createProofFromClaims(ProofRequest proofRequest, ClaimsForRequest claimsForRequest, Map<String, String> attributes) throws JsonProcessingException {
+    CompletableFuture<Proof> createProofFromClaims(ProofRequest proofRequest, ClaimsForRequest claimsForRequest, Map<String, String> attributes, String theirDid) throws JsonProcessingException {
         // We find all the ClaimReferents that we are going to use. The cases:
         // 1. The referent is for an attribute and a value is provided -> Find any that matches the provided value
         // 2. The referent is for an attribute and no value is provided -> Find any
         // 3. The referent is for a predicate -> Find any
+
+        log.debug("{} Creating proof using claims: {}", name, claimsForRequest.toJSON());
 
         Map<String, ClaimReferent> claimsByReferentKey = Stream.<Optional<AbstractMap.SimpleEntry<String, ClaimReferent>>>concat(claimsForRequest
                         .getAttrs().entrySet()
@@ -110,12 +112,21 @@ public class Prover extends WalletOwner {
 
         Map<String, ClaimReferent> claimsForProof = claimsByReferentKey
                 .values().stream()
+                .distinct()
                 .collect(Collectors.toMap(ClaimReferent::getReferent, Function.identity()));
 
         Map<String, String> selfAttestedAttributes = proofRequest.getRequestedAttrs()
                 .entrySet().stream()
                 .filter(stringAttributeInfoEntry -> !stringAttributeInfoEntry.getValue().getRestrictions().isPresent())
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> attributes.get(entry.getValue().getName())));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+                    log.debug("Entry: {}", entry);
+                    log.debug("Attributes {}", attributes);
+                    String value = attributes.get(entry.getValue().getName());
+                    if (value == null) {
+                        throw new IllegalArgumentException("Self attested attribute was not provided");
+                    }
+                    return value;
+                }));
 
         Map<String, List<Object>> requestedAttributes = proofRequest.getRequestedAttrs()
                 .entrySet().stream()
@@ -132,7 +143,19 @@ public class Prover extends WalletOwner {
         requestedClaimsJson.set("requested_attrs", JSONUtil.mapper.valueToTree(requestedAttributes));
         requestedClaimsJson.set("requested_predicates", JSONUtil.mapper.valueToTree(requestedPredicates));
 
-        return Anoncreds.proverCreateProof(wallet.getWallet(), proofRequest.toJSON(), JSONUtil.mapper.writeValueAsString(requestedClaimsJson), )
+
+        return getEntitiesFromLedger(claimsForProof)
+                .thenCompose(wrapException(entities -> {
+                    log.debug("{} Creating proof", name);
+                    return Anoncreds.proverCreateProof(wallet.getWallet(), proofRequest.toJSON(), JSONUtil.mapper.writeValueAsString(requestedClaimsJson),
+                            JSONUtil.mapper.writeValueAsString(entities.getSchemas()), masterSecretName,
+                            JSONUtil.mapper.writeValueAsString(entities.getClaimDefs()), "{}");
+                }))
+                .thenApply(wrapException(proofJson -> {
+                    Proof proof = JSONUtil.mapper.readValue(proofJson, Proof.class);
+                    proof.setTheirDid(theirDid);
+                    return proof;
+                }));
     }
 
 

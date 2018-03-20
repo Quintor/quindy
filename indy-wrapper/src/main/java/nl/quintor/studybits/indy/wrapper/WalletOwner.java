@@ -12,8 +12,11 @@ import org.hyperledger.indy.sdk.ledger.Ledger;
 import org.hyperledger.indy.sdk.pairwise.Pairwise;
 
 import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
@@ -102,6 +105,21 @@ public class WalletOwner {
                 .thenApply(wrapException(response -> JSONUtil.mapper.readTree(response).at("/result").toString()));
     }
 
+    CompletableFuture<EntitiesFromLedger> getEntitiesFromLedger(Map<String, ClaimReferent> identifiers) {
+        List<CompletableFuture<EntityFromLedger>> entityFutures = identifiers.entrySet().stream()
+                .map(wrapException((Map.Entry<String, ClaimReferent> stringClaimReferentEntry) ->
+                        getSchema(wallet.getMainDid(), stringClaimReferentEntry.getValue().getSchemaKey())
+                                .thenCompose(wrapException((Schema schema) ->
+                                        getClaimDef(wallet.getMainDid(), schema, stringClaimReferentEntry.getValue().getIssuerDid())
+                                                .thenApply(claimDef -> new EntityFromLedger(schema, claimDef, stringClaimReferentEntry.getKey()))
+
+                                ))))
+                .collect(Collectors.toList());
+
+        return CompletableFuture.allOf(entityFutures.toArray(new CompletableFuture[0]))
+                .thenApply(_void -> entityFutures.stream().map(CompletableFuture::join)
+                .collect(EntitiesFromLedger.collector()));
+    }
 
     public CompletableFuture<AnoncryptedMessage> anoncrypt(AnonCryptable message) throws JsonProcessingException, IndyException {
         log.debug("{} Anoncrypting message: {}, with did: {}", name, message.toJSON(), message.getTheirDid());
