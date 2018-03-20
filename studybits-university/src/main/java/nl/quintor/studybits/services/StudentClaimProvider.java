@@ -1,24 +1,30 @@
 package nl.quintor.studybits.services;
 
-import nl.quintor.studybits.entities.AuthEncryptedMessage;
-import nl.quintor.studybits.indy.wrapper.dto.ClaimRequest;
+import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
 import nl.quintor.studybits.models.StudentClaimInfo;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-public interface StudentClaimProvider {
+@Service
+public abstract class StudentClaimProvider {
 
-    List<StudentClaimInfo> findAvailableClaims(String universityName, String userName);
+    public String getClaimProviderId() {
+        return StringUtils.removeEndIgnoreCase(getClass().getName(), "service");
+    }
 
-    boolean claimOfferExists(Long studentClaimId);
+    public abstract List<StudentClaimInfo> findAvailableClaims(String universityName, String userName);
 
-    AuthEncryptedMessage createClaimOffer(String universityName, String userName, Long studentClaimId);
+    public abstract boolean claimOfferExists(Long studentClaimId);
 
-    AuthEncryptedMessage getClaimOffer(String universityName, String userName, Long studentClaimId);
+    public abstract AuthcryptedMessage createClaimOffer(String universityName, String userName, Long studentClaimId);
 
-    boolean claimExists(Long studentClaimId);
+    public abstract AuthcryptedMessage getClaimOffer(String universityName, String userName, Long studentClaimId);
 
-    AuthEncryptedMessage createClaim(String universityName, String userName, ClaimRequest claimRequest);
+    public abstract boolean claimExists(Long studentClaimId);
 
-    AuthEncryptedMessage getClaim(String universityName, String userName, ClaimRequest claimRequest);
+    public abstract AuthcryptedMessage createClaim(String universityName, String userName, AuthcryptedMessage authcryptedClaimRequestMessage);
+
+    public abstract AuthcryptedMessage getClaim(String universityName, String userName, AuthcryptedMessage authcryptedClaimRequestMessage);
 }

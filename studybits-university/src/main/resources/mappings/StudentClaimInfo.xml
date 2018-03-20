@@ -8,6 +8,10 @@
         <class-a>nl.quintor.studybits.entities.StudentClaim</class-a>
         <class-b>nl.quintor.studybits.models.StudentClaimInfo</class-b>
         <field>
+            <a>id</a>
+            <b>claimId</b>
+        </field>
+        <field>
             <a>claimName</a>
             <b>name</b>
         </field>

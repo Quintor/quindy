@@ -7,10 +7,7 @@ import nl.quintor.studybits.entities.AuthEncryptedMessage;
 import nl.quintor.studybits.entities.Student;
 import nl.quintor.studybits.entities.StudentClaim;
 import nl.quintor.studybits.indy.wrapper.Issuer;
-import nl.quintor.studybits.indy.wrapper.dto.Claim;
-import nl.quintor.studybits.indy.wrapper.dto.ClaimOffer;
-import nl.quintor.studybits.indy.wrapper.dto.ClaimRequest;
-import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
+import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.models.StudentClaimInfo;
 import nl.quintor.studybits.repositories.StudentClaimRepository;
 import nl.quintor.studybits.repositories.StudentRepository;
@@ -27,7 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
-public class EnrolmentService implements StudentClaimProvider {
+public class EnrolmentService extends StudentClaimProvider {
 
     @Autowired
     private IssuerService issuerService;
@@ -41,8 +38,12 @@ public class EnrolmentService implements StudentClaimProvider {
     @Autowired
     private Mapper mapper;
 
-    private AuthEncryptedMessage toModel(Object authcryptedMessage) {
+    private AuthEncryptedMessage toEntity(Object authcryptedMessage) {
         return mapper.map(authcryptedMessage, AuthEncryptedMessage.class);
+    }
+
+    private AuthcryptedMessage toModel(Object authEncryptedMessage) {
+        return mapper.map(authEncryptedMessage, AuthcryptedMessage.class);
     }
 
     private StudentClaimInfo toStudentClaimInfo(Object studentClaim) {
@@ -50,13 +51,21 @@ public class EnrolmentService implements StudentClaimProvider {
     }
 
     @SneakyThrows
-    private AuthEncryptedMessage toAuthcryptedMessage(Issuer issuer, ClaimOffer claimOffer) {
-        return toModel(issuer.authcrypt(claimOffer).get());
+    private AuthcryptedMessage toAuthcryptedMessage(Issuer issuer, AuthCryptable authCryptable) {
+        return issuer.authcrypt(authCryptable).get();
     }
 
-    @SneakyThrows
-    private AuthEncryptedMessage toAuthcryptedMessage(Issuer issuer, Claim claim) {
-        return toModel(issuer.authcrypt(claim).get());
+    public void addAvailableClaim(String universityName, String userName, Enrolment enrolment) {
+        Student student = studentRepository
+                .findByUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid student."));
+        addAvailableClaim(student, enrolment);
+    }
+
+    public void addAvailableClaim(Student student, Enrolment enrolment) {
+        SchemaDefinition schemaDefinition = ClaimUtils.getSchemaDefinition(enrolment.getClass());
+        StudentClaim studentClaim = new StudentClaim(null, student,  schemaDefinition.getName(), schemaDefinition.getVersion(), null, enrolment.getAcademicYear(), null, null);
+        studentClaimRepository.save(studentClaim);
     }
 
     @Override
@@ -80,23 +89,24 @@ public class EnrolmentService implements StudentClaimProvider {
     }
 
     @Override
-    public AuthEncryptedMessage createClaimOffer(String universityName, String userName, Long studentClaimId) {
+    public AuthcryptedMessage createClaimOffer(String universityName, String userName, Long studentClaimId) {
         return withStudentClaim(universityName, userName, studentClaimId, (issuer, studentClaim) -> {
             String academicYear = studentClaim.getClaimLabel();
             Student student = studentClaim.getStudent();
             Validate.validState(student.getAcademicYears().contains(academicYear), "Invalid claim offer request.");
             SchemaKey schemaKey = SchemaKey.fromSchema(ClaimUtils.getSchemaDefinition(Enrolment.class), issuer.getIssuerDid());
-            AuthEncryptedMessage authEncryptedMessage = createClaimOffer(issuer, schemaKey, student.getConnection().getDid());
-            studentClaim.setClaimOfferMessage(authEncryptedMessage);
-            return studentClaimRepository
-                    .saveAndFlush(studentClaim)
-                    .getClaimOfferMessage();
+            ClaimOffer claimOffer = createClaimOffer(issuer, schemaKey, student.getConnection().getDid());
+            AuthcryptedMessage authcryptedMessage = toAuthcryptedMessage(issuer, claimOffer);
+            studentClaim.setClaimNonce(claimOffer.getNonce());
+            studentClaim.setClaimOfferMessage(toEntity(authcryptedMessage));
+            studentClaimRepository.saveAndFlush(studentClaim);
+            return authcryptedMessage;
         });
     }
 
     @Override
-    public AuthEncryptedMessage getClaimOffer(String universityName, String userName, Long studentClaimId) {
-        return withStudentClaim(universityName, userName, studentClaimId, (issuer, studentClaim) -> studentClaim.getClaimOfferMessage());
+    public AuthcryptedMessage getClaimOffer(String universityName, String userName, Long studentClaimId) {
+        return withStudentClaim(universityName, userName, studentClaimId, (issuer, studentClaim) -> toModel(studentClaim.getClaimOfferMessage()));
     }
 
     @Override
@@ -108,23 +118,30 @@ public class EnrolmentService implements StudentClaimProvider {
     }
 
     @Override
-    public AuthEncryptedMessage createClaim(String universityName, String userName, ClaimRequest claimRequest) {
+    @SneakyThrows
+    public AuthcryptedMessage createClaim(String universityName, String userName, AuthcryptedMessage authcryptedClaimRequestMessage) {
+        Issuer issuer1 = issuerService.getIssuer(universityName);
+        ClaimRequest claimRequest = issuer1.authDecrypt(authcryptedClaimRequestMessage, ClaimRequest.class).get();
         return withStudentClaim(universityName, userName, claimRequest, (issuer, studentClaim) -> {
             String academicYear = studentClaim.getClaimLabel();
             Student student = studentClaim.getStudent();
             Validate.validState(student.getAcademicYears().contains(academicYear), "Invalid claim request.");
             Enrolment enrolment = new Enrolment(academicYear);
-            AuthEncryptedMessage authEncryptedMessage = createClaim(issuer, claimRequest, enrolment);
-            studentClaim.setClaimMessage(authEncryptedMessage);
-            return studentClaimRepository
-                    .saveAndFlush(studentClaim)
-                    .getClaimMessage();
+            Claim claim = createClaim(issuer, claimRequest, enrolment);
+            AuthcryptedMessage authcryptedMessage = toAuthcryptedMessage(issuer, claim);
+            studentClaim.setClaimMessage(toEntity(authcryptedMessage));
+            studentClaimRepository.saveAndFlush(studentClaim);
+            return authcryptedMessage;
         });
     }
 
+
     @Override
-    public AuthEncryptedMessage getClaim(String universityName, String userName, ClaimRequest claimRequest) {
-        return withStudentClaim(universityName, userName, claimRequest, (issuer, studentClaim) -> studentClaim.getClaimMessage());
+    @SneakyThrows
+    public AuthcryptedMessage getClaim(String universityName, String userName, AuthcryptedMessage authcryptedClaimRequestMessage) {
+        Issuer issuer1 = issuerService.getIssuer(universityName);
+        ClaimRequest claimRequest = issuer1.authDecrypt(authcryptedClaimRequestMessage, ClaimRequest.class).get();
+        return withStudentClaim(universityName, userName, claimRequest, (issuer, studentClaim) -> toModel(studentClaim.getClaimMessage()));
     }
 
 
@@ -155,16 +172,14 @@ public class EnrolmentService implements StudentClaimProvider {
     }
 
     @SneakyThrows
-    private AuthEncryptedMessage createClaimOffer(Issuer issuer, SchemaKey schemaKey, String targetDid) {
-        ClaimOffer claimOffer = issuer.createClaimOffer(schemaKey, targetDid).get();
-        return toAuthcryptedMessage(issuer, claimOffer);
+    private ClaimOffer createClaimOffer(Issuer issuer, SchemaKey schemaKey, String targetDid) {
+        return issuer.createClaimOffer(schemaKey, targetDid).get();
     }
 
     @SneakyThrows
-    private AuthEncryptedMessage createClaim(Issuer issuer, ClaimRequest claimRequest, Enrolment enrolment) {
+    private Claim createClaim(Issuer issuer, ClaimRequest claimRequest, Enrolment enrolment) {
         Map<String, Object> claimValues = ClaimUtils.getMapOfClaim(enrolment);
-        Claim claim = issuer.createClaim(claimRequest, claimValues).get();
-        return toAuthcryptedMessage(issuer, claim);
+        return issuer.createClaim(claimRequest, claimValues).get();
     }
 
 

@@ -29,12 +29,14 @@ public class StudentClaim {
     @Column(nullable = false)
     private String claimVersion;
 
-    @Column(nullable = false)
     private String claimNonce;
 
     @Column(nullable = false)
     private String claimLabel;
 
+    /**
+     * Used to cache the encrypted ClaimOffer message.
+     */
     @AttributeOverrides({
             @AttributeOverride(name="message",column=@Column(name="claimOfferMessage")),
             @AttributeOverride(name="did",column=@Column(name="claimOfferDid"))
@@ -42,6 +44,9 @@ public class StudentClaim {
     @Embedded
     private AuthEncryptedMessage claimOfferMessage;
 
+    /**
+     * Used to cache the encrypted Claim message.
+     */
     @AttributeOverrides({
             @AttributeOverride(name="message",column=@Column(name="claimMessage")),
             @AttributeOverride(name="did",column=@Column(name="claimDid"))
