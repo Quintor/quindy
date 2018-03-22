@@ -37,9 +37,9 @@ public class StudentController {
         return studentService.findAll();
     }
 
-    @PutMapping("/{studentId}")
-    void updateById(@PathVariable Long studentId, @RequestParam Student student) {
-        studentService.updateById(studentId, student);
+    @PutMapping()
+    void updateById(@RequestBody Student student) {
+        studentService.updateById(student);
     }
 
     @DeleteMapping("/{studentId}")

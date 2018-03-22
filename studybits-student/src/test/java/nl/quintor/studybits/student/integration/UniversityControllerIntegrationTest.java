@@ -5,19 +5,16 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.List;
 
 import static nl.quintor.studybits.student.RandomDataGenerator.randString;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class UniversityControllerIntegrationTest extends BaseIntegrationTest {
@@ -66,7 +63,5 @@ public class UniversityControllerIntegrationTest extends BaseIntegrationTest {
         // Delete the University and check that change was persisted
         mockMvc.perform(delete(baseURL + testUni.getId()))
                .andExpect(status().isOk());
-
-
     }
 }
