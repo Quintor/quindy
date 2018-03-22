@@ -64,8 +64,7 @@ public class UniversitiesBeanConfig {
                 .thenCompose(AsyncUtil.wrapException(steward::acceptConnectionResponse))
                 .get();
         AuthcryptedMessage verinym = issuer
-                .createVerinymRequest(connectionRequest.getDid())
-                .thenCompose(AsyncUtil.wrapException(issuer::authcrypt))
+                .authcrypt(issuer.createVerinymRequest(connectionRequest.getDid()))
                 .get();
         steward.authDecrypt(verinym, Verinym.class)
                 .thenCompose(AsyncUtil.wrapException(steward::acceptVerinymRequest))

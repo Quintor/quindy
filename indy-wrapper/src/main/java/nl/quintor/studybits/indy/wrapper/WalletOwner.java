@@ -106,12 +106,12 @@ public class WalletOwner {
     }
 
     CompletableFuture<EntitiesFromLedger> getEntitiesFromLedger(Map<String, ClaimReferent> identifiers) {
-        List<CompletableFuture<EntityFromLedger>> entityFutures = identifiers.entrySet().stream()
+        List<CompletableFuture<EntitiesForClaimReferent>> entityFutures = identifiers.entrySet().stream()
                 .map(wrapException((Map.Entry<String, ClaimReferent> stringClaimReferentEntry) ->
                         getSchema(wallet.getMainDid(), stringClaimReferentEntry.getValue().getSchemaKey())
                                 .thenCompose(wrapException((Schema schema) ->
                                         getClaimDef(wallet.getMainDid(), schema, stringClaimReferentEntry.getValue().getIssuerDid())
-                                                .thenApply(claimDef -> new EntityFromLedger(schema, claimDef, stringClaimReferentEntry.getKey()))
+                                                .thenApply(claimDef -> new EntitiesForClaimReferent(schema, claimDef, stringClaimReferentEntry.getKey()))
                                 ))))
                 .collect(Collectors.toList());
 

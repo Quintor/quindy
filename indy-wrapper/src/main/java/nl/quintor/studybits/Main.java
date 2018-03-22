@@ -112,7 +112,7 @@ public class Main {
         selfAttestedAttributes.put("phone_number", "123phonenumber");
 
         AuthcryptedMessage proof = alice.authDecrypt(authcryptedJobApplicationProofRequest, ProofRequest.class)
-                .thenCompose(AsyncUtil.wrapException(proofRequest -> alice.proofRequestToProof(proofRequest, selfAttestedAttributes)))
+                .thenCompose(AsyncUtil.wrapException(proofRequest -> alice.fulfillProofRequest(proofRequest, selfAttestedAttributes)))
                 .thenCompose(AsyncUtil.wrapException(alice::authcrypt))
                 .get();
 

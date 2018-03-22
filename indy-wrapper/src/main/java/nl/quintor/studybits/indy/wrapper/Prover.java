@@ -2,6 +2,7 @@ package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.*;
@@ -72,7 +73,7 @@ public class Prover extends WalletOwner {
      * @param attributes This map is used to get the correct claim, if multiple referents are present, or to provide self-attested attributes
      * @return
      */
-    public CompletableFuture<Proof> proofRequestToProof(ProofRequest proofRequest, Map<String, String> attributes) throws JsonProcessingException, IndyException {
+    public CompletableFuture<Proof> fulfillProofRequest(ProofRequest proofRequest, Map<String, String> attributes) throws JsonProcessingException, IndyException {
         return Anoncreds.proverGetClaimsForProofReq(wallet.getWallet(), proofRequest.toJSON())
                 .thenApply(wrapException(claimsForProofRequestJson -> {
                     return JSONUtil.mapper.readValue(claimsForProofRequestJson, ClaimsForRequest.class);
@@ -86,14 +87,54 @@ public class Prover extends WalletOwner {
     }
 
     CompletableFuture<Proof> createProofFromClaims(ProofRequest proofRequest, ClaimsForRequest claimsForRequest, Map<String, String> attributes, String theirDid) throws JsonProcessingException {
+        log.debug("{} Creating proof using claims: {}", name, claimsForRequest.toJSON());
+
+        // Collect the names and values of all self-attested attributes. Throw an exception if one is not specified.
+        Map<String, String> selfAttestedAttributes = proofRequest.getRequestedAttrs()
+                .entrySet().stream()
+                .filter(stringAttributeInfoEntry -> !stringAttributeInfoEntry.getValue().getRestrictions().isPresent())
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+                    String value = attributes.get(entry.getValue().getName());
+                    if (value == null) {
+                        throw new IllegalArgumentException("Self attested attribute was not provided");
+                    }
+                    return value;
+                }));
+
+        // Collect all claim referents needed for the proof
+        Map<String, ClaimReferent> claimsByReferentKey = findNeededClaimReferents(proofRequest, claimsForRequest, attributes);
+
+        // Store the claim referents in a way that enables us to fetch the needed entities from the ledger.
+        Map<String, ClaimReferent> claimsForProof = claimsByReferentKey
+                .values().stream()
+                .distinct()
+                .collect(Collectors.toMap(ClaimReferent::getReferent, Function.identity()));
+
+        // Create the json needed for creating the proof
+        JsonNode requestedClaimsJson = createRequestedClaimsJson(proofRequest, selfAttestedAttributes, claimsByReferentKey);
+
+        // Fetch the required schema's and claim definitions, then create, the proof, deserialize and return it.
+        return getEntitiesFromLedger(claimsForProof)
+                .thenCompose(wrapException(entities -> {
+                    log.debug("{} Creating proof", name);
+                    return Anoncreds.proverCreateProof(wallet.getWallet(), proofRequest.toJSON(), JSONUtil.mapper.writeValueAsString(requestedClaimsJson),
+                            JSONUtil.mapper.writeValueAsString(entities.getSchemas()), masterSecretName,
+                            JSONUtil.mapper.writeValueAsString(entities.getClaimDefs()), "{}");
+                }))
+                .thenApply(wrapException(proofJson -> {
+                    Proof proof = JSONUtil.mapper.readValue(proofJson, Proof.class);
+                    proof.setTheirDid(theirDid);
+                    return proof;
+                }));
+    }
+
+    private Map<String, ClaimReferent> findNeededClaimReferents(ProofRequest proofRequest, ClaimsForRequest claimsForRequest, Map<String, String> attributes) {
         // We find all the ClaimReferents that we are going to use. The cases:
         // 1. The referent is for an attribute and a value is provided -> Find any that matches the provided value
         // 2. The referent is for an attribute and no value is provided -> Find any
         // 3. The referent is for a predicate -> Find any
 
-        log.debug("{} Creating proof using claims: {}", name, claimsForRequest.toJSON());
-
-        Map<String, ClaimReferent> claimsByReferentKey = Stream.<Optional<AbstractMap.SimpleEntry<String, ClaimReferent>>>concat(claimsForRequest
+        return Stream.<Optional<AbstractMap.SimpleEntry<String, ClaimReferent>>>concat(claimsForRequest
                         .getAttrs().entrySet()
                         .stream()
                         .map((claimReferentEntry) -> {
@@ -113,23 +154,9 @@ public class Prover extends WalletOwner {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
 
-        Map<String, ClaimReferent> claimsForProof = claimsByReferentKey
-                .values().stream()
-                .distinct()
-                .collect(Collectors.toMap(ClaimReferent::getReferent, Function.identity()));
-
-        Map<String, String> selfAttestedAttributes = proofRequest.getRequestedAttrs()
-                .entrySet().stream()
-                .filter(stringAttributeInfoEntry -> !stringAttributeInfoEntry.getValue().getRestrictions().isPresent())
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
-                    String value = attributes.get(entry.getValue().getName());
-                    if (value == null) {
-                        throw new IllegalArgumentException("Self attested attribute was not provided");
-                    }
-                    return value;
-                }));
-
+    private JsonNode createRequestedClaimsJson(ProofRequest proofRequest, Map<String, String> selfAttestedAttributes, Map<String, ClaimReferent> claimsByReferentKey) {
         Map<String, List<Object>> requestedAttributes = proofRequest.getRequestedAttrs()
                 .entrySet().stream()
                 .filter(stringAttributeInfoEntry -> stringAttributeInfoEntry.getValue().getRestrictions().isPresent())
@@ -144,22 +171,8 @@ public class Prover extends WalletOwner {
         requestedClaimsJson.set("self_attested_attributes", JSONUtil.mapper.valueToTree(selfAttestedAttributes));
         requestedClaimsJson.set("requested_attrs", JSONUtil.mapper.valueToTree(requestedAttributes));
         requestedClaimsJson.set("requested_predicates", JSONUtil.mapper.valueToTree(requestedPredicates));
-
-
-        return getEntitiesFromLedger(claimsForProof)
-                .thenCompose(wrapException(entities -> {
-                    log.debug("{} Creating proof", name);
-                    return Anoncreds.proverCreateProof(wallet.getWallet(), proofRequest.toJSON(), JSONUtil.mapper.writeValueAsString(requestedClaimsJson),
-                            JSONUtil.mapper.writeValueAsString(entities.getSchemas()), masterSecretName,
-                            JSONUtil.mapper.writeValueAsString(entities.getClaimDefs()), "{}");
-                }))
-                .thenApply(wrapException(proofJson -> {
-                    Proof proof = JSONUtil.mapper.readValue(proofJson, Proof.class);
-                    proof.setTheirDid(theirDid);
-                    return proof;
-                }));
+        return requestedClaimsJson;
     }
-
 
 
     public CompletableFuture<Void> storeClaim(Claim claim) throws JsonProcessingException, IndyException {

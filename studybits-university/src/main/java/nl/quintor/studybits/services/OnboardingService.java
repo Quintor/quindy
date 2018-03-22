@@ -16,10 +16,7 @@ import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 @Service
 public class OnboardingService {
@@ -30,14 +27,8 @@ public class OnboardingService {
     @Autowired
     private StudentRepository studentRepository;
 
-    private Map<String, Issuer> issuers;
-
     @Autowired
-    public OnboardingService(Issuer[] issuers) {
-        this.issuers = Arrays
-                .stream(issuers)
-                .collect(Collectors.toMap(x -> x.getName().toLowerCase(), x -> x));
-    }
+    private IssuerService issuerService;
 
     @SneakyThrows
     public OnboardBegin onboardBegin(String universityName, String userName) {
@@ -55,7 +46,7 @@ public class OnboardingService {
     }
 
     private <R> R withIssuerAndStudent(String universityName, String userName, BiFunction<Issuer, Student, R> func) {
-        Issuer issuer = issuers.get(universityName.toLowerCase());
+        Issuer issuer = issuerService.getIssuer(universityName);
         Student student = studentRepository
                 .findByUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found!"));
