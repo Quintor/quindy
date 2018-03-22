@@ -8,11 +8,15 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class EntityFromLedger {
+/**
+ * EntitiesForClaimReferent holds the entities (schemas, claim definitions, in the future: revocation registries)
+ * needed to verify the proof for that particular claim referent.
+ */
+public class EntitiesForClaimReferent {
     private Schema schema;
     private String claimDef;
     @JsonIgnore
     private String referent;
     // TODO: Revocation
-    // private JsonNode revRegs;
+    // private JsonNode revReg;
 }
