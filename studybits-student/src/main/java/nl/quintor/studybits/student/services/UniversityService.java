@@ -52,11 +52,10 @@ public class UniversityService {
                 .collect(Collectors.toList());
     }
 
-    public void updateById(Long uniId, University university) {
-        if (!universityRepository.existsById(uniId))
+    public void updateById(University university) {
+        if (!universityRepository.existsById(university.getId()))
             throw new IllegalArgumentException("University with id not found.");
 
-        university.setId(uniId);
         universityRepository.save(university);
     }
 

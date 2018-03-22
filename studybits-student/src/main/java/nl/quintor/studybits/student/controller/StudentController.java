@@ -32,7 +32,7 @@ public class StudentController {
                 .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
     }
 
-    @GetMapping("")
+    @GetMapping()
     List<Student> findAll() {
         return studentService.findAll();
     }

@@ -27,14 +27,14 @@ public class UniversityController {
                 .orElseThrow(() -> new IllegalArgumentException("University with id not found"));
     }
 
-    @GetMapping("")
+    @GetMapping()
     List<University> findAll() {
         return universityService.findAll();
     }
 
-    @PutMapping("/{uniId}")
-    void updateById(@PathVariable Long uniId, @RequestParam University university) {
-        universityService.updateById(uniId, university);
+    @PutMapping()
+    void updateById(@RequestBody University university) {
+        universityService.updateById(university);
     }
 
     @DeleteMapping("/{uniId}")

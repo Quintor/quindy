@@ -21,27 +21,27 @@ public class StewardBeanConfig {
     @Autowired
     IndyPool indyPool;
 
-    @Value("${steward.active}")
+    @Value( "${steward.active}" )
     private String stewardActive;
 
-    @Value("${steward.walletname}")
+    @Value( "${steward.walletname}" )
     private String stewardWalletName;
 
-    @Value("${steward.walletseed}")
+    @Value( "${steward.walletseed}" )
     private String stewardWalletSeed;
 
-    @Bean("stewardTrustAnchor")
+    @Bean( "stewardTrustAnchor" )
     public TrustAnchor stewardTrustAnchor() throws Exception {
         IndyWallet stewardWallet = getIndyWallet(stewardWalletName, stewardWalletSeed);
         TrustAnchor steward = new TrustAnchor("Steward", indyPool, stewardWallet);
         return steward;
     }
 
-    private IndyWallet getIndyWallet(String name, String seed) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
+    private IndyWallet getIndyWallet( String name, String seed ) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
         try {
             return IndyWallet.create(indyPool, name, seed);
-        }catch (Exception ex) {
-            if(!(ex.getCause() instanceof WalletExistsException)) {
+        } catch ( Exception ex ) {
+            if ( !( ex.getCause() instanceof WalletExistsException ) ) {
                 throw ex;
             }
         }

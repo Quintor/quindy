@@ -1,4 +1,4 @@
-package nl.quintor.studybits.student;
+package nl.quintor.studybits.student.unit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.quintor.studybits.student.controller.StudentController;
