@@ -74,8 +74,11 @@ public class Prover extends WalletOwner {
      * @return
      */
     public CompletableFuture<Proof> fulfillProofRequest(ProofRequest proofRequest, Map<String, String> attributes) throws JsonProcessingException, IndyException {
+        log.debug("{} Proving proof request: {}", name, proofRequest);
+
         return Anoncreds.proverGetClaimsForProofReq(wallet.getWallet(), proofRequest.toJSON())
                 .thenApply(wrapException(claimsForProofRequestJson -> {
+                    log.debug("{}: Obtained claims for proof request {}", name, claimsForProofRequestJson);
                     return JSONUtil.mapper.readValue(claimsForProofRequestJson, ClaimsForRequest.class);
                 }))
                 .thenCompose(wrapException(claimsForRequest -> createProofFromClaims(proofRequest, claimsForRequest, attributes, proofRequest.getTheirDid())))

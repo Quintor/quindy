@@ -1,6 +1,7 @@
 package nl.quintor.studybits.indy.wrapper.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,5 +20,10 @@ public class ClaimReferent implements Serializable {
     private String issuerDid;
     @JsonProperty("revoc_reg_seq_no")
     private Integer revocRegSeqNo;
+
+    @JsonSetter("rev_reg_seq_no")
+    public void setRevRegSeqNo(Integer revRegSeqNo) {
+        this.revocRegSeqNo = revRegSeqNo;
+    }
 
 }

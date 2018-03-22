@@ -15,16 +15,16 @@ import java.util.Map;
 public class Proof implements Serializable, AuthCryptable {
     private JsonNode proof;
     @JsonProperty("requested_proof")
-    private RequestedProof requestedProof;
+    private JsonNode requestedProof;
     private Map<String, ClaimReferent> identifiers;
 
     @JsonIgnore
     private String theirDid;
-
-    @AllArgsConstructor
-    @Data
-    @NoArgsConstructor
-    public static class RequestedProof {
-
-    }
+//
+//    @AllArgsConstructor
+//    @Data
+//    @NoArgsConstructor
+//    public static class RequestedProof {
+//
+//    }
 }
