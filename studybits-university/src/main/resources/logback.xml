@@ -34,6 +34,10 @@
     <!-- in order to debug some marshalling issues, this needs to be TRACE -->
     <logger name="org.springframework.web.servlet.mvc" level="INFO" />
 
+    <!--<logger name="nl.quintor.studybits" level="TRACE"/>-->
+    <!--<logger name="org.hibernate.SQL" level="DEBUG" />-->
+    <!--<logger name="org.hibernate.type" level="TRACE" />-->
+
     <root level="DEBUG">
         <appender-ref ref="SAVE-TO-FILE" />
         <appender-ref ref="STDOUT"/>
