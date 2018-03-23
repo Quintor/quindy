@@ -6,8 +6,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -36,6 +34,13 @@ public class UserContext {
                 .orElseThrow(() -> new IllegalArgumentException("UserIdentity information missing."));
     }
 
+    public String currentUserNameName() {
+        return currentUserIdentity().getUserName();
+    }
+
+    public String currentUniversityName() {
+        return currentUserIdentity().getUniversityName();
+    }
 
     public Long currentUserId() {
         return currentUserIdentity()
@@ -43,13 +48,5 @@ public class UserContext {
                 .orElseThrow(() -> new IllegalArgumentException("Unknown user."));
     }
 
-    public Map<String, Object> getIdentityPathVariables() {
-        return getCurrentUser().map(identity -> {
-            HashMap<String, Object> arguments = new HashMap<>();
-            arguments.put("universityName", currentUserIdentity().getUniversityName());
-            arguments.put("userName", currentUserIdentity().getUserName());
-            return arguments;
-        }).orElseGet(() -> new HashMap<>());
-    }
 
 }

@@ -1,30 +1,27 @@
 package nl.quintor.studybits.university.controllers.student;
 
-import lombok.SneakyThrows;
 import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
 import nl.quintor.studybits.university.UserContext;
+import nl.quintor.studybits.university.helpers.LinkHelper;
 import nl.quintor.studybits.university.models.StudentClaimInfo;
 import nl.quintor.studybits.university.services.ClaimProvider;
 import nl.quintor.studybits.university.services.ClaimService;
 import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.springframework.hateoas.core.DummyInvocationUtils.methodOn;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("/{universityName}/student/{userName}/claims")
 public class ClaimController {
 
     private UserContext userContext;
+
+    private LinkHelper linkHelper;
 
     private ClaimService claimService;
 
@@ -35,8 +32,9 @@ public class ClaimController {
     }
 
     @Autowired
-    ClaimController(UserContext userContext, ClaimService claimService, ClaimProvider[] claimProviders) {
+    ClaimController(UserContext userContext, LinkHelper linkHelper, ClaimService claimService, ClaimProvider[] claimProviders) {
         this.userContext = userContext;
+        this.linkHelper = linkHelper;
         this.claimService = claimService;
         studentClaimProviderMap = Arrays.stream(claimProviders)
                 .collect(Collectors.toMap(x -> x.getSchemaName(), x -> x));
@@ -45,10 +43,12 @@ public class ClaimController {
 
     @GetMapping("")
     List<StudentClaimInfo> findAllClaims() {
-        return studentClaimProviderMap
-                .entrySet()
+        return claimService
+                .findAvailableClaims(userContext.currentUserId())
                 .stream()
-                .flatMap(x -> getProviderClaims(x.getKey(), x.getValue()))
+                .map(studentClaimInfo -> linkHelper
+                        .withLink(studentClaimInfo, ClaimController.class,
+                                c -> c.getClaimOffer(studentClaimInfo.getName(), studentClaimInfo.getClaimId())))
                 .collect(Collectors.toList());
     }
 
@@ -62,24 +62,6 @@ public class ClaimController {
     AuthcryptedMessage getClaim(@RequestBody String schemaName, @RequestBody AuthcryptedMessage authcryptedMessage) {
         ClaimProvider provider = getProvider(schemaName);
         return provider.getClaim(userContext.currentUserId(), authcryptedMessage);
-    }
-
-    private Stream<StudentClaimInfo> getProviderClaims(String provider, ClaimProvider claimProvider) {
-        return claimService
-                .findAvailableClaims(userContext.currentUserId())
-                .stream()
-                .map(x -> withClaimOfferLink(provider, x));
-    }
-
-    @SneakyThrows
-    private StudentClaimInfo withClaimOfferLink(String provider, StudentClaimInfo studentClaimInfo) {
-        AuthcryptedMessage proxyClaimController = methodOn(ClaimController.class)
-                .getClaimOffer(provider, studentClaimInfo.getClaimId());
-        Link link = linkTo(proxyClaimController)
-                .withRel("ClaimOffer")
-                .expand(userContext.getIdentityPathVariables());
-        studentClaimInfo.add(link);
-        return studentClaimInfo;
     }
 
 }

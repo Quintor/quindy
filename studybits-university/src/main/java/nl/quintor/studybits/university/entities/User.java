@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"userName", "university_id"}))
 public class User {
 
     @Id
@@ -21,7 +22,7 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String userName;
 
     private String firstName;
@@ -42,4 +43,7 @@ public class User {
     @PrimaryKeyJoinColumn
     private StudentUser studentUser;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    private AdminUser adminUser;
 }

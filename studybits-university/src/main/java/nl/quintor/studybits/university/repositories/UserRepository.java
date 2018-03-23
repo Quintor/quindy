@@ -1,5 +1,7 @@
 package nl.quintor.studybits.university.repositories;
 
+import nl.quintor.studybits.university.entities.AdminUser;
+import nl.quintor.studybits.university.entities.StudentUser;
 import nl.quintor.studybits.university.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +17,29 @@ public interface UserRepository extends JpaRepository<User, Long>{
 
     List<User> findAllByUniversityNameIgnoreCase(String universityName);
 
+    Optional<User> findAllByStudentUserIsNotNullAndId(Long id);
+
+    Optional<User> findAllByAdminUserIsNotNullAndId(Long id);
+
+    List<User> findAllByStudentUserIsNotNull();
+
+    List<User> findAllByAdminUserIsNotNull();
+
+    List<User> findAllByStudentUserIsNotNullAndUniversityNameIgnoreCase(String universityName);
+
+    Optional<User> findAllByStudentUserIsNotNullAndUniversityNameIgnoreCaseAndUserNameIgnoreCase(String universityName, String userName);
+
+    List<User> findAllByAdminUserIsNotNullAndUniversityNameIgnoreCase(String universityName);
+
     @Query("select u.id from User u where upper(u.userName) = upper(:userName) and upper(u.university.name) = upper(:universityName)")
     Optional<Long> findIdByUniversityNameAndUserName(@Param("universityName") String universityName, @Param("userName") String userName);
 
+
+    default User saveStudentUser(StudentUser studentUser) {
+        return save(studentUser.getUser());
+    }
+
+    default User saveAdminUser(AdminUser adminUser) {
+        return save(adminUser.getUser());
+    }
 }

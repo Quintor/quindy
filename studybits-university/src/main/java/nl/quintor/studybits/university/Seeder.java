@@ -7,11 +7,12 @@ import nl.quintor.studybits.indy.wrapper.dto.SchemaDefinition;
 import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
 import nl.quintor.studybits.university.dto.ClaimUtils;
 import nl.quintor.studybits.university.dto.Enrolment;
+import nl.quintor.studybits.university.entities.AdminUser;
 import nl.quintor.studybits.university.entities.StudentUser;
 import nl.quintor.studybits.university.entities.University;
 import nl.quintor.studybits.university.entities.User;
-import nl.quintor.studybits.university.repositories.StudentUserRepository;
 import nl.quintor.studybits.university.repositories.UniversityRepository;
+import nl.quintor.studybits.university.repositories.UserRepository;
 import nl.quintor.studybits.university.services.EnrolmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 public class Seeder {
 
     @Autowired
-    private StudentUserRepository studentUserRepository;
+    private UserRepository userRepository;
 
     @Autowired
     private UniversityRepository universityRepository;
@@ -45,16 +46,17 @@ public class Seeder {
             List<University> universities = seedUniversities();
             seedClaimDefinitions("rug", Enrolment.class);
             Map<String, University> universityMap = convertToMap(universities, x -> x.getName().toLowerCase());
-            List<StudentUser> studentUsers = seedStudents(universityMap);
-            addAcademicYears(studentUsers.get(0), "2016/17");
-            addAcademicYears(studentUsers.get(1), "2016/17", "2017/18");
-            addAcademicYears(studentUsers.get(2), "2016/17", "2017/18");
+            seedAdmins(universityMap);
+            List<User> students = seedStudents(universityMap);
+            addAcademicYears(students.get(0), "2016/17");
+            addAcademicYears(students.get(1), "2016/17", "2017/18");
+            addAcademicYears(students.get(2), "2016/17", "2017/18");
             log.info("Seeding completed.");
         }
     }
 
     public Boolean isEmpty() {
-        return studentUserRepository.findAll().isEmpty();
+        return userRepository.findAll().isEmpty();
     }
 
     private Optional<Issuer> getIssuerByName(String name) {
@@ -91,33 +93,55 @@ public class Seeder {
                 .collect(Collectors.toMap(keySelectFunction, x -> x));
     }
 
-    private List<StudentUser> seedStudents(Map<String, University> universityMap) {
+    private List<User> seedStudents(Map<String, University> universityMap) {
         University rug = universityMap.get("rug");
-        StudentUser s1 = createStudent("student1", "Cor", "Nuiten", rug);
-        StudentUser s2 = createStudent("student2", "Connie", "Veren", rug);
-        StudentUser s3 = createStudent("student3", "Ko", "de Kraker", rug);
-        List<StudentUser> users = Arrays.asList(s1, s2, s3);
-        return studentUserRepository.saveAll(users);
+        User rugStudent1 = createStudent("student1", "Peter", "Ulrich", rug);
+        User rugStudent2 = createStudent("student2", "Margot", "Veren", rug);
+        User rugStudent3 = createStudent("student3", "Ko", "de Kraker", rug);
+        University gent = universityMap.get("gent");
+        User gentStudent1 = createStudent("student1", "Axelle", "Wanders", gent);
+        User gentStudent2 = createStudent("student2", "Laure", "de Vadder", gent);
+        User gentStudent3 = createStudent("student3", "Senne", "de Waal", gent);
+        List<User> users = Arrays.asList(rugStudent1, rugStudent2, rugStudent3, gentStudent1, gentStudent2, gentStudent3);
+        return userRepository.saveAll(users);
+    }
+
+    private List<User> seedAdmins(Map<String, University> universityMap) {
+        University rug = universityMap.get("rug");
+        User admin1 = createAdmin("admin1", "Etienne", "Nijboer", rug);
+        University gent = universityMap.get("gent");
+        User admin2 = createAdmin("admin2", "Pim", "Otten", gent);
+        List<User> users = Arrays.asList(admin1, admin2);
+        return userRepository.saveAll(users);
     }
 
     private University createUniversity(String name) {
-
         log.info("Creating {} university...", name);
         return new University(null, name, new HashSet<>());
     }
 
-    private StudentUser createStudent(String userName, String firstName, String lastName, University university) {
-        log.info("Creating user {} for university {}...", userName, university.getName());
-        User user = new User(null, userName, firstName, lastName, university, null, new ArrayList<>(), null);
-        StudentUser studentUser = new StudentUser(null, user, new HashSet<>());
-        return studentUser;
+    private User createStudent(String userName, String firstName, String lastName, University university) {
+        log.info("Creating admin user {} for university {}...", userName, university.getName());
+        StudentUser studentUser = new StudentUser(null, null, new HashSet<>());
+        return createUser(userName, firstName, lastName, university, Optional.of(studentUser), Optional.empty());
     }
 
-    private void addAcademicYears(StudentUser studentUsers, String... academicYears) {
+    private User createAdmin(String userName, String firstName, String lastName, University university) {
+        log.info("Creating admin user {} for university {}...", userName, university.getName());
+        return createUser(userName, firstName, lastName, university, Optional.empty(), Optional.of(new AdminUser()));
+    }
+
+    private User createUser(String userName, String firstName, String lastName, University university, Optional<StudentUser> studentUser, Optional<AdminUser> adminUser) {
+        log.info("Creating admin user {} for university {}...", userName, university.getName());
+        User user = new User(null, userName, firstName, lastName, university, null, new ArrayList<>(), studentUser.orElse(null), adminUser.orElse(null));
+        studentUser.ifPresent(x -> x.setUser(user));
+        adminUser.ifPresent(x -> x.setUser(user));
+        return user;
+    }
+
+    private void addAcademicYears(User user, String... academicYears) {
         Arrays.stream(academicYears)
-                .forEach(academicYear -> enrolmentService.addEnrolment(studentUsers.getId(), academicYear));
-
+                .forEach(academicYear -> enrolmentService.addEnrolment(user.getId(), academicYear));
     }
-
 
 }

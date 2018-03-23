@@ -1,8 +1,7 @@
 package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
-import nl.quintor.studybits.university.UserContext;
-import nl.quintor.studybits.university.models.Student;
+import nl.quintor.studybits.university.models.UserModel;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,41 +19,38 @@ public class StudentService {
     private UserRepository userRepository;
 
     @Autowired
-    private UserContext userContext;
-
-    @Autowired
     private Mapper mapper;
 
-    private Student toModel(Object student) {
-        return mapper.map(student, Student.class);
+    private UserModel toModel(Object user) {
+        return mapper.map(user, UserModel.class);
     }
 
-    public List<Student> findAllStudents() {
+    public List<UserModel> findAllStudents() {
         return userRepository
-                .findAll()
+                .findAllByStudentUserIsNotNull()
                 .stream()
                 .map(this::toModel)
                 .collect(Collectors.toList());
     }
 
-    public List<Student> findAllForUniversity(String universityName) {
+    public List<UserModel> findAllForUniversity(String universityName) {
         return userRepository
-                .findAllByUniversityNameIgnoreCase(universityName)
+                .findAllByStudentUserIsNotNullAndUniversityNameIgnoreCase(universityName)
                 .stream()
                 .map(this::toModel)
                 .collect(Collectors.toList());
     }
 
 
-    public Optional<Student> findById(Long id) {
+    public Optional<UserModel> findById(Long id) {
         return userRepository
                 .findById(id)
                 .map(this::toModel);
     }
 
-    public Optional<Student> findByUniversityAndUserName(String universityName, String userName) {
+    public Optional<UserModel> findByUniversityAndUserName(String universityName, String userName) {
         return userRepository
-                .findByUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName)
+                .findAllByStudentUserIsNotNullAndUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName)
                 .map(this::toModel);
     }
 
