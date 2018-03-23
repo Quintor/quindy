@@ -2,14 +2,12 @@ package nl.quintor.studybits.university;
 
 import org.apache.commons.io.FileUtils;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.File;
 import java.nio.file.Paths;
 
-@EnableAutoConfiguration
-@ComponentScan
+@SpringBootApplication
 public class Main {
 
     public static void main(String[] args) throws Exception {

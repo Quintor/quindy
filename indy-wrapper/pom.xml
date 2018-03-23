@@ -9,6 +9,12 @@
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
+    <parent>
+        <groupId>nl.quintor</groupId>
+        <artifactId>studybits</artifactId>
+        <version>0.1</version>
+    </parent>
+
     <groupId>nl.quintor.studybits</groupId>
     <artifactId>indy-wrapper</artifactId>
     <version>0.1</version>

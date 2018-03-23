@@ -6,7 +6,6 @@ import org.hyperledger.indy.sdk.IndyException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -19,7 +18,6 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 import java.util.concurrent.ExecutionException;
 
 @Configuration
-@ComponentScan
 @EnableSwagger2
 public class AppConfig implements WebMvcConfigurer {
 
@@ -46,11 +44,6 @@ public class AppConfig implements WebMvcConfigurer {
             System.out.println(ex.getMessage());
         }
         return new IndyPool(poolName);
-    }
-
-    @Bean
-    public UserContext userContext() {
-        return new UserContext();
     }
 
     @Override

@@ -10,18 +10,20 @@ import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.hyperledger.indy.sdk.wallet.WalletExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.Optional;
 
-@Component
+@Configuration
 public class UniversitiesBeanConfig {
 
     @Autowired
     private IndyPool indyPool;
 
     @Autowired
+    @Qualifier("stewardTrustAnchor")
     private TrustAnchor steward;
 
     @Bean("RugUniversity")

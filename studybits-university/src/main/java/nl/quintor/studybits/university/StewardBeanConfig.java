@@ -9,11 +9,11 @@ import org.hyperledger.indy.sdk.wallet.WalletExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.concurrent.ExecutionException;
 
-@Component
+@Configuration
 public class StewardBeanConfig {
 
     @Autowired

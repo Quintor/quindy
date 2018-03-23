@@ -9,30 +9,22 @@ services:
     # Host networking is used, because we need to know the pool IP at build time, which is kind-of tricky
     network_mode: "host"
 
-  jars:
+  backend-student:
     depends_on:
       - pool
     build:
-      context: ../
-
-  backend-student:
-    depends_on:
-      - jars
-    build:
       context: ../studybits-student
-      args:
-        LIBINDY_VERSION: ${LIBINDY_VERSION}
     ports:
     - "8090:8090"
     network_mode: "host"
 
   backend-university:
     depends_on:
-      - jars
+      - pool
     build:
       context: ../studybits-university
-      args:
-        LIBINDY_VERSION: ${LIBINDY_VERSION}
+    environment:
+    - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK=DEBUG
     ports:
       - "8095:8095"
     network_mode: "host"

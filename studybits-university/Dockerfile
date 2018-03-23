@@ -1,3 +1,4 @@
+FROM studybits:latest
 FROM ubuntu:16.04
 # First install software-properties-common for add-apt-repository, and apt-transport-https to communicate.
 RUN apt-get update \
@@ -9,11 +10,10 @@ RUN apt-get update \
 
 # Set the default Libindy version. Will be overwritten when argument is supplied from console
 ARG LIBINDY_VERSION=1.3.1~406
-ENV ENV_LIBINDY_VERSTION=$LIBINDY_VERSION
 
 # Split off libindy command for fast builds on version bump
-RUN apt-get update && apt-get install -y libindy=$ENV_LIBINDY_VERSTION
+RUN apt-get update && apt-get install -y libindy=$LIBINDY_VERSION
 
-COPY --from=0 /target/studybits-university-*-jar-with-dependencies.jar /backend-university.jar
+COPY --from=0 /studybits-university/target/studybits-university-*.jar /backend-university.jar
 
-CMD java -cp /backend-university.jar nl.quintor.studybits.university.Main
+CMD java -jar /backend-university.jar
