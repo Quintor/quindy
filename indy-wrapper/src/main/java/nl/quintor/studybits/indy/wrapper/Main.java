@@ -4,22 +4,22 @@ import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
+import org.apache.commons.io.FileUtils;
 import org.hyperledger.indy.sdk.IndyException;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        Runtime.getRuntime().exec("rm -rf /home/potte/.indy_client");
+        removeIndyClientDirectory();
 
         String poolName = PoolUtils.createPoolLedgerConfig();
-
         IndyPool indyPool = new IndyPool(poolName);
         TrustAnchor steward = new TrustAnchor("Steward", indyPool, IndyWallet.create(indyPool, "steward_wallet", "000000000000000000000000Steward1"));
-
 
         // Onboard the issuers (onboard -> verinym -> issuerDids)
         Issuer government = new Issuer("Government", indyPool, IndyWallet.create(indyPool, "government_wallet",null));
@@ -37,6 +37,8 @@ public class Main {
         Prover alice = new Prover("Alice", indyPool, IndyWallet.create(indyPool, "alice_wallet", null));
         String aliceFaberDid = onboardWalletOwner(faber, alice);
         alice.init("alice_master_secret");
+
+        String aliceAcmeDid = onboardWalletOwner(acme, alice);
 
         // Create schemas
         SchemaKey jobCertificateSchemaKey = government.createAndSendSchema("Job-Certificate", "0.2",
@@ -78,6 +80,50 @@ public class Main {
 
         alice.authDecrypt(claim, Claim.class)
                 .thenCompose(AsyncUtil.wrapException(alice::storeClaim)).get();
+
+        List<ClaimInfo> claims = alice.findAllClaims()
+                                      .get();
+
+        System.out.println(claims);
+
+
+        List<Filter> transcriptFilter = Collections.singletonList(new Filter(faber.getIssuerDid(), transcriptSchemaKey));
+        ProofRequest jobApplicationProofRequest = ProofRequest.builder()
+                                                              .name("Job-Application")
+                                                              .nonce("1432422343242122312411212")
+                                                              .version("0.1")
+                                                              .requestedAttr("attr1_referent", new AttributeInfo("first_name", Optional.empty()))
+                                                              .requestedAttr("attr2_referent", new AttributeInfo("last_name", Optional.empty()))
+                                                              .requestedAttr("attr3_referent", new AttributeInfo("degree", Optional.of(transcriptFilter)))
+                                                              .requestedAttr("attr4_referent", new AttributeInfo("status", Optional.of(transcriptFilter)))
+                                                              .requestedAttr("attr5_referent", new AttributeInfo("ssn", Optional.of(transcriptFilter)))
+                                                              .requestedAttr("attr6_referent", new AttributeInfo("phone_number", Optional.empty()))
+                                                              .requestedPredicate("predicate1_referent", new PredicateInfo("average", ">=", 4, Optional.of(transcriptFilter)))
+                                                              .build();
+
+        jobApplicationProofRequest.setTheirDid(aliceAcmeDid);
+
+        AuthcryptedMessage authcryptedJobApplicationProofRequest = acme.authcrypt(jobApplicationProofRequest)
+                                                                       .get();
+
+
+        Map<String, String> selfAttestedAttributes = new HashMap<>();
+        selfAttestedAttributes.put("first_name", "Alice");
+        selfAttestedAttributes.put("last_name", "Garcia");
+        selfAttestedAttributes.put("phone_number", "123phonenumber");
+
+        AuthcryptedMessage authcryptedProof = alice.authDecrypt(authcryptedJobApplicationProofRequest, ProofRequest.class)
+                                                   .thenCompose(AsyncUtil.wrapException(proofRequest -> alice.fulfillProofRequest(proofRequest, selfAttestedAttributes)))
+                                                   .thenCompose(AsyncUtil.wrapException(alice::authcrypt))
+                                                   .get();
+
+        Verifier acmeVerifier = new Verifier(acme.getName(), indyPool, acme.getWallet());
+
+        Map<String, Map.Entry<String, String>> attributes = acmeVerifier.authDecrypt(authcryptedProof, Proof.class)
+                                                                        .thenCompose(proof -> acmeVerifier.verifyProof(jobApplicationProofRequest, proof))
+                                                                        .get();
+
+        System.out.println(attributes);
     }
 
     private static void onboardIssuer(TrustAnchor steward, Issuer newcomer) throws InterruptedException, java.util.concurrent.ExecutionException, IndyException, java.io.IOException {
@@ -91,8 +137,9 @@ public class Main {
         steward.anonDecrypt(newcomerConnectionResponse, ConnectionResponse.class)
                 .thenCompose(AsyncUtil.wrapException(steward::acceptConnectionResponse)).get();
 
-        AuthcryptedMessage verinym = newcomer.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class).getDid())
-                .thenCompose(AsyncUtil.wrapException(newcomer::authcrypt)).get();
+        AuthcryptedMessage verinym = newcomer.authcrypt(newcomer.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class)
+                                                                                                     .getDid()))
+                                             .get();
 
         steward.authDecrypt(verinym, Verinym.class)
                 .thenCompose(AsyncUtil.wrapException(steward::acceptVerinymRequest)).get();
@@ -110,5 +157,12 @@ public class Main {
                 .thenCompose(AsyncUtil.wrapException(trustAnchor::acceptConnectionResponse)).get();
 
         return newcomerDid;
+    }
+
+    private static void removeIndyClientDirectory() throws Exception {
+        String homeDir = System.getProperty("user.home");
+        File indyClientDir = Paths.get(homeDir, ".indy_client")
+                                  .toFile();
+        FileUtils.deleteDirectory(indyClientDir);
     }
 }

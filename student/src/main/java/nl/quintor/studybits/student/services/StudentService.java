@@ -1,43 +1,107 @@
 package nl.quintor.studybits.student.services;
 
-import javassist.NotFoundException;
-import nl.quintor.studybits.student.interfaces.StudentRepository;
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
+import nl.quintor.studybits.indy.wrapper.IndyPool;
+import nl.quintor.studybits.indy.wrapper.IndyWallet;
+import nl.quintor.studybits.indy.wrapper.WalletOwner;
+import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
+import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
+import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.student.model.MetaWallet;
 import nl.quintor.studybits.student.model.Student;
 import nl.quintor.studybits.student.model.University;
+import nl.quintor.studybits.student.repositories.StudentRepository;
+import org.apache.commons.lang3.Validate;
+import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-@Component
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+
+@Service
+@AllArgsConstructor( onConstructor = @__( @Autowired ) )
 public class StudentService {
-    @Autowired
     private StudentRepository studentRepository;
-
-    @Autowired
     private UniversityService universityService;
-
-    @Autowired
     private MetaWalletService metaWalletService;
+    private ConnectionRecordService connectionRecordService;
+    private IndyPool indyPool;
+    private Mapper mapper;
 
-    public Boolean exists(String username) {
-        return studentRepository.getByUsername(username) != null;
+    private Student toModel( Object student ) {
+        return mapper.map(student, Student.class);
     }
 
-    public Student getById(Long studentId) {
-        return studentRepository.getById(studentId);
-    }
+    @SneakyThrows
+    public Student createAndSave( String username, String uniName ) {
+        if ( studentRepository.existsByUsername(username) ) throw new IllegalArgumentException("Student with username exists already.");
 
-    public Student createAndSave(String username, String uniName) throws Exception {
-        if (exists(username))
-            throw new IllegalArgumentException("Student with username exists already.");
-
-        if (!universityService.exists(uniName))
-            throw new NotFoundException("University does not exist (yet).");
-
-        University university = universityService.getByName(uniName);
+        University university = universityService.findByName(uniName)
+                                                 .orElseThrow(() -> new IllegalArgumentException("University with id not found"));
         MetaWallet metaWallet = metaWalletService.createAndSave(username);
         Student student = new Student(null, username, university, metaWallet);
 
         return studentRepository.save(student);
     }
+
+    public Optional<Student> findById( Long studentId ) {
+        return studentRepository.findById(studentId)
+                                .map(this::toModel);
+    }
+
+    public List<Student> findAll() {
+        return studentRepository.findAll()
+                                .stream()
+                                .map(this::toModel)
+                                .collect(Collectors.toList());
+    }
+
+    public void updateById( Student student ) {
+        if ( !studentRepository.existsById(student.getId()) ) throw new IllegalArgumentException("Student with id not found.");
+
+        studentRepository.save(student);
+    }
+
+    public void deleteById( Long studentId ) {
+        if ( !studentRepository.existsById(studentId) ) throw new IllegalArgumentException("University with id not found.");
+
+        studentRepository.deleteById(studentId);
+    }
+
+    @SneakyThrows
+    public void onboard( Student student, University university ) {
+        URI uriBegin = universityService.buildOnboardingBeginUri(university, student);
+        URI uriFinalize = universityService.buildOnboardingFinalizeUri(university, student);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ConnectionRequest beginRequest = restTemplate.getForObject(uriBegin, ConnectionRequest.class);
+        connectionRecordService.saveConnectionRequest(beginRequest, university, student);
+
+        AnoncryptedMessage beginResponse = acceptConnectionRequest(student, beginRequest);
+        ResponseEntity<Void> finalizeResponse = restTemplate.postForEntity(uriFinalize, beginResponse, Void.class);
+        Validate.isTrue(finalizeResponse.getStatusCode()
+                                        .is2xxSuccessful());
+    }
+
+    @SneakyThrows
+    private AnoncryptedMessage acceptConnectionRequest( Student student, ConnectionRequest connectionRequest ) {
+        WalletOwner walletOwner = getWalletOwnerForStudent(student);
+        return walletOwner.acceptConnectionRequest(connectionRequest)
+                          .thenCompose(AsyncUtil.wrapException(walletOwner::anoncrypt))
+                          .get();
+    }
+
+    private WalletOwner getWalletOwnerForStudent( Student student ) {
+        IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
+        return new WalletOwner(student.getUsername(), indyPool, indyWallet);
+
+    }
 }
+

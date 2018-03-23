@@ -1,10 +1,7 @@
 package nl.quintor.studybits.indy.wrapper.util;
 
 import java.util.concurrent.CompletionException;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 public class AsyncUtil {
     public static <T, R> Function<T, R> wrapException(ExceptionalFunction<T, R> exceptionalFunction) {
@@ -51,6 +48,16 @@ public class AsyncUtil {
         };
     }
 
+    public static <T, U> BiConsumer<T, U> wrapBiConsumerException( ExceptionalBiConsumer<T, U> exceptionalBiConsumer ) {
+        return ( T t, U u ) -> {
+            try {
+                exceptionalBiConsumer.consume(t, u);
+            } catch ( Exception e ) {
+                throw new CompletionException(e);
+            }
+        };
+    }
+
 
     public interface ExceptionalFunction<T, R> {
         public R apply(T t) throws Exception;
@@ -66,5 +73,9 @@ public class AsyncUtil {
 
     public interface ExceptionalPredicate<T> {
         public boolean test(T t) throws Exception;
+    }
+
+    public interface ExceptionalBiConsumer<T, U> {
+        public void consume( T t, U u ) throws Exception;
     }
 }

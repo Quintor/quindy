@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Map;
 
 public class IntegerEncodingUtil {
@@ -31,6 +32,17 @@ public class IntegerEncodingUtil {
         else {
             return new String(encoding.subtract(STRING_RANGE_START).toByteArray(), Charset.forName("utf8"));
         }
+    }
+
+    public static boolean validateProofEncoding( List<String> value ) {
+        if ( value.size() != 3 ) {
+            return false;
+        }
+
+        String plainValue = value.get(1);
+        String encoding = value.get(2);
+
+        return plainValue.equals(decode(new BigInteger(encoding)));
     }
 
     public static JsonNode claimValuesFromMap(Map<String, Object> valueMap) throws UnsupportedEncodingException {

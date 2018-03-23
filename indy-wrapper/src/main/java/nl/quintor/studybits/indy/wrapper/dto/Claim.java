@@ -23,7 +23,5 @@ public class Claim implements Serializable, AuthCryptable {
     private Integer revReqSeqNo;
 
     @JsonIgnore
-    private String myDid;
-    @JsonIgnore
     private String theirDid;
 }

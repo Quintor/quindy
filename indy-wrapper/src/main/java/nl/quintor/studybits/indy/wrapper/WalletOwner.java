@@ -12,14 +12,18 @@ import org.hyperledger.indy.sdk.ledger.Ledger;
 import org.hyperledger.indy.sdk.pairwise.Pairwise;
 
 import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
 @Slf4j
 public class WalletOwner {
     IndyPool pool;
+    @Getter
     IndyWallet wallet;
     @Getter
     String name;
@@ -66,7 +70,7 @@ public class WalletOwner {
                         }));
     }
 
-    CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid(String theirDid) throws IndyException {
+    public CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid( String theirDid ) throws IndyException {
         log.debug("{} Called getPairwise by their did: {}", name, theirDid);
         return Pairwise.getPairwise(wallet.getWallet(), theirDid)
                 .thenApply(wrapException(json -> JSONUtil.mapper.readValue(json, GetPairwiseResult.class)));
@@ -102,6 +106,19 @@ public class WalletOwner {
                 .thenApply(wrapException(response -> JSONUtil.mapper.readTree(response).at("/result").toString()));
     }
 
+    CompletableFuture<EntitiesFromLedger> getEntitiesFromLedger( Map<String, ClaimIdentifier> identifiers ) {
+        List<CompletableFuture<EntitiesForClaimReferent>> entityFutures = identifiers.entrySet()
+                                                                                     .stream()
+                                                                                     .map(wrapException(( Map.Entry<String, ClaimIdentifier> stringClaimIdentifierEntry ) -> getSchema(wallet.getMainDid(), stringClaimIdentifierEntry.getValue()
+                                                                                                                                                                                                                                      .getSchemaKey()).thenCompose(wrapException(( Schema schema ) -> getClaimDef(wallet.getMainDid(), schema, stringClaimIdentifierEntry.getValue()
+                                                                                                                                                                                                                                                                                                                                                                         .getIssuerDid()).thenApply(claimDef -> new EntitiesForClaimReferent(schema, claimDef, stringClaimIdentifierEntry.getKey()))))))
+                                                                                     .collect(Collectors.toList());
+
+        return CompletableFuture.allOf(entityFutures.toArray(new CompletableFuture[0]))
+                                .thenApply(_void -> entityFutures.stream()
+                                                                 .map(CompletableFuture::join)
+                                                                 .collect(EntitiesFromLedger.collector()));
+    }
 
     public CompletableFuture<AnoncryptedMessage> anoncrypt(AnonCryptable message) throws JsonProcessingException, IndyException {
         log.debug("{} Anoncrypting message: {}, with did: {}", name, message.toJSON(), message.getTheirDid());
@@ -119,16 +136,15 @@ public class WalletOwner {
                 .thenApply(wrapException((decryptedMessage) -> JSONUtil.mapper.readValue(new String(decryptedMessage, Charset.forName("utf8")), valueType)));
     }
 
-   public CompletableFuture<AuthcryptedMessage> authcrypt(AuthCryptable message) throws JsonProcessingException, IndyException {
-        log.debug("{} Authcrypting message: {}, myDid: {}, theirDid: {}", name, message.toJSON(), message.getMyDid(), message.getTheirDid());
-        return getKeyForDid(message.getMyDid())
-                .thenCompose(wrapException(myKey -> {
-                    return getKeyForDid(message.getTheirDid())
-                            .thenCompose(wrapException((String theirKey) -> {
-                                        log.debug("{} Authcrypting with keys myKey {}, theirKey {}", name, myKey, theirKey);
-                                        return Crypto.authCrypt(wallet.getWallet(), myKey, theirKey, message.toJSON().getBytes(Charset.forName("utf8")))
-                                                .thenApply(cryptedMessage -> new AuthcryptedMessage(cryptedMessage, message.getMyDid()));
-                                    })
+    public CompletableFuture<AuthcryptedMessage> authcrypt( AuthCryptable message ) throws JsonProcessingException, IndyException {
+        log.debug("{} Authcrypting message: {}, theirDid: {}", name, message.toJSON(), message.getTheirDid());
+        return getKeyForDid(message.getTheirDid()).thenCompose(wrapException(( String theirKey ) -> {
+            return getPairwiseByTheirDid(message.getTheirDid()).thenCompose(wrapException(( GetPairwiseResult getPairwiseResult ) -> getKeyForDid(getPairwiseResult.getMyDid()).thenCompose(wrapException(( String myKey ) -> {
+                        log.debug("{} Authcrypting with keys myKey {}, theirKey {}", name, myKey, theirKey);
+                        return Crypto.authCrypt(wallet.getWallet(), myKey, theirKey, message.toJSON()
+                                                                                            .getBytes(Charset.forName("utf8")))
+                                     .thenApply(cryptedMessage -> new AuthcryptedMessage(cryptedMessage, getPairwiseResult.getMyDid()));
+                    })))
                             );
                 }));
     }
@@ -140,7 +156,6 @@ public class WalletOwner {
                         .thenApply(wrapException((decryptedMessage) -> {
                             assert decryptedMessage.getVerkey().equals(key);
                             T decryptedObject = JSONUtil.mapper.readValue(new String(decryptedMessage.getDecryptedMessage(), Charset.forName("utf8")), valueType);
-                            decryptedObject.setMyDid(pairwiseResult.getMyDid());
                             decryptedObject.setTheirDid(message.getDid());
                             return decryptedObject;
                         }))))))
