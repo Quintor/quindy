@@ -5,18 +5,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
-
 @AllArgsConstructor
 @Data
 @NoArgsConstructor
-public class ClaimReferent implements Serializable {
-    private String referent;
-    private Map<String, String> attrs;
+public class ClaimIdentifier implements Serializable {
     @JsonProperty("schema_key")
     private SchemaKey schemaKey;
     @JsonProperty("issuer_did")
     private String issuerDid;
-    @JsonProperty("revoc_reg_seq_no")
-    private Integer revocRegSeqNo;
+    @JsonProperty("rev_reg_seq_no")
+    private Integer revRegSeqNo;
+
+    public ClaimIdentifier(ClaimReferent claimReferent) {
+        this(claimReferent.getSchemaKey(), claimReferent.getIssuerDid(), claimReferent.getRevocRegSeqNo());
+    }
 }
