@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -15,16 +16,23 @@ import java.util.Map;
 public class Proof implements Serializable, AuthCryptable {
     private JsonNode proof;
     @JsonProperty("requested_proof")
-    private JsonNode requestedProof;
-    private Map<String, ClaimReferent> identifiers;
+    private RequestedProof requestedProof;
+    private Map<String, ClaimIdentifier> identifiers;
 
     @JsonIgnore
     private String theirDid;
-//
-//    @AllArgsConstructor
-//    @Data
-//    @NoArgsConstructor
-//    public static class RequestedProof {
-//
-//    }
+
+    @AllArgsConstructor
+    @Data
+    @NoArgsConstructor
+    public static class RequestedProof {
+        private Map<String, String> predicates;
+        @JsonProperty("self_attested_attrs")
+        private Map<String, String> selfAttestedAttributes;
+        @JsonProperty("revealed_attrs")
+        private Map<String, List<String>> revealedAttributes;
+
+        @JsonProperty("unrevealed_attrs")
+        private JsonNode unrevealedAttrs;
+    }
 }

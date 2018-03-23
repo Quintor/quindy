@@ -23,6 +23,7 @@ import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 @Slf4j
 public class WalletOwner {
     IndyPool pool;
+    @Getter
     IndyWallet wallet;
     @Getter
     String name;
@@ -105,13 +106,13 @@ public class WalletOwner {
                 .thenApply(wrapException(response -> JSONUtil.mapper.readTree(response).at("/result").toString()));
     }
 
-    CompletableFuture<EntitiesFromLedger> getEntitiesFromLedger(Map<String, ClaimReferent> identifiers) {
+    CompletableFuture<EntitiesFromLedger> getEntitiesFromLedger(Map<String, ClaimIdentifier> identifiers) {
         List<CompletableFuture<EntitiesForClaimReferent>> entityFutures = identifiers.entrySet().stream()
-                .map(wrapException((Map.Entry<String, ClaimReferent> stringClaimReferentEntry) ->
-                        getSchema(wallet.getMainDid(), stringClaimReferentEntry.getValue().getSchemaKey())
+                .map(wrapException((Map.Entry<String, ClaimIdentifier> stringClaimIdentifierEntry) ->
+                        getSchema(wallet.getMainDid(), stringClaimIdentifierEntry.getValue().getSchemaKey())
                                 .thenCompose(wrapException((Schema schema) ->
-                                        getClaimDef(wallet.getMainDid(), schema, stringClaimReferentEntry.getValue().getIssuerDid())
-                                                .thenApply(claimDef -> new EntitiesForClaimReferent(schema, claimDef, stringClaimReferentEntry.getKey()))
+                                        getClaimDef(wallet.getMainDid(), schema, stringClaimIdentifierEntry.getValue().getIssuerDid())
+                                                .thenApply(claimDef -> new EntitiesForClaimReferent(schema, claimDef, stringClaimIdentifierEntry.getKey()))
                                 ))))
                 .collect(Collectors.toList());
 

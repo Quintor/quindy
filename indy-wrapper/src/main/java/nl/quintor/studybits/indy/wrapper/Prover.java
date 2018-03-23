@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -74,7 +73,7 @@ public class Prover extends WalletOwner {
      * @return
      */
     public CompletableFuture<Proof> fulfillProofRequest(ProofRequest proofRequest, Map<String, String> attributes) throws JsonProcessingException, IndyException {
-        log.debug("{} Proving proof request: {}", name, proofRequest);
+        log.debug("{} Proving proof request: {}", name, proofRequest.toJSON());
 
         return Anoncreds.proverGetClaimsForProofReq(wallet.getWallet(), proofRequest.toJSON())
                 .thenApply(wrapException(claimsForProofRequestJson -> {
@@ -108,10 +107,10 @@ public class Prover extends WalletOwner {
         Map<String, ClaimReferent> claimsByReferentKey = findNeededClaimReferents(proofRequest, claimsForRequest, attributes);
 
         // Store the claim referents in a way that enables us to fetch the needed entities from the ledger.
-        Map<String, ClaimReferent> claimsForProof = claimsByReferentKey
+        Map<String, ClaimIdentifier> claimsForProof = claimsByReferentKey
                 .values().stream()
                 .distinct()
-                .collect(Collectors.toMap(ClaimReferent::getReferent, Function.identity()));
+                .collect(Collectors.toMap(ClaimReferent::getReferent, ClaimIdentifier::new));
 
         // Create the json needed for creating the proof
         JsonNode requestedClaimsJson = createRequestedClaimsJson(proofRequest, selfAttestedAttributes, claimsByReferentKey);
