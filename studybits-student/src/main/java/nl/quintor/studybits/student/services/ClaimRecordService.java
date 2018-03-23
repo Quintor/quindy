@@ -28,7 +28,7 @@ public class ClaimRecordService {
         Student student = studentService
                 .findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
-        ClaimRecord claimRecord = new ClaimRecord(student, claim);
+        ClaimRecord claimRecord = new ClaimRecord(null, student, claim);
 
         return claimRecordRepository.save(claimRecord);
     }

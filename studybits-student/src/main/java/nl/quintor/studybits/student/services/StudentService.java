@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 
 @Service
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@AllArgsConstructor( onConstructor = @__( @Autowired ) )
 public class StudentService {
     private StudentRepository studentRepository;
     private UniversityService universityService;
@@ -35,55 +35,48 @@ public class StudentService {
     private IndyPool indyPool;
     private Mapper mapper;
 
-    private Student toModel(Object student) {
+    private Student toModel( Object student ) {
         return mapper.map(student, Student.class);
     }
 
     @SneakyThrows
-    public Student createAndSave(String username, String uniName) {
-        if (studentRepository.existsByUsername(username))
-            throw new IllegalArgumentException("Student with username exists already.");
+    public Student createAndSave( String username, String uniName ) {
+        if ( studentRepository.existsByUsername(username) ) throw new IllegalArgumentException("Student with username exists already.");
 
-        University university = universityService
-                .findByName(uniName)
-                .orElseThrow(() -> new IllegalArgumentException("University with id not found"));
+        University university = universityService.findByName(uniName)
+                                                 .orElseThrow(() -> new IllegalArgumentException("University with id not found"));
         MetaWallet metaWallet = metaWalletService.createAndSave(username);
         Student student = new Student(null, username, university, metaWallet);
 
         return studentRepository.save(student);
     }
 
-    public Optional<Student> findById(Long studentId) {
-        return studentRepository
-                .findById(studentId)
-                .map(this::toModel);
+    public Optional<Student> findById( Long studentId ) {
+        return studentRepository.findById(studentId)
+                                .map(this::toModel);
     }
 
     public List<Student> findAll() {
-        return studentRepository
-                .findAll()
-                .stream()
-                .map(this::toModel)
-                .collect(Collectors.toList());
+        return studentRepository.findAll()
+                                .stream()
+                                .map(this::toModel)
+                                .collect(Collectors.toList());
     }
 
-    public void updateById(Long studentId, Student student) {
-        if (!studentRepository.existsById(studentId))
-            throw new IllegalArgumentException("Student with id not found.");
+    public void updateById( Student student ) {
+        if ( !studentRepository.existsById(student.getId()) ) throw new IllegalArgumentException("Student with id not found.");
 
-        student.setId(studentId);
         studentRepository.save(student);
     }
 
-    public void deleteById(Long studentId) {
-        if (!studentRepository.existsById(studentId))
-            throw new IllegalArgumentException("University with id not found.");
+    public void deleteById( Long studentId ) {
+        if ( !studentRepository.existsById(studentId) ) throw new IllegalArgumentException("University with id not found.");
 
         studentRepository.deleteById(studentId);
     }
 
     @SneakyThrows
-    public void onboard(Student student, University university) {
+    public void onboard( Student student, University university ) {
         URI uriBegin = universityService.buildOnboardingBeginUri(university, student);
         URI uriFinalize = universityService.buildOnboardingFinalizeUri(university, student);
 
@@ -93,17 +86,19 @@ public class StudentService {
 
         AnoncryptedMessage beginResponse = acceptConnectionRequest(student, beginRequest);
         ResponseEntity<Void> finalizeResponse = restTemplate.postForEntity(uriFinalize, beginResponse, Void.class);
-        Validate.isTrue(finalizeResponse.getStatusCode().is2xxSuccessful());
+        Validate.isTrue(finalizeResponse.getStatusCode()
+                                        .is2xxSuccessful());
     }
 
     @SneakyThrows
-    private AnoncryptedMessage acceptConnectionRequest(Student student, ConnectionRequest connectionRequest) {
+    private AnoncryptedMessage acceptConnectionRequest( Student student, ConnectionRequest connectionRequest ) {
         WalletOwner walletOwner = getWalletOwnerForStudent(student);
         return walletOwner.acceptConnectionRequest(connectionRequest)
-                .thenCompose(AsyncUtil.wrapException(walletOwner::anoncrypt)).get();
+                          .thenCompose(AsyncUtil.wrapException(walletOwner::anoncrypt))
+                          .get();
     }
 
-    private WalletOwner getWalletOwnerForStudent(Student student) {
+    private WalletOwner getWalletOwnerForStudent( Student student ) {
         IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
         return new WalletOwner(student.getUsername(), indyPool, indyWallet);
 

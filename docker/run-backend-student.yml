@@ -2,13 +2,13 @@ version: '2.3'
 services:
   wrapper:
     build:
-      context: .
+      context: ../studybits-student
       args:
         LIBINDY_VERSION: ${LIBINDY_VERSION}
     network_mode: "host"
   pool:
     build:
-      context: ci
+      context: ../ci
       dockerfile: indy-pool.dockerfile
     ports:
     - "9701-9708:9701-9708"
