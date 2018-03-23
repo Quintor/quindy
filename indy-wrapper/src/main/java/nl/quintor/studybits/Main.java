@@ -111,11 +111,18 @@ public class Main {
         selfAttestedAttributes.put("last_name", "Garcia");
         selfAttestedAttributes.put("phone_number", "123phonenumber");
 
-        AuthcryptedMessage proof = alice.authDecrypt(authcryptedJobApplicationProofRequest, ProofRequest.class)
+        AuthcryptedMessage authcryptedProof = alice.authDecrypt(authcryptedJobApplicationProofRequest, ProofRequest.class)
                 .thenCompose(AsyncUtil.wrapException(proofRequest -> alice.fulfillProofRequest(proofRequest, selfAttestedAttributes)))
                 .thenCompose(AsyncUtil.wrapException(alice::authcrypt))
                 .get();
 
+        Verifier acmeVerifier = new Verifier(acme.getName(), indyPool, acme.getWallet());
+
+        Map<String, Map.Entry<String, String>> attributes = acmeVerifier.authDecrypt(authcryptedProof, Proof.class)
+                .thenCompose(proof -> acmeVerifier.verifyProof(jobApplicationProofRequest, proof))
+                .get();
+
+        System.out.println(attributes);
     }
 
     private static void onboardIssuer(TrustAnchor steward, Issuer newcomer) throws InterruptedException, java.util.concurrent.ExecutionException, IndyException, java.io.IOException {
