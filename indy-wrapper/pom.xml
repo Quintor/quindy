@@ -8,10 +8,13 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
+    <parent>
+        <groupId>nl.quintor.studybits.backend</groupId>
+        <artifactId>maven-parent</artifactId>
+        <version>0.1</version>
+    </parent>
 
-    <groupId>nl.quintor.studybits</groupId>
     <artifactId>indy-wrapper</artifactId>
-    <version>0.1</version>
 
     <repositories>
         <repository>
@@ -57,6 +60,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+            <version>2.9.4</version>
+        </dependency>
+
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.0.13</version>
@@ -82,7 +91,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4.1</version>
                 <configuration>
                     <!-- get all project dependencies -->
                     <descriptorRefs>
@@ -91,7 +99,7 @@
                     <!-- MainClass in mainfest make a executable jar -->
                     <archive>
                         <manifest>
-                            <mainClass>nl.quintor.studybits.Main</mainClass>
+                            <mainClass>nl.quintor.studybits.indy.wrapper.Main</mainClass>
                         </manifest>
                     </archive>
 
