@@ -3,13 +3,14 @@ package nl.quintor.studybits.university;
 import org.apache.commons.io.FileUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import java.io.File;
 import java.nio.file.Paths;
 
 @SpringBootApplication
+@EnableSwagger2
 public class Main {
-
     public static void main(String[] args) throws Exception {
         removeIndyClientDirectory();
         SpringApplication.run(Main.class, args);

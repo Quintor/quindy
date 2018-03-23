@@ -5,4 +5,4 @@ ADD studybits-university/pom.xml /studybits-university/pom.xml
 ADD indy-wrapper/pom.xml /indy-wrapper/pom.xml
 RUN mvn package
 ADD . /
-RUN mvn install
+RUN mvn clean install

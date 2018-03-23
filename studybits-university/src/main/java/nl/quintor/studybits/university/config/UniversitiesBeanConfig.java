@@ -1,4 +1,4 @@
-package nl.quintor.studybits.university;
+package nl.quintor.studybits.university.config;
 
 import lombok.SneakyThrows;
 import nl.quintor.studybits.indy.wrapper.IndyPool;

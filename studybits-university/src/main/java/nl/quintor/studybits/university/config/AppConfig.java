@@ -1,7 +1,8 @@
-package nl.quintor.studybits.university;
+package nl.quintor.studybits.university.config;
 
 import nl.quintor.studybits.indy.wrapper.IndyPool;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
+import nl.quintor.studybits.university.RequestInterceptor;
 import org.hyperledger.indy.sdk.IndyException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,12 +14,10 @@ import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import java.util.concurrent.ExecutionException;
 
 @Configuration
-@EnableSwagger2
 public class AppConfig implements WebMvcConfigurer {
 
     @Value("${indy.poolname}")
