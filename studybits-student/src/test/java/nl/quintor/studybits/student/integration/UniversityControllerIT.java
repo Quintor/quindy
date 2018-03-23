@@ -17,7 +17,7 @@ import static org.junit.Assert.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class UniversityControllerIntegrationTest extends BaseIntegrationTest {
+public class UniversityControllerIT extends BaseIT {
 
     private String baseURL = "/university/";
 
@@ -26,7 +26,7 @@ public class UniversityControllerIntegrationTest extends BaseIntegrationTest {
 
 
     @Test
-    public void University_FromFrontendToBackend_IntegrationTest() throws Exception {
+    public void University_FromFrontendToBackend_IT() throws Exception {
         University testUni = new University(null, randString(), randString());
 
         // Create a new University

@@ -1,6 +1,7 @@
 package nl.quintor.studybits.student.unit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import nl.quintor.studybits.indy.wrapper.IndyPool;
 import nl.quintor.studybits.student.controller.StudentController;
 import nl.quintor.studybits.student.model.Student;
 import nl.quintor.studybits.student.services.StudentService;
@@ -39,6 +40,9 @@ public class StudentControllerTest {
 
     @MockBean
     private StudentService studentService;
+
+    @MockBean
+    private IndyPool indyPool;
 
     @Before
     public void setup() {

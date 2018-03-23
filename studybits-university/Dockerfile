@@ -14,6 +14,6 @@ ENV ENV_LIBINDY_VERSTION=$LIBINDY_VERSION
 # Split off libindy command for fast builds on version bump
 RUN apt-get update && apt-get install -y libindy=$ENV_LIBINDY_VERSTION
 
-COPY --from=0 /target/indy-wrapper-*-jar-with-dependencies.jar /indy-wrapper.jar
+COPY --from=0 /target/studybits-university-*-jar-with-dependencies.jar /backend-university.jar
 
-CMD java -cp /indy-wrapper.jar nl.quintor.studybits.university.Main
+CMD java -cp /backend-university.jar nl.quintor.studybits.university.Main

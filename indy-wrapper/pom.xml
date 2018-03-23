@@ -97,7 +97,7 @@
                     <!-- MainClass in mainfest make a executable jar -->
                     <archive>
                         <manifest>
-                            <mainClass>nl.quintor.studybits.Main</mainClass>
+                            <mainClass>nl.quintor.studybits.university.Main</mainClass>
                         </manifest>
                     </archive>
 

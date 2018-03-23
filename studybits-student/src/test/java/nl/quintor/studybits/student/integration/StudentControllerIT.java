@@ -18,7 +18,7 @@ import static org.junit.Assert.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class StudentControllerIntegrationTest extends BaseIntegrationTest {
+public class StudentControllerIT extends BaseIT {
 
     private String baseURL = "/student/";
 
@@ -27,7 +27,7 @@ public class StudentControllerIntegrationTest extends BaseIntegrationTest {
 
 
     @Test
-    public void Student_FromFrontendToBackend_IntegrationTest() throws Exception {
+    public void Student_FromFrontendToBackend_IT() throws Exception {
         // Create a new University
         MultiValueMap<String, String> payloadUni = new LinkedMultiValueMap<>();
         payloadUni.add("name", randString());
@@ -54,14 +54,14 @@ public class StudentControllerIntegrationTest extends BaseIntegrationTest {
                                              .getBody();
         assertEquals(resultFindById, testStudent);
 
-        // Find all Universities and check that created University is returned
+        // Find all Students and check that created Student is returned
         List<Student> resultFindAll = restTemplate.exchange(baseURL, HttpMethod.GET, null, new ParameterizedTypeReference<List<Student>>() {})
                                                   .getBody();
         assertFalse(resultFindAll.isEmpty());
         assertEquals(1, resultFindAll.size());
         assertEquals(testStudent, resultFindAll.get(0));
 
-        // Update University and check that update was persisted
+        // Update Student and check that update was persisted
         testStudent.setUsername(randString());
         restTemplate.put(baseURL, testStudent);
 
@@ -69,7 +69,7 @@ public class StudentControllerIntegrationTest extends BaseIntegrationTest {
                                                .getBody();
         assertEquals(testStudent, resultUpdateById);
 
-        // Delete the University and check that change was persisted
+        // Delete the Student again
         mockMvc.perform(delete(baseURL + testStudent.getId()))
                .andExpect(status().isOk());
     }
