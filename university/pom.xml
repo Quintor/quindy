@@ -6,12 +6,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>nl.quintor</groupId>
-        <artifactId>studybits</artifactId>
+        <groupId>nl.quintor.studybits.backend</groupId>
+        <artifactId>maven-parent</artifactId>
         <version>0.1</version>
     </parent>
 
-    <artifactId>studybits-university</artifactId>
+    <artifactId>university</artifactId>
+    <version>0.1</version>
 
     <dependencyManagement>
         <dependencies>
@@ -73,7 +74,7 @@
             <version>5.4.0</version>
         </dependency>
         <dependency>
-            <groupId>nl.quintor.studybits</groupId>
+            <groupId>nl.quintor.studybits.backend</groupId>
             <artifactId>indy-wrapper</artifactId>
             <version>0.1</version>
             <exclusions>
@@ -90,6 +91,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
