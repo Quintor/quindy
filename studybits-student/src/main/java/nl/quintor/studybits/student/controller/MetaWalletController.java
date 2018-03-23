@@ -30,5 +30,10 @@ public class MetaWalletController {
     void updateConnectionById(@PathVariable Long studentId, @PathVariable Long connectionId, @RequestParam ConnectionRecord connectionRecord) {
         connectionRecordService.updateConnectionById(studentId, connectionId, connectionRecord);
     }
+
+    @DeleteMapping
+    public void delete() {
+
+    }
 }
 

@@ -1,6 +1,7 @@
 package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.student.model.Student;
 import nl.quintor.studybits.student.model.University;
 import nl.quintor.studybits.student.repositories.UniversityRepository;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
+@Slf4j
 public class UniversityService {
     private UniversityRepository universityRepository;
     private Mapper mapper;
@@ -66,7 +68,12 @@ public class UniversityService {
         universityRepository.deleteById(uniId);
     }
 
+    public void deleteAll() {
+        universityRepository.deleteAll();
+    }
+
     private URI buildOnboardingUri(University university, String endpoint, Student student) {
+        log.debug("Building onboarding uri on: university endpoint: {}, endpoint: {}, student: {}", university.getEndpoint(), endpoint, student);
         return UriComponentsBuilder
                 .fromPath(university.getEndpoint())
                 .path("/university/{universityName}/onboarding")

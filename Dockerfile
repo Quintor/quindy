@@ -3,6 +3,7 @@ ADD pom.xml /
 ADD studybits-student/pom.xml /studybits-student/pom.xml
 ADD studybits-university/pom.xml /studybits-university/pom.xml
 ADD indy-wrapper/pom.xml /indy-wrapper/pom.xml
+ADD integration-tests/pom.xml /integration-tests/pom.xml
 RUN mvn package
 ADD . /
 RUN mvn clean install
