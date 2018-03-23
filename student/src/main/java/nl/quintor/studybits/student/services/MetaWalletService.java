@@ -15,10 +15,10 @@ public class MetaWalletService {
     private IndyWalletService indyWalletService;
 
     public MetaWallet createAndSave(String username) throws Exception {
-        IndyWallet indyWallet = indyWalletService.create(username);
-        MetaWallet metaWallet = new MetaWallet(null, username, indyWallet.getMainDid(), indyWallet.getMainKey());
-
-        return metaWalletRepository.save(metaWallet);
+        try ( IndyWallet indyWallet = indyWalletService.create(username) ) {
+            MetaWallet metaWallet = new MetaWallet(null, username, indyWallet.getMainDid(), indyWallet.getMainKey());
+            return metaWalletRepository.save(metaWallet);
+        }
     }
 
     @SneakyThrows

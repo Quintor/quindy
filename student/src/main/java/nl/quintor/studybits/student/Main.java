@@ -39,7 +39,7 @@ public class Main {
         try {
             PoolUtils.createPoolLedgerConfig();
         } catch ( Exception ex ) {
-            System.out.println(ex.getMessage());
+            System.err.println(ex.getMessage());
         }
         return new IndyPool(poolName);
     }

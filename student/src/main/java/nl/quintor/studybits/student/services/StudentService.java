@@ -101,7 +101,6 @@ public class StudentService {
     private WalletOwner getWalletOwnerForStudent( Student student ) {
         IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
         return new WalletOwner(student.getUsername(), indyPool, indyWallet);
-
     }
 }
 

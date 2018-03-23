@@ -72,7 +72,7 @@ public class ClaimController {
                  .orElseThrow(() -> new IllegalStateException("Unknown claim provider."));
     }
 
-    @PostMapping("{userName}/{provider}")
+    @PostMapping( "/{userName}/{provider}" )
     AuthcryptedMessage getClaim(@PathVariable String universityName, @PathVariable String userName, @RequestBody String provider, @RequestBody AuthcryptedMessage authcryptedMessage) {
         return getProvider(provider)
                 .map(service -> service.getClaim(universityName, userName, authcryptedMessage))

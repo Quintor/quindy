@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 @AllArgsConstructor( onConstructor = @__( @Autowired ) )
 public class ClaimRecordService {
     private ClaimRecordRepository claimRecordRepository;
+    private ConnectionRecordService connectionRecordService;
+    private ClaimOfferService claimOfferService;
     private StudentService studentService;
     private Mapper mapper;
 
@@ -59,5 +61,6 @@ public class ClaimRecordService {
         Student student = studentService.findById(studentId)
                                         .orElseThrow(() -> new IllegalArgumentException("Student with id not found"));
 
+        List<Claim> claims = claimOfferService.fetchAllForStudent(student);
     }
 }
