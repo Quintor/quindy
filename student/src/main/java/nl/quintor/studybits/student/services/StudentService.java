@@ -2,6 +2,7 @@ package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.IndyPool;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.indy.wrapper.Prover;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor( onConstructor = @__( @Autowired ) )
+@Slf4j
 public class StudentService {
     private StudentRepository studentRepository;
     private UniversityService universityService;
@@ -76,11 +78,24 @@ public class StudentService {
         studentRepository.deleteById(studentId);
     }
 
+    public void deleteAll() {
+        log.debug("Deleting all students and wallets");
+        List<Student> students = findAll();
+
+        for (Student student : students) {
+            metaWalletService.delete(student.getMetaWallet());
+            deleteById(student.getId());
+
+            log.debug("Deleted student {} with wallet {}", student.getId(), student.getMetaWallet().getId());
+
+        }
+    }
+
     @SneakyThrows
     public void onboard( Student student, University university ) {
         URI uriBegin = universityService.buildOnboardingBeginUri(university, student);
         URI uriFinalize = universityService.buildOnboardingFinalizeUri(university, student);
-
+        log.debug("Onboarding with uriBegin {}, uriEnd {}", uriBegin, uriFinalize);
         RestTemplate restTemplate = new RestTemplate();
         ConnectionRequest beginRequest = restTemplate.getForObject(uriBegin, ConnectionRequest.class);
         connectionRecordService.saveConnectionRequest(beginRequest, university, student);

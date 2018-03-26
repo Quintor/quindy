@@ -14,6 +14,10 @@
     <artifactId>student</artifactId>
     <version>0.1</version>
 
+    <properties>
+        <start-class>nl.quintor.studybits.student.Main</start-class>
+    </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -116,28 +120,15 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <!-- get all project dependencies -->
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <!-- MainClass in mainfest make a executable jar -->
-                    <archive>
-                        <manifest>
-                            <mainClass>nl.quintor.studybits.student.Main</mainClass>
-                        </manifest>
-                    </archive>
-
+                    <mainClass>${start-class}</mainClass>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>make-assembly</id>
-                        <!-- bind to the packaging phase -->
-                        <phase>package</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>repackage</goal>
                         </goals>
                     </execution>
                 </executions>

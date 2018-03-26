@@ -25,4 +25,18 @@ public class MetaWalletService {
     public IndyWallet createIndyWalletFromMetaWallet( MetaWallet metaWallet ) {
         return new IndyWallet(metaWallet.getName(), metaWallet.getMainDid(), metaWallet.getMainKey());
     }
+
+    @SneakyThrows
+    public void delete(MetaWallet wallet) {
+        IndyWallet indyWallet = createIndyWalletFromMetaWallet(wallet);
+        indyWallet.close();
+        IndyWallet.delete(indyWallet.getName());
+
+        metaWalletRepository.delete(wallet);
+    }
+
+    public void deleteAll() {
+        metaWalletRepository.deleteAll();
+
+    }
 }
