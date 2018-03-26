@@ -41,16 +41,27 @@ public class Seeder {
     @EventListener
     public void seed(ContextRefreshedEvent event) {
         if(isEmpty()) {
-            log.info("Seeding started...");
-            List<University> universities = seedUniversities();
-            seedClaimDefinitions("rug", Enrolment.class);
-            Map<String, University> universityMap = convertToMap(universities, x -> x.getName().toLowerCase());
-            List<StudentUser> studentUsers = seedStudents(universityMap);
-            addAcademicYears(studentUsers.get(0), "2016/17");
-            addAcademicYears(studentUsers.get(1), "2016/17", "2017/18");
-            addAcademicYears(studentUsers.get(2), "2016/17", "2017/18");
-            log.info("Seeding completed.");
+            seed(true);
         }
+    }
+
+    public void seed(boolean withLedger) {
+        log.info("Seeding started...");
+        List<University> universities;
+        if (withLedger) {
+            universities = seedUniversities();
+            seedClaimDefinitions("rug", Enrolment.class);
+        }
+        else {
+            universities = universityRepository.findAll();
+        }
+
+        Map<String, University> universityMap = convertToMap(universities, x -> x.getName().toLowerCase());
+        List<StudentUser> studentUsers = seedStudents(universityMap);
+        addAcademicYears(studentUsers.get(0), "2016/17");
+        addAcademicYears(studentUsers.get(1), "2016/17", "2017/18");
+        addAcademicYears(studentUsers.get(2), "2016/17", "2017/18");
+        log.info("Seeding completed.");
     }
 
     public Boolean isEmpty() {

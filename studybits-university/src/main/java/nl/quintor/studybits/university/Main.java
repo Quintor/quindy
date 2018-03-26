@@ -14,7 +14,7 @@ public class Main {
         SpringApplication.run(Main.class, args);
     }
 
-    private static void removeIndyClientDirectory() throws Exception {
+    public static void removeIndyClientDirectory() throws Exception {
         String homeDir = System.getProperty("user.home");
         File indyClientDir = Paths.get(homeDir, ".indy_client").toFile();
         FileUtils.deleteDirectory(indyClientDir);
