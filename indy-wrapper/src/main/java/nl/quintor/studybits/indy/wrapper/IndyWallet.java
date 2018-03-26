@@ -31,13 +31,11 @@ public class IndyWallet implements AutoCloseable {
     public IndyWallet( String name ) throws IndyException, ExecutionException, InterruptedException {
         try {
             this.wallet = Wallet.openWallet(name, null, null).get();
-        }
-        catch (ExecutionException e) {
+        } catch ( ExecutionException e ) {
             log.debug("Executiong exception when opening wallet");
-            if (e.getCause() instanceof WalletAlreadyOpenedException) {
+            if ( e.getCause() instanceof WalletAlreadyOpenedException ) {
                 log.info("Wallet already opened when being instantiated");
-            }
-            else {
+            } else {
                 log.warn("Retrowing exception when opening wallet", e);
                 throw e;
             }

@@ -76,7 +76,9 @@ public class ClaimOfferService {
         ClaimRequest claimRequest = prover.createClaimRequest(claimOffer).get();
         HttpEntity<ClaimRequest> entity = new HttpEntity<>(claimRequest);
 
-        return new RestTemplate().postForEntity(claimOffer.getLink("self").toString(), entity, AuthcryptedMessage.class).getBody();
+        return null;
+
+//        return new RestTemplate().postForEntity(claimOffer.getLink("self").toString(), entity, AuthcryptedMessage.class).getBody();
     }
 
     @SneakyThrows

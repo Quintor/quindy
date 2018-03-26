@@ -82,7 +82,7 @@ public class StudentService {
         log.debug("Deleting all students and wallets");
         List<Student> students = findAll();
 
-        for (Student student : students) {
+        for ( Student student : students ) {
             metaWalletService.delete(student.getMetaWallet());
             deleteById(student.getId());
 

@@ -14,6 +14,6 @@ ARG LIBINDY_VERSION=1.3.1~406
 # Split off libindy command for fast builds on version bump
 RUN apt-get update && apt-get install -y libindy=$LIBINDY_VERSION
 
-COPY --from=0 /studybits-student/target/studybits-student-*.jar /backend-student.jar
+COPY --from=0 /student/target/student-*.jar /backend-student.jar
 
 CMD java -jar /backend-student.jar

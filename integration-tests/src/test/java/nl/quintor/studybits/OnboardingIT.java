@@ -11,6 +11,12 @@ public class OnboardingIT {
     private static final String STUDENT = "http://localhost:8095";
     private static final String UNIVERSITY = "http://localhost:8090";
 
+    protected static RequestSpecification givenCorrectHeaders( String endpoint ) {
+        return given()
+                .baseUri(endpoint)
+                .header("Content-type", "application/json");
+    }
+
     @Before
     public void setUp() {
 
@@ -27,7 +33,7 @@ public class OnboardingIT {
         Integer universityId = givenCorrectHeaders(STUDENT)
                 .queryParam("name", "Rug")
                 .queryParam("endpoint", UNIVERSITY)
-                .post("/university/register" )
+                .post("/university/register")
                 .then()
                 .assertThat().statusCode(200)
                 .extract()
@@ -48,12 +54,5 @@ public class OnboardingIT {
                 .post("/student/onboard")
                 .then()
                 .assertThat().statusCode(200);
-    }
-
-
-    protected static RequestSpecification givenCorrectHeaders(String endpoint) {
-        return given()
-                .baseUri(endpoint)
-                .header("Content-type", "application/json");
     }
 }

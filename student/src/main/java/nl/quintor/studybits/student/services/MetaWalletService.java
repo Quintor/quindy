@@ -27,7 +27,7 @@ public class MetaWalletService {
     }
 
     @SneakyThrows
-    public void delete(MetaWallet wallet) {
+    public void delete( MetaWallet wallet ) {
         IndyWallet indyWallet = createIndyWalletFromMetaWallet(wallet);
         indyWallet.close();
         IndyWallet.delete(indyWallet.getName());

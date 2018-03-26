@@ -24,8 +24,8 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
      * spring boot application in some later article
      */
     @Override
-    public boolean preHandle(HttpServletRequest request,
-                             HttpServletResponse response, Object object) throws Exception {
+    public boolean preHandle( HttpServletRequest request,
+                              HttpServletResponse response, Object object ) throws Exception {
 
 
         try {
@@ -36,8 +36,7 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
             //String userName = ServletRequestUtils.getStringParameter(request, "userName");
             userContext.setCurrentUser(universityName, userName);
             log.info("request to university {} from user {}.", universityName, userName);
-        }
-        catch (Exception e) {
+        } catch ( Exception e ) {
             log.warn("Request did not have university and user context");
             return true;
         }
@@ -47,15 +46,15 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
     }
 
     @Override
-    public void postHandle(HttpServletRequest request, HttpServletResponse response,
-                           Object object, ModelAndView model)
+    public void postHandle( HttpServletRequest request, HttpServletResponse response,
+                            Object object, ModelAndView model )
             throws Exception {
 
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
-                                Object object, Exception arg3)
+    public void afterCompletion( HttpServletRequest request, HttpServletResponse response,
+                                 Object object, Exception arg3 )
             throws Exception {
 
     }
