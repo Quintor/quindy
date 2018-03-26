@@ -4,7 +4,7 @@ FROM ubuntu:16.04
 RUN apt-get update \
     && apt-get install -y software-properties-common \
                 openjdk-8-jre \
-                apt-transport-https \
+                apt-transport-https curl \
     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
     && add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master"
 

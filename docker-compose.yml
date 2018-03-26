@@ -1,0 +1,50 @@
+version: '2.3'
+services:
+  pool:
+    build:
+      context: ci
+      dockerfile: indy-pool.dockerfile
+    ports:
+    - "9701-9708:9701-9708"
+    # Host networking is used, because we need to know the pool IP at build time, which is kind-of tricky
+    network_mode: "host"
+
+  backend-student:
+    depends_on:
+      - pool
+    build:
+      context: studybits-student
+    ports:
+    - "8090:8090"
+    network_mode: "host"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/swagger-ui.html"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+  backend-university:
+    depends_on:
+      - pool
+    build:
+      context: studybits-university
+    environment:
+    - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK=DEBUG
+    ports:
+      - "8095:8095"
+    network_mode: "host"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8095/swagger-ui.html"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+  tests:
+    build:
+      context: integration-tests
+    network_mode: "host"
+    depends_on:
+      backend-student:
+        condition: service_healthy
+      backend-university:
+        condition: service_healthy
+
+
