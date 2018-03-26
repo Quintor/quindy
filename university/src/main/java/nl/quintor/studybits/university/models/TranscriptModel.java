@@ -6,7 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class TranscriptModel {
-
     private String degree;
     private String status;
     private String year;

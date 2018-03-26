@@ -18,7 +18,7 @@ services:
     - "8090:8090"
     network_mode: "host"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8090/test/health"]
+      test: curl -f http://localhost:8090/test/health || exit 1
       interval: 5s
       timeout: 2s
       retries: 25
@@ -31,7 +31,7 @@ services:
       - "8095:8095"
     network_mode: "host"
     healthcheck:
-      test: ["CMD","curl", "-f", "http://localhost:8095/test/health"]
+      test: curl -f http://localhost:8095/test/health || exit 1
       interval: 5s
       timeout: 2s
       retries: 25

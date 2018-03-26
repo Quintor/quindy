@@ -7,7 +7,6 @@ import nl.quintor.studybits.indy.wrapper.dto.SchemaDefinition;
 import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
 import nl.quintor.studybits.university.dto.ClaimUtils;
 import nl.quintor.studybits.university.dto.Enrolment;
-import nl.quintor.studybits.university.dto.Transcript;
 import nl.quintor.studybits.university.entities.AdminUser;
 import nl.quintor.studybits.university.entities.StudentUser;
 import nl.quintor.studybits.university.entities.University;
@@ -47,20 +46,29 @@ public class Seeder {
 
     @EventListener
     public void seed(ContextRefreshedEvent event) {
-        if(isEmpty()) {
-            log.info("Seeding started...");
-            List<University> universities = seedUniversities();
-            seedClaimDefinitions("rug", Enrolment.class);
-            seedClaimDefinitions("rug", Transcript.class);
-            Map<String, University> universityMap = convertToMap(universities, x -> x.getName().toLowerCase());
-            seedAdmins(universityMap);
-            List<User> students = seedStudents(universityMap);
-            addAcademicYears(students.get(0), "2016/17");
-            addAcademicYears(students.get(1), "2016/17", "2017/18");
-            addAcademicYears(students.get(2), "2015/16", "2016/17", "2017/18");
-            addTranscript(students.get(2), new TranscriptModel("Bachelor of Science, Marketing", "graduated", "2018", "5"));
-            log.info("Seeding completed.");
+        if (isEmpty()) {
+            seed(true);
         }
+    }
+
+    public void seed(boolean withLedger) {
+        log.info("Seeding started...");
+        List<University> universities;
+        if (withLedger) {
+            universities = seedUniversities();
+            seedClaimDefinitions("rug", Enrolment.class);
+        } else {
+            universities = universityRepository.findAll();
+        }
+
+        Map<String, University> universityMap = convertToMap(universities, x -> x.getName().toLowerCase());
+        seedAdmins(universityMap);
+        List<User> students = seedStudents(universityMap);
+        addAcademicYears(students.get(0), "2016/17");
+        addAcademicYears(students.get(1), "2016/17", "2017/18");
+        addAcademicYears(students.get(2), "2015/16", "2016/17", "2017/18");
+        addTranscript(students.get(2), new TranscriptModel("Bachelor of Science, Marketing", "graduated", "2018", "5"));
+        log.info("Seeding completed.");
     }
 
     public Boolean isEmpty() {
@@ -103,7 +111,7 @@ public class Seeder {
 
     private List<User> seedStudents(Map<String, University> universityMap) {
         University rug = universityMap.get("rug");
-        User rugStudent1 = createStudent("student1", "Peter", "Ulrich", "1111-11-0001", rug);
+        User rugStudent1 = createStudent("student1", "Peter", "Ullrich", "1111-11-0001", rug);
         User rugStudent2 = createStudent("student2", "Margot", "Veren", "1111-11-0002", rug);
         User rugStudent3 = createStudent("student3", "Ko", "de Kraker", "1111-11-0003", rug);
         University gent = universityMap.get("gent");
@@ -118,7 +126,7 @@ public class Seeder {
         University rug = universityMap.get("rug");
         User admin1 = createAdmin("admin1", "Etienne", "Nijboer", "222-11-0001", rug);
         University gent = universityMap.get("gent");
-        User admin2 = createAdmin("admin2", "Pim", "Otten", "222-22-0002", gent);
+        User admin2 = createAdmin("admin2", "Pim", "Otte", "222-22-0002", gent);
         List<User> users = Arrays.asList(admin1, admin2);
         return userRepository.saveAll(users);
     }

@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 
 @SpringBootApplication
 public class Main {
-    public static void main( String[] args ) throws Exception {
+    public static void main(String[] args) throws Exception {
         removeIndyClientDirectory();
         SpringApplication.run(Main.class, args);
     }

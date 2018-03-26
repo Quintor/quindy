@@ -32,7 +32,7 @@ public class StudentUser {
     @Column(nullable = false)
     private Set<String> academicYears = new HashSet<>();
 
-    @OneToMany(mappedBy = "studentUser", cascade = CascadeType.MERGE)
+    @OneToMany(mappedBy = "studentUser", cascade = CascadeType.ALL)
     @Column(nullable = false)
     private List<TranscriptRecord> transcriptRecords = new ArrayList<>();
 
