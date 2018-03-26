@@ -60,7 +60,7 @@ public abstract class ClaimProvider<T extends nl.quintor.studybits.university.dt
      */
     protected void addAvailableClaim(Long userId, T claim) {
         User user = userRepository.getOne(userId);
-        ClaimRecord claimRecord = new ClaimRecord(null, user,  claim.getSchemaName(), claim.getSchemaVersion(), null, claim.getLabel(), null, null);
+        ClaimRecord claimRecord = new ClaimRecord(null, user, claim.getSchemaName(), claim.getSchemaVersion(), null, claim.getLabel(), null, null);
         claimRecordRepository.save(claimRecord);
     }
 
@@ -78,7 +78,7 @@ public abstract class ClaimProvider<T extends nl.quintor.studybits.university.dt
         ClaimRecord claimRecord = getClaimRecord(claimRecordId);
         Validate.validState(claimRecord.getUser().getId().equals(userId), "Claim record user mismatch.");
         User user = getConnectedUserById(userId);
-        if(claimRecord.getClaimMessage() != null) {
+        if (claimRecord.getClaimMessage() != null) {
             return toModel(claimRecord.getClaimOfferMessage());
         }
         Issuer issuer = issuerService.getIssuer(user.getUniversity().getName());
@@ -107,7 +107,7 @@ public abstract class ClaimProvider<T extends nl.quintor.studybits.university.dt
         ClaimRequest claimRequest = authDecrypt(issuer, authEncryptedMessageModel, ClaimRequest.class);
         ClaimRecord claimRecord = getClaimRecord(claimRequest);
         Validate.validState(claimRecord.getUser().getId().equals(userId), "Claim record user mismatch.");
-        if(claimRecord.getClaimMessage() != null) {
+        if (claimRecord.getClaimMessage() != null) {
             return toModel(claimRecord.getClaimMessage());
         }
         T claim = getClaimForClaimRecord(claimRecord);

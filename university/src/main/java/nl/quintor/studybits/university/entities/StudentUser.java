@@ -14,12 +14,13 @@ import java.util.Set;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter @Setter
+@Getter
+@Setter
 public class StudentUser {
 
     @Id
     @GeneratedValue
-    @Column(name="student_user_id")
+    @Column(name = "student_user_id")
     private Long id;
 
     @MapsId

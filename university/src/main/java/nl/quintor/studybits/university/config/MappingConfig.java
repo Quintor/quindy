@@ -1,4 +1,4 @@
-package nl.quintor.studybits.university;
+package nl.quintor.studybits.university.config;
 
 import org.dozer.spring.DozerBeanMapperFactoryBean;
 import org.springframework.beans.factory.annotation.Value;

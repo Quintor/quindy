@@ -27,11 +27,6 @@ public class ClaimController {
 
     private Map<String, ClaimProvider> studentClaimProviderMap;
 
-    private ClaimProvider getProvider(String schemaName) {
-        Validate.notNull(schemaName, "Schema name cannot be null.");
-        return Validate.notNull(studentClaimProviderMap.get(schemaName.toLowerCase()), "Unknown schema.");
-    }
-
     @Autowired
     ClaimController(UserContext userContext, LinkHelper linkHelper, ClaimService claimService, ClaimProvider[] claimProviders) {
         this.userContext = userContext;
@@ -41,6 +36,10 @@ public class ClaimController {
                 .collect(Collectors.toMap(x -> x.getSchemaName().toLowerCase(), x -> x));
     }
 
+    private ClaimProvider getProvider(String schemaName) {
+        Validate.notNull(schemaName, "Schema name cannot be null.");
+        return Validate.notNull(studentClaimProviderMap.get(schemaName.toLowerCase()), "Unknown schema.");
+    }
 
     @GetMapping("")
     List<StudentClaimInfo> findAllClaims() {

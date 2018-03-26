@@ -24,6 +24,6 @@ public class UserModel {
 
     @NotNull(message = "can't be missing")
     @Size(min = 1, message = "can't be empty")
-    @Pattern(regexp= "^\\d{3}-\\d{2}-\\d{4}$", message="must be a valid ssn (XXX-XX-XXXX)")
+    @Pattern(regexp = "^\\d{3}-\\d{2}-\\d{4}$", message = "must be a valid ssn (XXX-XX-XXXX)")
     private String ssn;
 }

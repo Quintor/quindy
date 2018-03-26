@@ -38,7 +38,7 @@ public class EnrolmentService extends ClaimProvider<Enrolment> {
         StudentUser studentUser = studentUserRepository
                 .findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Student user unknown."));
-        if(studentUser.getAcademicYears().add(academicYear)) {
+        if (studentUser.getAcademicYears().add(academicYear)) {
             studentUserRepository.save(studentUser);
             addAvailableClaim(userId, new Enrolment(academicYear));
         } else {

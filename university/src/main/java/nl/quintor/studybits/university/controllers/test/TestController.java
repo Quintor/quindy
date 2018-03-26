@@ -6,6 +6,7 @@ import nl.quintor.studybits.university.repositories.StudentUserRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,6 +26,11 @@ public class TestController {
         claimRecordRepository.deleteAll();
         studentUserRepository.deleteAll();
         userRepository.deleteAll();
-        seeder.seed(false);
+        seeder.seed(null);
+    }
+
+    @GetMapping("/health")
+    String health() {
+        return "University Backend says: Ich lebe! Heidewitzka!";
     }
 }

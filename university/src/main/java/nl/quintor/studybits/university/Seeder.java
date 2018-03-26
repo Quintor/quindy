@@ -83,7 +83,7 @@ public class Seeder {
 
     private void seedClaimDefinitions(String universityName, Class<?>... claimTypes) {
         Issuer issuer = getIssuerByName(universityName)
-               .orElseThrow(() -> new IllegalStateException(String.format("Issuer for %s university not found!", universityName)));
+                .orElseThrow(() -> new IllegalStateException(String.format("Issuer for %s university not found!", universityName)));
         Arrays.stream(claimTypes).map(ClaimUtils::getSchemaDefinition)
                 .forEach(schemaDefinition -> defineSchema(issuer, schemaDefinition));
     }
@@ -142,10 +142,10 @@ public class Seeder {
     private User createUser(String userName, String firstName, String lastName, String ssn, University university, StudentUser studentUser, AdminUser adminUser) {
         log.info("Creating admin user {} for university {}...", userName, university.getName());
         User user = new User(null, userName, firstName, lastName, ssn, university, null, new ArrayList<>(), studentUser, adminUser);
-        if(studentUser != null) {
+        if (studentUser != null) {
             studentUser.setUser(user);
         }
-        if(adminUser != null) {
+        if (adminUser != null) {
             adminUser.setUser(user);
         }
         return user;

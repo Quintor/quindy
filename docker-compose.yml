@@ -18,7 +18,7 @@ services:
     - "8090:8090"
     network_mode: "host"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8090/swagger-ui.html"]
+      test: ["CMD", "curl", "-f", "http://localhost:8090/test/health"]
       interval: 5s
       timeout: 2s
       retries: 25
@@ -27,13 +27,11 @@ services:
       - pool
     build:
       context: university
-    environment:
-    - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK=DEBUG
     ports:
       - "8095:8095"
     network_mode: "host"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8095/swagger-ui.html"]
+      test: ["CMD","curl", "-f", "http://localhost:8095/test/health"]
       interval: 5s
       timeout: 2s
       retries: 25

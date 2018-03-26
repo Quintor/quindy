@@ -57,7 +57,7 @@ public class TranscriptService extends ClaimProvider<Transcript> {
                 .findAllByStudentUserIsNotNullAndId(userId)
                 .map(User::getStudentUser)
                 .orElseThrow(() -> new IllegalArgumentException("Student user unknown."));
-        if(studentUser.getTranscriptRecords().stream().noneMatch(x ->
+        if (studentUser.getTranscriptRecords().stream().noneMatch(x ->
                 x.getDegree().equalsIgnoreCase(transcriptModel.getDegree()))) {
             TranscriptRecord transcriptRecord = toEntity(transcriptModel);
             transcriptRecord.setStudentUser(studentUser);

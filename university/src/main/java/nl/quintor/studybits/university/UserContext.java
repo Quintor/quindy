@@ -20,9 +20,9 @@ public class UserContext {
     }
 
     public void setCurrentUser(String universityName, String userName) {
-        if(StringUtils.isNoneBlank(universityName, userName)) {
+        if (StringUtils.isNoneBlank(universityName, userName)) {
             Optional<Long> userId = userRepository
-                .findIdByUniversityNameAndUserName(universityName, userName);
+                    .findIdByUniversityNameAndUserName(universityName, userName);
             currentUserIdentity.set(new UserIdentity(userId, universityName, userName));
         } else {
             currentUserIdentity.remove();

@@ -24,6 +24,7 @@ public interface Claim {
 
     /**
      * Must provide a label that makes this specific claim unique.
+     *
      * @return The unique claim label.
      */
     String getLabel();

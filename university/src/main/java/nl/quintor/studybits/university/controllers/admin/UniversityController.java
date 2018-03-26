@@ -10,13 +10,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping( "/{universityName}/admin/claims" )
+@RequestMapping("/{universityName}/admin/claims")
 public class UniversityController {
 
     @Autowired
     private UniversityService universityService;
 
-    @GetMapping( "" )
+    @GetMapping
     List<University> findAll() {
         return universityService.findAll();
     }
