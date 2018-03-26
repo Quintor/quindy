@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>nl.quintor.studybits.backend</groupId>
+        <groupId>nl.quintor.studybits</groupId>
         <artifactId>maven-parent</artifactId>
         <version>0.1</version>
     </parent>
@@ -93,7 +93,7 @@
             <version>5.4.0</version>
         </dependency>
         <dependency>
-            <groupId>nl.quintor.studybits.backend</groupId>
+            <groupId>nl.quintor.studybits</groupId>
             <artifactId>indy-wrapper</artifactId>
             <version>0.1</version>
             <exclusions>

@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>nl.quintor.studybits.backend</groupId>
+    <groupId>nl.quintor.studybits</groupId>
     <artifactId>maven-parent</artifactId>
     <version>0.1</version>
     <packaging>pom</packaging>
