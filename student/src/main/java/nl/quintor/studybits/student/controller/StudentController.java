@@ -9,26 +9,27 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@AllArgsConstructor( onConstructor = @__( @Autowired ) )
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 @RestController
 @RequestMapping("/student")
 public class StudentController {
     private final StudentService studentService;
 
-    @PostMapping( "/onboard" )
-    void onboard( @RequestParam Student student, @RequestParam University university ) {
+    @PostMapping("/onboard")
+    void onboard(@RequestParam Student student, @RequestParam University university) throws Exception {
         studentService.onboard(student, university);
     }
 
-    @PostMapping( "/register" )
-    Student register( @RequestParam String username, @RequestParam( value = "university" ) String uniName ) {
+    @PostMapping("/register")
+    Student register(@RequestParam String username, @RequestParam(value = "university") String uniName) {
         return studentService.createAndSave(username, uniName);
     }
 
-    @GetMapping( "/{studentId}" )
-    Student findById( @PathVariable Long studentId ) {
-        return studentService.findById(studentId)
-                             .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
+    @GetMapping("/{studentId}")
+    Student findById(@PathVariable Long studentId) {
+        return studentService
+                .findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
     }
 
     @GetMapping()
@@ -37,12 +38,12 @@ public class StudentController {
     }
 
     @PutMapping()
-    void updateById( @RequestBody Student student ) {
+    void updateById(@RequestBody Student student) {
         studentService.updateById(student);
     }
 
-    @DeleteMapping( "/{studentId}" )
-    void deleteById( @PathVariable Long studentId ) {
+    @DeleteMapping("/{studentId}")
+    void deleteById(@PathVariable Long studentId) {
         studentService.deleteById(studentId);
     }
 

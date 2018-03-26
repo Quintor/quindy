@@ -5,7 +5,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.IndyPool;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
-import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.indy.wrapper.WalletOwner;
 import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
@@ -82,7 +81,7 @@ public class StudentService {
         log.debug("Deleting all students and wallets");
         List<Student> students = findAll();
 
-        for ( Student student : students ) {
+        for (Student student : students) {
             metaWalletService.delete(student.getMetaWallet());
             deleteById(student.getId());
 
@@ -117,11 +116,7 @@ public class StudentService {
     private WalletOwner getWalletOwnerForStudent( Student student ) {
         IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
         return new WalletOwner(student.getUsername(), indyPool, indyWallet);
-    }
 
-    public Prover getProverForStudent( Student student ) {
-        IndyWallet wallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
-        return new Prover(student.getUsername(), indyPool, wallet);
     }
 }
 

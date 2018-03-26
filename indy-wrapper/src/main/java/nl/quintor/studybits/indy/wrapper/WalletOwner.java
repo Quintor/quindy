@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
 @Slf4j
-public class WalletOwner {
+public class WalletOwner implements AutoCloseable {
     IndyPool pool;
     @Getter
     IndyWallet wallet;
@@ -160,5 +160,10 @@ public class WalletOwner {
                             return decryptedObject;
                         }))))))
                 ;
+    }
+
+    @Override
+    public void close() throws Exception {
+        wallet.close();
     }
 }

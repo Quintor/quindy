@@ -19,17 +19,19 @@ public class OnboardingIT {
 
     @Before
     public void setUp() {
-
-    }
-
-    @Test
-    public void testOnboardStudent() {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
         givenCorrectHeaders(STUDENT)
                 .delete("/test/nuke")
                 .then()
                 .assertThat().statusCode(200);
+        givenCorrectHeaders(UNIVERSITY)
+                .delete("/test/nuke")
+                .then()
+                .assertThat().statusCode(200);
+    }
 
+    @Test
+    public void testOnboardStudent() {
         Integer universityId = givenCorrectHeaders(STUDENT)
                 .queryParam("name", "Rug")
                 .queryParam("endpoint", UNIVERSITY)

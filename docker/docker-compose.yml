@@ -13,7 +13,7 @@ services:
     depends_on:
       - pool
     build:
-      context: ../student
+      context: ../studybits-student
     ports:
     - "8090:8090"
     network_mode: "host"
@@ -22,7 +22,7 @@ services:
     depends_on:
       - pool
     build:
-      context: ../university
+      context: ../studybits-university
     environment:
     - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK=DEBUG
     ports:

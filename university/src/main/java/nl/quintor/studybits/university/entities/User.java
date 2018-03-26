@@ -31,7 +31,7 @@ public class User {
     @ManyToOne( fetch = FetchType.EAGER, optional = false )
     private University university;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     private IndyConnection connection;
 
     @OneToMany( mappedBy = "user", cascade = CascadeType.MERGE )

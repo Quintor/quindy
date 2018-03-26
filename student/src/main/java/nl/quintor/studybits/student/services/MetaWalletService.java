@@ -1,33 +1,36 @@
 package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.student.model.MetaWallet;
 import nl.quintor.studybits.student.repositories.MetaWalletRepository;
+import org.hyperledger.indy.sdk.IndyException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.ExecutionException;
+
 @Service
-@AllArgsConstructor( onConstructor = @__( @Autowired ) )
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class MetaWalletService {
     private MetaWalletRepository metaWalletRepository;
     private IndyWalletService indyWalletService;
 
     public MetaWallet createAndSave(String username) throws Exception {
-        try ( IndyWallet indyWallet = indyWalletService.create(username) ) {
+        try (IndyWallet indyWallet = indyWalletService.create(username)) {
             MetaWallet metaWallet = new MetaWallet(null, username, indyWallet.getMainDid(), indyWallet.getMainKey());
+
             return metaWalletRepository.save(metaWallet);
         }
     }
 
-    @SneakyThrows
-    public IndyWallet createIndyWalletFromMetaWallet( MetaWallet metaWallet ) {
-        return new IndyWallet(metaWallet.getName(), metaWallet.getMainDid(), metaWallet.getMainKey());
+    public IndyWallet createIndyWalletFromMetaWallet(MetaWallet metaWallet) throws InterruptedException, ExecutionException, IndyException {
+        IndyWallet indyWallet = new IndyWallet(metaWallet.getName(), metaWallet.getMainDid(), metaWallet.getMainKey());
+        return indyWallet;
     }
 
-    @SneakyThrows
-    public void delete( MetaWallet wallet ) {
+
+    public void delete(MetaWallet wallet) throws Exception {
         IndyWallet indyWallet = createIndyWalletFromMetaWallet(wallet);
         indyWallet.close();
         IndyWallet.delete(indyWallet.getName());
