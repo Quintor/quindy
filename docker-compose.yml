@@ -21,7 +21,7 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8090/swagger-ui.html"]
       interval: 5s
       timeout: 2s
-      retries: 10
+      retries: 25
   backend-university:
     depends_on:
       - pool
@@ -36,7 +36,7 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8095/swagger-ui.html"]
       interval: 5s
       timeout: 2s
-      retries: 10
+      retries: 25
   tests:
     build:
       context: integration-tests

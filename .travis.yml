@@ -1,0 +1,3 @@
+sudo: enabled
+install: docker build -t studybits:latest .
+script: docker-compose up --build --force-recreate --exit-code-from tests
