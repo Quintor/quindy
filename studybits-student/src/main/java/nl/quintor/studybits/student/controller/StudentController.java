@@ -16,7 +16,7 @@ public class StudentController {
     private final StudentService studentService;
 
     @PostMapping("/onboard")
-    void onboard(@RequestParam Student student, @RequestParam University university) {
+    void onboard(@RequestParam Student student, @RequestParam University university) throws Exception {
         studentService.onboard(student, university);
     }
 

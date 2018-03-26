@@ -15,6 +15,7 @@ import nl.quintor.studybits.student.model.University;
 import nl.quintor.studybits.student.repositories.StudentRepository;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
+import org.hyperledger.indy.sdk.IndyException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 
@@ -77,43 +79,43 @@ public class StudentService {
         studentRepository.deleteById(studentId);
     }
 
-    public void deleteAll() {
+    public void deleteAll() throws Exception {
         log.debug("Deleting all students and wallets");
         List<Student> students = findAll();
 
         for (Student student : students) {
-            metaWalletService.delete(student.getMetaWallet());
             deleteById(student.getId());
+            metaWalletService.delete(student.getMetaWallet());
 
             log.debug("Deleted student {} with wallet {}", student.getId(), student.getMetaWallet().getId());
 
         }
     }
 
-    @SneakyThrows
-    public void onboard( Student student, University university ) {
+    public void onboard( Student student, University university ) throws Exception {
         URI uriBegin = universityService.buildOnboardingBeginUri(university, student);
         URI uriFinalize = universityService.buildOnboardingFinalizeUri(university, student);
         log.debug("Onboarding with uriBegin {}, uriEnd {}", uriBegin, uriFinalize);
         RestTemplate restTemplate = new RestTemplate();
         ConnectionRequest beginRequest = restTemplate.getForObject(uriBegin, ConnectionRequest.class);
         connectionRecordService.saveConnectionRequest(beginRequest, university, student);
-
+        log.debug("Saved connection request. Responding.");
         AnoncryptedMessage beginResponse = acceptConnectionRequest(student, beginRequest);
         ResponseEntity<Void> finalizeResponse = restTemplate.postForEntity(uriFinalize, beginResponse, Void.class);
         Validate.isTrue(finalizeResponse.getStatusCode()
                                         .is2xxSuccessful());
     }
 
-    @SneakyThrows
-    private AnoncryptedMessage acceptConnectionRequest( Student student, ConnectionRequest connectionRequest ) {
-        WalletOwner walletOwner = getWalletOwnerForStudent(student);
-        return walletOwner.acceptConnectionRequest(connectionRequest)
-                          .thenCompose(AsyncUtil.wrapException(walletOwner::anoncrypt))
-                          .get();
+
+    private AnoncryptedMessage acceptConnectionRequest( Student student, ConnectionRequest connectionRequest ) throws Exception {
+        try (WalletOwner walletOwner = getWalletOwnerForStudent(student)) {
+            return walletOwner.acceptConnectionRequest(connectionRequest)
+                    .thenCompose(AsyncUtil.wrapException(walletOwner::anoncrypt))
+                    .get();
+        }
     }
 
-    private WalletOwner getWalletOwnerForStudent( Student student ) {
+    private WalletOwner getWalletOwnerForStudent( Student student ) throws InterruptedException, ExecutionException, IndyException {
         IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
         return new WalletOwner(student.getUsername(), indyPool, indyWallet);
 

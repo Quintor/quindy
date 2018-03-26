@@ -60,4 +60,8 @@ public class ClaimRecordService {
         claimRecord.setId(claimId);
         claimRecordRepository.save(claimRecord);
     }
+
+    public void deleteAll() {
+        claimRecordRepository.deleteAll();
+    }
 }

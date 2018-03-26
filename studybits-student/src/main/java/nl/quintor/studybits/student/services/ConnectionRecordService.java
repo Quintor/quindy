@@ -53,4 +53,8 @@ public class ConnectionRecordService {
         connectionRecord.setId(connectionId);
         connectionRecordRepository.save(connectionRecord);
     }
+
+    public void deleteAll() {
+        connectionRecordRepository.deleteAll();
+    }
 }

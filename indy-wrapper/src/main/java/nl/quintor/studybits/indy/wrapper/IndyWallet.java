@@ -10,7 +10,6 @@ import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.did.Did;
 import org.hyperledger.indy.sdk.did.DidResults;
 import org.hyperledger.indy.sdk.wallet.Wallet;
-import org.hyperledger.indy.sdk.wallet.WalletAlreadyOpenedException;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -29,19 +28,7 @@ public class IndyWallet implements AutoCloseable {
     private String mainKey;
 
     public IndyWallet( String name ) throws IndyException, ExecutionException, InterruptedException {
-        try {
-            this.wallet = Wallet.openWallet(name, null, null).get();
-        }
-        catch (ExecutionException e) {
-            log.debug("Executiong exception when opening wallet");
-            if (e.getCause() instanceof WalletAlreadyOpenedException) {
-                log.info("Wallet already opened when being instantiated");
-            }
-            else {
-                log.warn("Retrowing exception when opening wallet", e);
-                throw e;
-            }
-        }
+        this.wallet = Wallet.openWallet(name, null, null).get();
 
         this.name = name;
     }
