@@ -8,4 +8,4 @@ The `studybits-university` module contains the university trust-anchor rest-api.
 
 The `studybits-student` module contains the student agent rest-api.
 
-Running tests: `docker-compose up --build --force-recreate --exit-code-from tests`
+Running tests: `docker build -t studybits:latests . && docker-compose up --build --force-recreate --exit-code-from tests`
