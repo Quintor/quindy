@@ -25,7 +25,7 @@ public class ClaimOfferService {
     private ConnectionRecordService connectionRecordService;
     private StudentService studentService;
 
-    public List<Claim> fetchAllForStudent( Student student ) {
+    public List<Claim> getAllForStudent( Student student ) throws Exception {
         Prover prover = studentService.getProverForStudent(student);
 
         List<StudentClaimInfo> claimInfos = getAllClaimInfo(student);

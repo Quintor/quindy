@@ -5,7 +5,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.IndyPool;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
-import nl.quintor.studybits.indy.wrapper.WalletOwner;
+import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
@@ -77,21 +77,19 @@ public class StudentService {
         studentRepository.deleteById(studentId);
     }
 
-    public void deleteAll() {
+    public void deleteAll() throws Exception {
         log.debug("Deleting all students and wallets");
         List<Student> students = findAll();
 
-        for (Student student : students) {
+        for ( Student student : students ) {
             metaWalletService.delete(student.getMetaWallet());
             deleteById(student.getId());
 
             log.debug("Deleted student {} with wallet {}", student.getId(), student.getMetaWallet().getId());
-
         }
     }
 
-    @SneakyThrows
-    public void onboard( Student student, University university ) {
+    public void onboard( Student student, University university ) throws Exception {
         URI uriBegin = universityService.buildOnboardingBeginUri(university, student);
         URI uriFinalize = universityService.buildOnboardingFinalizeUri(university, student);
         log.debug("Onboarding with uriBegin {}, uriEnd {}", uriBegin, uriFinalize);
@@ -105,18 +103,17 @@ public class StudentService {
                                         .is2xxSuccessful());
     }
 
-    @SneakyThrows
-    private AnoncryptedMessage acceptConnectionRequest( Student student, ConnectionRequest connectionRequest ) {
-        WalletOwner walletOwner = getWalletOwnerForStudent(student);
-        return walletOwner.acceptConnectionRequest(connectionRequest)
-                          .thenCompose(AsyncUtil.wrapException(walletOwner::anoncrypt))
-                          .get();
+    private AnoncryptedMessage acceptConnectionRequest( Student student, ConnectionRequest connectionRequest ) throws Exception {
+        Prover prover = getProverForStudent(student);
+        return prover.acceptConnectionRequest(connectionRequest)
+                     .thenCompose(AsyncUtil.wrapException(prover::anoncrypt))
+                     .get();
     }
 
-    private WalletOwner getWalletOwnerForStudent( Student student ) {
-        IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
-        return new WalletOwner(student.getUsername(), indyPool, indyWallet);
-
+    public Prover getProverForStudent( Student student ) throws Exception {
+        try ( IndyWallet wallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet()) ) {
+            return new Prover(student.getUsername(), indyPool, wallet);
+        }
     }
 }
 

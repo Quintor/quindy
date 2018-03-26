@@ -17,8 +17,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor( onConstructor = @__( @Autowired ) )
 public class ClaimRecordService {
     private ClaimRecordRepository claimRecordRepository;
-    private ConnectionRecordService connectionRecordService;
-    private ClaimOfferService claimOfferService;
     private StudentService studentService;
     private Mapper mapper;
 
@@ -27,40 +25,42 @@ public class ClaimRecordService {
     }
 
     public ClaimRecord createAndSave( Long studentId, Claim claim ) {
-        Student student = studentService.findById(studentId)
-                                        .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
+        Student student = studentService
+                .findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
         ClaimRecord claimRecord = new ClaimRecord(null, student, claim);
 
         return claimRecordRepository.save(claimRecord);
     }
 
     public Optional<ClaimRecord> findById( Long claimId ) {
-        return claimRecordRepository.findById(claimId)
-                                    .map(this::toModel);
+        return claimRecordRepository
+                .findById(claimId)
+                .map(this::toModel);
     }
 
     public List<ClaimRecord> findAllClaims( Long studentId ) {
-        Student owner = studentService.findById(studentId)
-                                      .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
+        Student owner = studentService
+                .findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
 
-        return claimRecordRepository.findAllByOwner(owner)
-                                    .stream()
-                                    .map(this::toModel)
-                                    .collect(Collectors.toList());
+        return claimRecordRepository
+                .findAllByOwner(owner)
+                .stream()
+                .map(this::toModel)
+                .collect(Collectors.toList());
     }
 
-    public void updateClaimById( Long studentId, Long claimId, ClaimRecord claimRecord ) {
-        if ( !claimRecordRepository.existsById(claimId) ) throw new IllegalArgumentException("ClaimRecord with id not found.");
+    public void updateClaimById( Long claimId, ClaimRecord claimRecord ) {
+        if ( !claimRecordRepository.existsById(claimId) )
+            throw new IllegalArgumentException("ClaimRecord with id not found.");
 
         // TODO: Add ownership check
 
         claimRecordRepository.save(claimRecord);
     }
 
-    public void fetchClaims( Long studentId ) {
-        Student student = studentService.findById(studentId)
-                                        .orElseThrow(() -> new IllegalArgumentException("Student with id not found"));
-
-        List<Claim> claims = claimOfferService.fetchAllForStudent(student);
+    public void deleteAll() {
+        claimRecordRepository.deleteAll();
     }
 }

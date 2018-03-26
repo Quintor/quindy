@@ -33,7 +33,7 @@ public class OnboardingIT {
     @Test
     public void testOnboardStudent() {
         Integer universityId = givenCorrectHeaders(STUDENT)
-                .queryParam("name", "Rug")
+                .queryParam("name", "Rug1")
                 .queryParam("endpoint", UNIVERSITY)
                 .post("/university/register")
                 .then()
@@ -42,7 +42,7 @@ public class OnboardingIT {
                 .path("id");
 
         Integer studentId = givenCorrectHeaders(STUDENT)
-                .queryParam("username", "student1")
+                .queryParam("username", "student2")
                 .queryParam("university", "Rug")
                 .post("/student/register")
                 .then()

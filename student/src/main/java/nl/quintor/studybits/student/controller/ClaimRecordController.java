@@ -35,12 +35,12 @@ public class ClaimRecordController {
 
     @PutMapping( "/{claimId}" )
     void updateClaimById( @PathVariable Long studentId, @PathVariable Long claimId, @RequestBody ClaimRecord claimRecord ) {
-        claimRecordService.updateClaimById(studentId, claimId, claimRecord);
+        claimRecordService.updateClaimById(claimId, claimRecord);
     }
 
     @GetMapping( "/fetch" )
     void updateClaims( @PathVariable Long studentId ) {
-        claimRecordService.fetchClaims(studentId);
+        claimRecordService.findAllClaims(studentId);
     }
 }
 

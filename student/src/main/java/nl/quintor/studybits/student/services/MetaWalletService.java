@@ -4,11 +4,8 @@ import lombok.AllArgsConstructor;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.student.model.MetaWallet;
 import nl.quintor.studybits.student.repositories.MetaWalletRepository;
-import org.hyperledger.indy.sdk.IndyException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.concurrent.ExecutionException;
 
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -24,9 +21,10 @@ public class MetaWalletService {
         }
     }
 
-    public IndyWallet createIndyWalletFromMetaWallet(MetaWallet metaWallet) throws InterruptedException, ExecutionException, IndyException {
-        IndyWallet indyWallet = new IndyWallet(metaWallet.getName(), metaWallet.getMainDid(), metaWallet.getMainKey());
-        return indyWallet;
+    public IndyWallet createIndyWalletFromMetaWallet( MetaWallet metaWallet ) throws Exception {
+        try ( IndyWallet indyWallet = new IndyWallet(metaWallet.getName(), metaWallet.getMainDid(), metaWallet.getMainKey()) ) {
+            return indyWallet;
+        }
     }
 
 
