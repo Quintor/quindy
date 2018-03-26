@@ -18,27 +18,27 @@ public class User {
 
     @Id
     @GeneratedValue
-    @Column( name = "user_id" )
+    @Column(name = "user_id")
     private Long id;
 
-    @Column( nullable = false, unique = true )
+    @Column(nullable = false, unique = true)
     private String userName;
 
     private String firstName;
 
     private String lastName;
 
-    @ManyToOne( fetch = FetchType.EAGER, optional = false )
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     private University university;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     private IndyConnection connection;
 
-    @OneToMany( mappedBy = "user", cascade = CascadeType.MERGE )
-    @Column( nullable = false )
+    @OneToMany(mappedBy = "user", cascade = CascadeType.MERGE)
+    @Column(nullable = false)
     private List<ClaimRecord> claims;
 
-    @OneToOne( cascade = CascadeType.ALL )
+    @OneToOne(cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
     private StudentUser studentUser;
 

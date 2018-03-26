@@ -22,5 +22,9 @@ public interface Claim {
         return ClaimUtils.getMapOfClaim(this);
     }
 
+    /**
+     * Must provide a label that makes this specific claim unique.
+     * @return The unique claim label.
+     */
     String getLabel();
 }

@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByUniversityNameIgnoreCaseAndUserNameIgnoreCase( String universityName, String userName );
+public interface UserRepository extends JpaRepository<User, Long>{
+    Optional<User> findByUniversityNameIgnoreCaseAndUserNameIgnoreCase(String universityName, String userName);
 
-    List<User> findAllByUniversityNameIgnoreCase( String universityName );
+    List<User> findAllByUniversityNameIgnoreCase(String universityName);
 
-    @Query( "select u.id from User u where upper(u.userName) = upper(:userName) and upper(u.university.name) = upper(:universityName)" )
-    Optional<Long> findIdByUniversityNameAndUserName( @Param( "universityName" ) String universityName, @Param( "userName" ) String userName );
+    @Query("select u.id from User u where upper(u.userName) = upper(:userName) and upper(u.university.name) = upper(:universityName)")
+    Optional<Long> findIdByUniversityNameAndUserName(@Param("universityName") String universityName, @Param("userName") String userName);
 
 }

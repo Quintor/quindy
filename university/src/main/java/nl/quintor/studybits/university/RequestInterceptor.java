@@ -18,44 +18,25 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
     @Autowired
     private UserContext userContext;
 
-    /**
-     * This is not a good practice to use sysout. Always integrate any logger
-     * with your application. We will discuss about integrating logger with
-     * spring boot application in some later article
-     */
     @Override
-    public boolean preHandle( HttpServletRequest request,
-                              HttpServletResponse response, Object object ) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object object) {
 
+        Map pathVariables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+        String universityName = (String) pathVariables.get("universityName");
+        String userName = (String) pathVariables.get("userName");
+        userContext.setCurrentUser(universityName, userName);
 
-        try {
-            Map pathVariables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-            String universityName = (String) pathVariables.get("universityName");
-            String userName = (String) pathVariables.get("userName");
-            //String universityName = ServletRequestUtils.getStringParameter(request, "universityName");
-            //String userName = ServletRequestUtils.getStringParameter(request, "userName");
-            userContext.setCurrentUser(universityName, userName);
-            log.info("request to university {} from user {}.", universityName, userName);
-        } catch ( Exception e ) {
-            log.warn("Request did not have university and user context");
-            return true;
-        }
-
-
+        log.info("request to university {}, user {}.", universityName, userName);
         return true;
     }
 
     @Override
-    public void postHandle( HttpServletRequest request, HttpServletResponse response,
-                            Object object, ModelAndView model )
-            throws Exception {
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object object, ModelAndView model) {
 
     }
 
     @Override
-    public void afterCompletion( HttpServletRequest request, HttpServletResponse response,
-                                 Object object, Exception arg3 )
-            throws Exception {
-
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object object, Exception arg3) {
+        userContext.setCurrentUser(null, null);
     }
 }

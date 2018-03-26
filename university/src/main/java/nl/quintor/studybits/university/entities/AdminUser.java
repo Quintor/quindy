@@ -6,22 +6,22 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
+
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class University {
+public class AdminUser {
 
     @Id
     @GeneratedValue
+    @Column(name = "admin_user_id")
     private Long id;
 
-    private String name;
-
-    @OneToMany(mappedBy = "university", cascade = CascadeType.MERGE)
-    private Set<User> users = new HashSet<>();
+    @MapsId
+    @OneToOne(mappedBy = "adminUser", optional = false)
+    @JoinColumn(name = "admin_user_id")
+    private User user;
 }
