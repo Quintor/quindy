@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import nl.quintor.studybits.indy.wrapper.IndyPool;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
+import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.indy.wrapper.WalletOwner;
 import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
@@ -101,6 +102,11 @@ public class StudentService {
     private WalletOwner getWalletOwnerForStudent( Student student ) {
         IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
         return new WalletOwner(student.getUsername(), indyPool, indyWallet);
+    }
+
+    public Prover getProverForStudent( Student student ) {
+        IndyWallet wallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
+        return new Prover(student.getUsername(), indyPool, wallet);
     }
 }
 

@@ -1,6 +1,7 @@
 package nl.quintor.studybits.student.model;
 
 import lombok.Data;
+import nl.quintor.studybits.indy.wrapper.dto.AuthCryptable;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -9,7 +10,7 @@ import javax.persistence.OneToOne;
 
 @Data
 @Entity
-public class Claim {
+public class Claim implements AuthCryptable {
     @Id
     @GeneratedValue
     private Long id;
