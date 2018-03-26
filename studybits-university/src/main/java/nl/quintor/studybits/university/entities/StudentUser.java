@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -26,7 +29,10 @@ public class StudentUser {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Column(nullable = false)
-    private Set<String> academicYears;
+    private Set<String> academicYears = new HashSet<>();
+
+    @OneToMany(mappedBy = "studentUser", cascade = CascadeType.MERGE)
+    @Column(nullable = false)
+    private List<TranscriptRecord> transcriptRecords = new ArrayList<>();
 
 }
-

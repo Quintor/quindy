@@ -6,6 +6,7 @@ import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.university.entities.AuthEncryptedMessage;
 import nl.quintor.studybits.university.entities.ClaimRecord;
 import nl.quintor.studybits.university.entities.User;
+import nl.quintor.studybits.university.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.university.repositories.ClaimRecordRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.apache.commons.lang3.Validate;
@@ -13,6 +14,8 @@ import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
+
+import javax.transaction.Transactional;
 
 @Service
 public abstract class ClaimProvider<T extends nl.quintor.studybits.university.dto.Claim> {
@@ -29,12 +32,20 @@ public abstract class ClaimProvider<T extends nl.quintor.studybits.university.dt
     @Autowired
     protected Mapper mapper;
 
-    protected AuthEncryptedMessage toEntity(Object authcryptedMessage) {
+    protected AuthEncryptedMessage toEntity(AuthcryptedMessage authcryptedMessage) {
         return mapper.map(authcryptedMessage, AuthEncryptedMessage.class);
     }
 
-    protected AuthcryptedMessage toModel(Object authEncryptedMessage) {
+    protected AuthcryptedMessage toDto(AuthEncryptedMessage authEncryptedMessage) {
         return mapper.map(authEncryptedMessage, AuthcryptedMessage.class);
+    }
+
+    protected AuthEncryptedMessageModel toModel(AuthEncryptedMessage authEncryptedMessage) {
+        return mapper.map(authEncryptedMessage, AuthEncryptedMessageModel.class);
+    }
+
+    protected AuthcryptedMessage toDto(AuthEncryptedMessageModel authEncryptedMessageModel) {
+        return mapper.map(authEncryptedMessageModel, AuthcryptedMessage.class);
     }
 
     public abstract String getSchemaName();
@@ -62,9 +73,10 @@ public abstract class ClaimProvider<T extends nl.quintor.studybits.university.dt
      * @return Authcrypted claim offer.
      */
     @SneakyThrows
-    public AuthcryptedMessage getClaimOffer(Long userId, Long claimRecordId) {
+    @Transactional
+    public AuthEncryptedMessageModel getClaimOffer(Long userId, Long claimRecordId) {
         ClaimRecord claimRecord = getClaimRecord(claimRecordId);
-        Validate.validState(claimRecord.getUser().getId() == userId, "Claim record user mismatch.");
+        Validate.validState(claimRecord.getUser().getId().equals(userId), "Claim record user mismatch.");
         User user = getConnectedUserById(userId);
         if(claimRecord.getClaimMessage() != null) {
             return toModel(claimRecord.getClaimOfferMessage());
@@ -72,11 +84,11 @@ public abstract class ClaimProvider<T extends nl.quintor.studybits.university.dt
         Issuer issuer = issuerService.getIssuer(user.getUniversity().getName());
         nl.quintor.studybits.university.dto.Claim claim = getClaimForClaimRecord(claimRecord);
         ClaimOffer claimOffer = createClaimOffer(issuer, claimRecord.getUser(), claim.getSchemaDefinition());
-        AuthcryptedMessage authcryptedMessage = issuer.authcrypt(claimOffer).get();
+        AuthEncryptedMessage authEncryptedMessage = authEncrypt(issuer, claimOffer);
         claimRecord.setClaimNonce(claimOffer.getNonce());
-        claimRecord.setClaimOfferMessage(toEntity(authcryptedMessage));
+        claimRecord.setClaimOfferMessage(authEncryptedMessage);
         claimRecordRepository.saveAndFlush(claimRecord);
-        return authcryptedMessage;
+        return toModel(authEncryptedMessage);
     }
 
     /**
@@ -84,27 +96,40 @@ public abstract class ClaimProvider<T extends nl.quintor.studybits.university.dt
      * Note: The cached message will be returned if the claim was requested earlier and therefore already written
      *       to the ledger.
      * @param userId The user id.
-     * @param authcryptedClaimRequestMessage The authcrypted ClaimRequest message that was provided to the client by Indy.
+     * @param authEncryptedMessageModel The authcrypted ClaimRequest message that was provided to the client by Indy.
      * @return Authcrypted claim.
      */
     @SneakyThrows
-    public AuthcryptedMessage getClaim(Long userId, AuthcryptedMessage authcryptedClaimRequestMessage) {
+    @Transactional
+    public AuthEncryptedMessageModel getClaim(Long userId, AuthEncryptedMessageModel authEncryptedMessageModel) {
         User user = getConnectedUserById(userId);
         Issuer issuer = issuerService.getIssuer(user.getUniversity().getName());
-        ClaimRequest claimRequest = issuer.authDecrypt(authcryptedClaimRequestMessage, ClaimRequest.class).get();
+        ClaimRequest claimRequest = authDecrypt(issuer, authEncryptedMessageModel, ClaimRequest.class);
         ClaimRecord claimRecord = getClaimRecord(claimRequest);
-        Validate.validState(claimRecord.getUser().getId() == userId, "Claim record user mismatch.");
+        Validate.validState(claimRecord.getUser().getId().equals(userId), "Claim record user mismatch.");
         if(claimRecord.getClaimMessage() != null) {
             return toModel(claimRecord.getClaimMessage());
         }
         T claim = getClaimForClaimRecord(claimRecord);
         Claim indyClaim = createClaim(issuer, claimRequest, claim);
-        AuthcryptedMessage authcryptedMessage = issuer.authcrypt(indyClaim).get();
-        claimRecord.setClaimOfferMessage(toEntity(authcryptedMessage));
+        AuthEncryptedMessage authEncryptedMessage = authEncrypt(issuer, indyClaim);
+        claimRecord.setClaimOfferMessage(authEncryptedMessage);
         claimRecordRepository.saveAndFlush(claimRecord);
-        return authcryptedMessage;
+        return toModel(authEncryptedMessage);
     }
 
+    @SneakyThrows
+    private AuthEncryptedMessage authEncrypt(Issuer issuer, AuthCryptable authCryptable) {
+        AuthcryptedMessage authcryptedMessage = issuer.authcrypt(authCryptable).get();
+        return toEntity(authcryptedMessage);
+    }
+
+
+    @SneakyThrows
+    private <R extends AuthCryptable> R authDecrypt(Issuer issuer, AuthEncryptedMessageModel authEncryptedMessageModel, Class<R> valueType) {
+        AuthcryptedMessage authcryptedMessage = toDto(authEncryptedMessageModel);
+        return issuer.authDecrypt(authcryptedMessage, valueType).get();
+    }
 
     protected User getConnectedUserById(Long userId) {
         User user = userRepository.findById(userId)
@@ -132,7 +157,7 @@ public abstract class ClaimProvider<T extends nl.quintor.studybits.university.dt
 
     private void validateClaimRecord(Long userId, ClaimRecord claimRecord) {
         User user = claimRecord.getUser();
-        Validate.validState(user.getId() == userId, "Claim record user mismatch.");
+        Validate.validState(user.getId().equals(userId), "Claim record user mismatch.");
         Validate.validState(user.getConnection() != null, "User onboarding incomplete!");
     }
 

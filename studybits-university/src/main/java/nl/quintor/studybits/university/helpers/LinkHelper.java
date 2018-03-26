@@ -25,7 +25,7 @@ public class LinkHelper {
             arguments.put("universityName", identity.getUniversityName());
             arguments.put("userName", identity.getUserName());
             return arguments;
-        }).orElseGet(() -> new HashMap<>());
+        }).orElseGet(HashMap::new);
     }
 
 

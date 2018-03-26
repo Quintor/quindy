@@ -1,8 +1,8 @@
 package nl.quintor.studybits.university.controllers.student;
 
-import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
 import nl.quintor.studybits.university.UserContext;
 import nl.quintor.studybits.university.helpers.LinkHelper;
+import nl.quintor.studybits.university.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.university.models.StudentClaimInfo;
 import nl.quintor.studybits.university.services.ClaimProvider;
 import nl.quintor.studybits.university.services.ClaimService;
@@ -28,7 +28,8 @@ public class ClaimController {
     private Map<String, ClaimProvider> studentClaimProviderMap;
 
     private ClaimProvider getProvider(String schemaName) {
-        return Validate.notNull(studentClaimProviderMap.get(schemaName), "Unknown claim provider.");
+        Validate.notNull(schemaName, "Schema name cannot be null.");
+        return Validate.notNull(studentClaimProviderMap.get(schemaName.toLowerCase()), "Unknown schema.");
     }
 
     @Autowired
@@ -37,7 +38,7 @@ public class ClaimController {
         this.linkHelper = linkHelper;
         this.claimService = claimService;
         studentClaimProviderMap = Arrays.stream(claimProviders)
-                .collect(Collectors.toMap(x -> x.getSchemaName(), x -> x));
+                .collect(Collectors.toMap(x -> x.getSchemaName().toLowerCase(), x -> x));
     }
 
 
@@ -53,15 +54,16 @@ public class ClaimController {
     }
 
     @GetMapping("/{schemaName}/{studentClaimId}")
-    AuthcryptedMessage getClaimOffer(@PathVariable String schemaName, @PathVariable Long studentClaimId) {
+    AuthEncryptedMessageModel getClaimOffer(@PathVariable String schemaName, @PathVariable Long studentClaimId) {
         ClaimProvider provider = getProvider(schemaName);
-        return provider.getClaimOffer(userContext.currentUserId(), studentClaimId);
+        AuthEncryptedMessageModel resultModel = provider.getClaimOffer(userContext.currentUserId(), studentClaimId);
+        return linkHelper.withLink(resultModel, ClaimController.class, x -> x.getClaim(schemaName, null));
     }
 
     @PostMapping("/{schemaName}")
-    AuthcryptedMessage getClaim(@RequestBody String schemaName, @RequestBody AuthcryptedMessage authcryptedMessage) {
+    AuthEncryptedMessageModel getClaim(@PathVariable String schemaName, @RequestBody AuthEncryptedMessageModel authEncryptedMessageModel) {
         ClaimProvider provider = getProvider(schemaName);
-        return provider.getClaim(userContext.currentUserId(), authcryptedMessage);
+        return provider.getClaim(userContext.currentUserId(), authEncryptedMessageModel);
     }
 
 }

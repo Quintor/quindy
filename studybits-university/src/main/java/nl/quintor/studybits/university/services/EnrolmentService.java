@@ -37,8 +37,8 @@ public class EnrolmentService extends ClaimProvider<Enrolment> {
         log.debug("Adding academic year '{}' to userId {}", academicYear, userId);
         StudentUser studentUser = userRepository
                 .findAllByStudentUserIsNotNullAndId(userId)
-                .map(x -> x.getStudentUser())
-                .orElseThrow(() -> new IllegalArgumentException("UserModel user unknown."));
+                .map(User::getStudentUser)
+                .orElseThrow(() -> new IllegalArgumentException("Student user unknown."));
         if(studentUser.getAcademicYears().add(academicYear)) {
             userRepository.saveStudentUser(studentUser);
             addAvailableClaim(userId, new Enrolment(academicYear));

@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -29,6 +30,9 @@ public class User {
 
     private String lastName;
 
+    @Column(nullable = false, unique = true)
+    private String ssn;
+
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     private University university;
 
@@ -37,7 +41,7 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.MERGE)
     @Column(nullable = false)
-    private List<ClaimRecord> claims;
+    private List<ClaimRecord> claims = new ArrayList<>();
 
     @OneToOne(cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
