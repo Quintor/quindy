@@ -1,7 +1,7 @@
 package nl.quintor.studybits.student.controller;
 
 import lombok.AllArgsConstructor;
-import nl.quintor.studybits.student.Main;
+import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.student.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 @RestController
 @RequestMapping("/test")
+@Slf4j
 public class TestController {
     private final StudentService studentService;
     private final MetaWalletService metaWalletService;
@@ -21,12 +22,16 @@ public class TestController {
 
     @DeleteMapping("/nuke")
     void nuke() throws Exception {
+        log.info("Deleting connection records");
         connectionRecordService.deleteAll();
+        log.info("Deleting claim records");
         claimRecordService.deleteAll();
+        log.info("Deleting students");
         studentService.deleteAll();
-        universityService.deleteAll();
+        log.info("Deleting meta wallets");
         metaWalletService.deleteAll();
-        Main.removeIndyClientDirectory();
+        log.info("Deleting universities");
+        universityService.deleteAll();
     }
 
     @GetMapping("/health")

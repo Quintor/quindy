@@ -33,7 +33,7 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
             //String universityName = ServletRequestUtils.getStringParameter(request, "universityName");
             //String userName = ServletRequestUtils.getStringParameter(request, "userName");
             userContext.setCurrentUser(universityName, userName);
-            log.info("request to university {} from user {}.", universityName, userName);
+            log.debug("request to university {} from user {}.", universityName, userName);
         } catch (Exception e) {
             log.warn("Request did not have university and user context");
             return true;

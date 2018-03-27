@@ -22,9 +22,7 @@ public class MetaWalletService {
     }
 
     public IndyWallet createIndyWalletFromMetaWallet( MetaWallet metaWallet ) throws Exception {
-        try ( IndyWallet indyWallet = new IndyWallet(metaWallet.getName(), metaWallet.getMainDid(), metaWallet.getMainKey()) ) {
-            return indyWallet;
-        }
+        return new IndyWallet(metaWallet.getName(), metaWallet.getMainDid(), metaWallet.getMainKey());
     }
 
 

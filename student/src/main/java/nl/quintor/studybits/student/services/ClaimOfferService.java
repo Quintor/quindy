@@ -26,12 +26,13 @@ public class ClaimOfferService {
     private StudentService studentService;
 
     public List<Claim> getAllForStudent( Student student ) throws Exception {
-        Prover prover = studentService.getProverForStudent(student);
+        try (Prover prover = studentService.getProverForStudent(student)) {
 
-        List<StudentClaimInfo> claimInfos = getAllClaimInfo(student);
-        List<ClaimOffer> claimOffers = getAllClaimOffers(claimInfos, prover);
+            List<StudentClaimInfo> claimInfos = getAllClaimInfo(student);
+            List<ClaimOffer> claimOffers = getAllClaimOffers(claimInfos, prover);
 
-        return getAllClaims(claimOffers, prover);
+            return getAllClaims(claimOffers, prover);
+        }
     }
 
     private List<StudentClaimInfo> getAllClaimInfo( Student student ) {

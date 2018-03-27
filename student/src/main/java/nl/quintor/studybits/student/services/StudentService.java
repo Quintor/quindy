@@ -104,16 +104,17 @@ public class StudentService {
     }
 
     private AnoncryptedMessage acceptConnectionRequest( Student student, ConnectionRequest connectionRequest ) throws Exception {
-        Prover prover = getProverForStudent(student);
-        return prover.acceptConnectionRequest(connectionRequest)
-                     .thenCompose(AsyncUtil.wrapException(prover::anoncrypt))
-                     .get();
+        try (Prover prover = getProverForStudent(student)) {
+            return prover.acceptConnectionRequest(connectionRequest)
+                    .thenCompose(AsyncUtil.wrapException(prover::anoncrypt))
+                    .get();
+        }
     }
 
     public Prover getProverForStudent( Student student ) throws Exception {
-        try ( IndyWallet wallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet()) ) {
-            return new Prover(student.getUsername(), indyPool, wallet);
-        }
+        IndyWallet wallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
+
+        return new Prover(student.getUsername(), indyPool, wallet);
     }
 }
 

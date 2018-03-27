@@ -75,10 +75,9 @@ public class UniversityService {
     private URI buildOnboardingUri( University university, String endpoint, Student student ) {
         log.debug("Building onboarding uri on: university endpoint: {}, endpoint: {}, student: {}", university.getEndpoint(), endpoint, student);
         return UriComponentsBuilder
-                .fromPath(university.getEndpoint())
-                .path("/university/{universityName}/onboarding")
-                .path("/{endpoint}/{userName}")
-                .build(university.getName(), endpoint, student.getUsername());
+                .fromHttpUrl(university.getEndpoint())
+                .path("/{universityName}/student/{userName}/onboarding/{endpoint}")
+                .build(university.getName(), student.getUsername(), endpoint);
     }
 
     public URI buildOnboardingBeginUri( University university, Student student ) {
