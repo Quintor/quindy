@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class Filter implements Serializable {
-    @JsonProperty("issuer_did")
+    @JsonProperty( "issuer_did" )
     private String issuerDid;
-    @JsonProperty("schema_key")
+    @JsonProperty( "schema_key" )
     private SchemaKey schemaKey;
 }

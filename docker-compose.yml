@@ -1,0 +1,48 @@
+version: '2.3'
+services:
+  pool:
+    build:
+      context: ci
+      dockerfile: indy-pool.dockerfile
+    ports:
+    - "9701-9708:9701-9708"
+    # Host networking is used, because we need to know the pool IP at build time, which is kind-of tricky
+    network_mode: "host"
+
+  backend-student:
+    depends_on:
+      - pool
+    build:
+      context: student
+    ports:
+    - "8090:8090"
+    network_mode: "host"
+    healthcheck:
+      test: curl -f http://localhost:8090/test/health || exit 1
+      interval: 5s
+      timeout: 2s
+      retries: 25
+  backend-university:
+    depends_on:
+      - pool
+    build:
+      context: university
+    ports:
+      - "8095:8095"
+    network_mode: "host"
+    healthcheck:
+      test: curl -f http://localhost:8095/test/health || exit 1
+      interval: 5s
+      timeout: 2s
+      retries: 25
+  tests:
+    build:
+      context: integration-tests
+    network_mode: "host"
+    depends_on:
+      backend-student:
+        condition: service_healthy
+      backend-university:
+        condition: service_healthy
+
+

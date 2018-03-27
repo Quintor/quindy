@@ -48,12 +48,11 @@ public class AsyncUtil {
         };
     }
 
-    public static <T, U> BiConsumer<T, U> wrapBiConsumerException(ExceptionalBiConsumer<T, U> exceptionalBiConsumer) {
-        return (T t, U u) -> {
+    public static <T, U> BiConsumer<T, U> wrapBiConsumerException( ExceptionalBiConsumer<T, U> exceptionalBiConsumer ) {
+        return ( T t, U u ) -> {
             try {
                 exceptionalBiConsumer.consume(t, u);
-            }
-            catch (Exception e) {
+            } catch ( Exception e ) {
                 throw new CompletionException(e);
             }
         };
@@ -77,6 +76,6 @@ public class AsyncUtil {
     }
 
     public interface ExceptionalBiConsumer<T, U> {
-        public void consume(T t, U u) throws Exception;
+        public void consume( T t, U u ) throws Exception;
     }
 }

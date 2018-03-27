@@ -12,10 +12,10 @@ import java.util.Optional;
 @Data
 @NoArgsConstructor
 public class PredicateInfo implements Serializable {
-    @JsonProperty("attr_name")
+    @JsonProperty( "attr_name" )
     private String attrName;
 
-    @JsonProperty("p_type")
+    @JsonProperty( "p_type" )
     private String pType;
 
     private int value;

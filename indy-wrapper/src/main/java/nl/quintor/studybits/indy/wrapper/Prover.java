@@ -36,10 +36,9 @@ public class Prover extends WalletOwner {
     public CompletableFuture<ClaimRequest> storeClaimOfferAndCreateClaimRequest(ClaimOffer claimOffer) throws IndyException, JsonProcessingException {
         return storeClaimOffer(claimOffer)
                         .thenCompose(wrapException((_void) -> createClaimRequest(claimOffer.getTheirDid(), claimOffer)));
-
     }
 
-    CompletableFuture<ClaimRequest> createClaimRequest(String theirDid, ClaimOffer claimOffer) throws IndyException, JsonProcessingException {
+    public CompletableFuture<ClaimRequest> createClaimRequest( String theirDid, ClaimOffer claimOffer ) throws IndyException, JsonProcessingException {
         return getPairwiseByTheirDid(theirDid)
                 .thenCompose(wrapException(pairwiseResult -> getSchema(pairwiseResult.getMyDid(), claimOffer.getSchemaKey())
                         .thenCompose(wrapException(schema -> getClaimDef(pairwiseResult.getMyDid(), schema, claimOffer.getIssuerDid())))
@@ -47,19 +46,23 @@ public class Prover extends WalletOwner {
                             log.debug("{} creating claim request with claimDefJson {}", name, claimDefJson);
                             return Anoncreds.proverCreateAndStoreClaimReq(wallet.getWallet(), pairwiseResult.getMyDid(),
                                     claimOffer.toJSON(), claimDefJson, this.masterSecretName)
-                                    .thenCompose(wrapException(claimReqJsonStorageResponse -> {
-                                        log.debug("{} Got claim request storage response {}", name, claimReqJsonStorageResponse);
-                                        return Anoncreds.proverCreateAndStoreClaimReq(wallet.getWallet(), pairwiseResult.getMyDid(),
-                                                claimOffer.toJSON(), claimDefJson, this.masterSecretName);
-                                    }));
+                                            .thenCompose(wrapException(claimReqJsonStorageResponse -> {
+                                                log.debug("{} Got claim request storage response {}", name, claimReqJsonStorageResponse);
+                                                return Anoncreds.proverCreateAndStoreClaimReq(wallet.getWallet(), pairwiseResult.getMyDid(),
+                                                        claimOffer.toJSON(), claimDefJson, this.masterSecretName);
+                                            }));
                         })).thenApply(wrapException(claimRequestJson -> {
                             ClaimRequest claimRequest = JSONUtil.mapper.readValue(claimRequestJson, ClaimRequest.class);
                             claimRequest.setTheirDid(theirDid);
                             return claimRequest;
                         })))
-
                 );
     }
+
+    public CompletableFuture<ClaimRequest> createClaimRequest( ClaimOffer claimOffer ) throws IndyException, JsonProcessingException {
+        return createClaimRequest(claimOffer.getTheirDid(), claimOffer);
+    }
+
 
     CompletableFuture<Void> storeClaimOffer(ClaimOffer claimOffer) throws IndyException, JsonProcessingException {
         return Anoncreds.proverStoreClaimOffer(wallet.getWallet(), claimOffer.toJSON());
@@ -69,104 +72,118 @@ public class Prover extends WalletOwner {
      * Proves the proofRequest using the stored claims
      *
      * @param proofRequest
-     * @param attributes This map is used to get the correct claim, if multiple referents are present, or to provide self-attested attributes
+     * @param attributes   This map is used to get the correct claim, if multiple referents are present, or to provide self-attested attributes
      * @return
      */
-    public CompletableFuture<Proof> fulfillProofRequest(ProofRequest proofRequest, Map<String, String> attributes) throws JsonProcessingException, IndyException {
+    public CompletableFuture<Proof> fulfillProofRequest( ProofRequest proofRequest, Map<String, String> attributes ) throws JsonProcessingException, IndyException {
         log.debug("{} Proving proof request: {}", name, proofRequest.toJSON());
 
         return Anoncreds.proverGetClaimsForProofReq(wallet.getWallet(), proofRequest.toJSON())
-                .thenApply(wrapException(claimsForProofRequestJson -> {
-                    log.debug("{}: Obtained claims for proof request {}", name, claimsForProofRequestJson);
-                    return JSONUtil.mapper.readValue(claimsForProofRequestJson, ClaimsForRequest.class);
-                }))
-                .thenCompose(wrapException(claimsForRequest -> createProofFromClaims(proofRequest, claimsForRequest, attributes, proofRequest.getTheirDid())))
-                .thenApply(wrapException(proof -> {
-                    log.debug("{}: Created proof {}", name, proof.toJSON());
-                    return proof;
-                }));
+                        .thenApply(wrapException(claimsForProofRequestJson -> {
+                            log.debug("{}: Obtained claims for proof request {}", name, claimsForProofRequestJson);
+                            return JSONUtil.mapper.readValue(claimsForProofRequestJson, ClaimsForRequest.class);
+                        }))
+                        .thenCompose(wrapException(claimsForRequest -> createProofFromClaims(proofRequest, claimsForRequest, attributes, proofRequest.getTheirDid())))
+                        .thenApply(wrapException(proof -> {
+                            log.debug("{}: Created proof {}", name, proof.toJSON());
+                            return proof;
+                        }));
 
     }
 
-    CompletableFuture<Proof> createProofFromClaims(ProofRequest proofRequest, ClaimsForRequest claimsForRequest, Map<String, String> attributes, String theirDid) throws JsonProcessingException {
+    CompletableFuture<Proof> createProofFromClaims( ProofRequest proofRequest, ClaimsForRequest claimsForRequest, Map<String, String> attributes, String theirDid ) throws JsonProcessingException {
         log.debug("{} Creating proof using claims: {}", name, claimsForRequest.toJSON());
 
         // Collect the names and values of all self-attested attributes. Throw an exception if one is not specified.
         Map<String, String> selfAttestedAttributes = proofRequest.getRequestedAttrs()
-                .entrySet().stream()
-                .filter(stringAttributeInfoEntry -> !stringAttributeInfoEntry.getValue().getRestrictions().isPresent())
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
-                    String value = attributes.get(entry.getValue().getName());
-                    if (value == null) {
-                        throw new IllegalArgumentException("Self attested attribute was not provided");
-                    }
-                    return value;
-                }));
+                                                                 .entrySet()
+                                                                 .stream()
+                                                                 .filter(stringAttributeInfoEntry -> !stringAttributeInfoEntry.getValue()
+                                                                                                                              .getRestrictions()
+                                                                                                                              .isPresent())
+                                                                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+                                                                     String value = attributes.get(entry.getValue()
+                                                                                                        .getName());
+                                                                     if ( value == null ) {
+                                                                         throw new IllegalArgumentException("Self attested attribute was not provided");
+                                                                     }
+                                                                     return value;
+                                                                 }));
 
         // Collect all claim referents needed for the proof
         Map<String, ClaimReferent> claimsByReferentKey = findNeededClaimReferents(proofRequest, claimsForRequest, attributes);
 
         // Store the claim referents in a way that enables us to fetch the needed entities from the ledger.
-        Map<String, ClaimIdentifier> claimsForProof = claimsByReferentKey
-                .values().stream()
-                .distinct()
-                .collect(Collectors.toMap(ClaimReferent::getReferent, ClaimIdentifier::new));
+        Map<String, ClaimIdentifier> claimsForProof = claimsByReferentKey.values()
+                                                                         .stream()
+                                                                         .distinct()
+                                                                         .collect(Collectors.toMap(ClaimReferent::getReferent, ClaimIdentifier::new));
 
         // Create the json needed for creating the proof
         JsonNode requestedClaimsJson = createRequestedClaimsJson(proofRequest, selfAttestedAttributes, claimsByReferentKey);
 
         // Fetch the required schema's and claim definitions, then create, the proof, deserialize and return it.
-        return getEntitiesFromLedger(claimsForProof)
-                .thenCompose(wrapException(entities -> {
-                    log.debug("{} Creating proof", name);
-                    return Anoncreds.proverCreateProof(wallet.getWallet(), proofRequest.toJSON(), JSONUtil.mapper.writeValueAsString(requestedClaimsJson),
-                            JSONUtil.mapper.writeValueAsString(entities.getSchemas()), masterSecretName,
-                            JSONUtil.mapper.writeValueAsString(entities.getClaimDefs()), "{}");
-                }))
-                .thenApply(wrapException(proofJson -> {
-                    Proof proof = JSONUtil.mapper.readValue(proofJson, Proof.class);
-                    proof.setTheirDid(theirDid);
-                    return proof;
-                }));
+        return getEntitiesFromLedger(claimsForProof).thenCompose(wrapException(entities -> {
+            log.debug("{} Creating proof", name);
+            return Anoncreds.proverCreateProof(wallet.getWallet(), proofRequest.toJSON(), JSONUtil.mapper.writeValueAsString(requestedClaimsJson), JSONUtil.mapper.writeValueAsString(entities.getSchemas()), masterSecretName, JSONUtil.mapper.writeValueAsString(entities.getClaimDefs()), "{}");
+        }))
+                                                    .thenApply(wrapException(proofJson -> {
+                                                        Proof proof = JSONUtil.mapper.readValue(proofJson, Proof.class);
+                                                        proof.setTheirDid(theirDid);
+                                                        return proof;
+                                                    }));
     }
 
-    private Map<String, ClaimReferent> findNeededClaimReferents(ProofRequest proofRequest, ClaimsForRequest claimsForRequest, Map<String, String> attributes) {
+    private Map<String, ClaimReferent> findNeededClaimReferents( ProofRequest proofRequest, ClaimsForRequest claimsForRequest, Map<String, String> attributes ) {
         // We find all the ClaimReferents that we are going to use. The cases:
         // 1. The referent is for an attribute and a value is provided -> Find any that matches the provided value
         // 2. The referent is for an attribute and no value is provided -> Find any
         // 3. The referent is for a predicate -> Find any
 
-        return Stream.<Optional<AbstractMap.SimpleEntry<String, ClaimReferent>>>concat(claimsForRequest
-                        .getAttrs().entrySet()
-                        .stream()
-                        .map((claimReferentEntry) -> {
-                            return claimReferentEntry.getValue()
-                                    .stream()
-                                    .filter(claimReferent -> claimReferent.getAttrs()
-                                            .entrySet().stream()
-                                            // Find attribute that matches the one that is requested for this particular referent
-                                            .filter(entry -> entry.getKey().equals(proofRequest.getRequestedAttrs().get(claimReferentEntry.getKey()).getName()))
-                                            // Check if it matches the provided value, or the value is not provided
-                                            .anyMatch(entry -> entry.getValue().equals(attributes.getOrDefault(entry.getKey(), entry.getValue()))))
-                                    .map(claimReferent -> new AbstractMap.SimpleEntry<>(claimReferentEntry.getKey(), claimReferent))
-                                    .findAny();
-                        }),
-                claimsForRequest.getPredicates().entrySet().stream().map(entry -> entry.getValue().isEmpty() ?
-                        Optional.empty() : Optional.of(new AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue().get(0)))))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return Stream.<Optional<AbstractMap.SimpleEntry<String, ClaimReferent>>>concat(claimsForRequest.getAttrs()
+                                                                                                       .entrySet()
+                                                                                                       .stream()
+                                                                                                       .map(( claimReferentEntry ) -> {
+                                                                                                           return claimReferentEntry.getValue()
+                                                                                                                                    .stream()
+                                                                                                                                    .filter(claimReferent -> claimReferent.getAttrs()
+                                                                                                                                                                          .entrySet()
+                                                                                                                                                                          .stream()
+                                                                                                                                                                          // Find attribute that matches the one that is requested for this particular referent
+                                                                                                                                                                          .filter(entry -> entry.getKey()
+                                                                                                                                                                                                .equals(proofRequest.getRequestedAttrs()
+                                                                                                                                                                                                                    .get(claimReferentEntry.getKey())
+                                                                                                                                                                                                                    .getName()))
+                                                                                                                                                                          // Check if it matches the provided value, or the value is not provided
+                                                                                                                                                                          .anyMatch(entry -> entry.getValue()
+                                                                                                                                                                                                  .equals(attributes.getOrDefault(entry.getKey(), entry.getValue()))))
+                                                                                                                                    .map(claimReferent -> new AbstractMap.SimpleEntry<>(claimReferentEntry.getKey(), claimReferent))
+                                                                                                                                    .findAny();
+                                                                                                       }), claimsForRequest.getPredicates()
+                                                                                                                           .entrySet()
+                                                                                                                           .stream()
+                                                                                                                           .map(entry -> entry.getValue()
+                                                                                                                                              .isEmpty() ? Optional.empty() : Optional.of(new AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue()
+                                                                                                                                                                                                                                             .get(0))))).filter(Optional::isPresent)
+                                                                                                                                                                                                                                                        .map(Optional::get)
+                                                                                                                                                                                                                                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private JsonNode createRequestedClaimsJson(ProofRequest proofRequest, Map<String, String> selfAttestedAttributes, Map<String, ClaimReferent> claimsByReferentKey) {
+    private JsonNode createRequestedClaimsJson( ProofRequest proofRequest, Map<String, String> selfAttestedAttributes, Map<String, ClaimReferent> claimsByReferentKey ) {
         Map<String, List<Object>> requestedAttributes = proofRequest.getRequestedAttrs()
-                .entrySet().stream()
-                .filter(stringAttributeInfoEntry -> stringAttributeInfoEntry.getValue().getRestrictions().isPresent())
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> Arrays.asList(claimsByReferentKey.get(entry.getKey()).getReferent(), true)));
+                                                                    .entrySet()
+                                                                    .stream()
+                                                                    .filter(stringAttributeInfoEntry -> stringAttributeInfoEntry.getValue()
+                                                                                                                                .getRestrictions()
+                                                                                                                                .isPresent())
+                                                                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> Arrays.asList(claimsByReferentKey.get(entry.getKey())
+                                                                                                                                                           .getReferent(), true)));
 
         Map<String, String> requestedPredicates = proofRequest.getRequestedPredicates()
-                .entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> claimsByReferentKey.get(entry.getKey()).getReferent()));
+                                                              .entrySet()
+                                                              .stream()
+                                                              .collect(Collectors.toMap(Map.Entry::getKey, entry -> claimsByReferentKey.get(entry.getKey())
+                                                                                                                                       .getReferent()));
 
         ObjectNode requestedClaimsJson = JSONUtil.mapper.createObjectNode();
 
@@ -177,19 +194,19 @@ public class Prover extends WalletOwner {
     }
 
 
-    public CompletableFuture<Void> storeClaim(Claim claim) throws JsonProcessingException, IndyException {
+    public CompletableFuture<Void> storeClaim( Claim claim ) throws JsonProcessingException, IndyException {
         return Anoncreds.proverStoreClaim(wallet.getWallet(), claim.toJSON(), null);
     }
 
     public CompletableFuture<List<ClaimInfo>> findAllClaims() throws IndyException {
         String filter = "{}";
         return Anoncreds.proverGetClaims(wallet.getWallet(), filter)
-                .thenApply(wrapException(this::deserializeClaimInfo));
+                        .thenApply(wrapException(this::deserializeClaimInfo));
     }
 
 
-    private List<ClaimInfo> deserializeClaimInfo(String json) throws IOException {
-        return JSONUtil.mapper.readValue(json, new TypeReference<List<ClaimInfo>>(){});
+    private List<ClaimInfo> deserializeClaimInfo( String json ) throws IOException {
+        return JSONUtil.mapper.readValue(json, new TypeReference<List<ClaimInfo>>() {});
     }
 
 

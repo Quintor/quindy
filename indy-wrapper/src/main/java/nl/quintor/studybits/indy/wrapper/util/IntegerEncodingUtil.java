@@ -34,8 +34,8 @@ public class IntegerEncodingUtil {
         }
     }
 
-    public static boolean validateProofEncoding(List<String> value) {
-        if (value.size() != 3) {
+    public static boolean validateProofEncoding( List<String> value ) {
+        if ( value.size() != 3 ) {
             return false;
         }
 

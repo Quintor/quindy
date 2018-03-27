@@ -1,3 +1,4 @@
+FROM studybits:latest
 FROM ubuntu:16.04
 # First install software-properties-common for add-apt-repository, and apt-transport-https to communicate.
 RUN apt-get update \
@@ -9,11 +10,10 @@ RUN apt-get update \
 
 # Set the default Libindy version. Will be overwritten when argument is supplied from console
 ARG LIBINDY_VERSION=1.3.1~406
-ENV ENV_LIBINDY_VERSTION=$LIBINDY_VERSION
 
 # Split off libindy command for fast builds on version bump
-RUN apt-get update && apt-get install -y libindy=$ENV_LIBINDY_VERSTION
+RUN apt-get update && apt-get install -y libindy=$LIBINDY_VERSION
 
-COPY --from=0 /target/indy-wrapper-*-jar-with-dependencies.jar /indy-wrapper.jar
+COPY --from=0 /indy-wrapper/target/indy-wrapper-*-jar-with-dependencies.jar /indy-wrapper.jar
 
-CMD java -cp /indy-wrapper.jar nl.quintor.studybits.university.Main
+CMD java -jar /indy-wrapper.jar

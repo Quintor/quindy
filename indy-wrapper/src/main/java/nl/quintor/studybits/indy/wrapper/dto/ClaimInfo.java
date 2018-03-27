@@ -11,17 +11,17 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ClaimInfo {
-    @JsonProperty("schema_key")
+    @JsonProperty( "schema_key" )
     private SchemaKey schemaKey;
 
-    @JsonProperty("issuer_did")
+    @JsonProperty( "issuer_did" )
     private String issuer_did;
 
     private String referent;
 
-    @JsonProperty("attrs")
+    @JsonProperty( "attrs" )
     private Map<String, Object> attrs;
 
-    @JsonProperty("revoc_reg_seq_no")
+    @JsonProperty( "revoc_reg_seq_no" )
     private Integer revReqSeqNo;
 }

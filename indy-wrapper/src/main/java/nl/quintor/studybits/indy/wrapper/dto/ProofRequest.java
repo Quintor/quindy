@@ -16,11 +16,11 @@ public class ProofRequest implements Serializable, AuthCryptable {
     private String version;
 
     @Singular
-    @JsonProperty("requested_attrs")
+    @JsonProperty( "requested_attrs" )
     private Map<String, AttributeInfo> requestedAttrs;
 
     @Singular
-    @JsonProperty("requested_predicates")
+    @JsonProperty( "requested_predicates" )
     private Map<String, PredicateInfo> requestedPredicates;
 
     @JsonIgnore

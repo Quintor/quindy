@@ -11,8 +11,7 @@ import lombok.NoArgsConstructor;
 /**
  * EntitiesForClaimReferent holds the entities (schemas, claim definitions, in the future: revocation registries)
  * needed to verify the proof for that particular claim referent.
- */
-public class EntitiesForClaimReferent {
+ */ public class EntitiesForClaimReferent {
     private Schema schema;
     private String claimDef;
     @JsonIgnore

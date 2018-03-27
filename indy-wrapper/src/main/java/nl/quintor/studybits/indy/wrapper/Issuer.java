@@ -46,22 +46,22 @@ public class Issuer extends TrustAnchor {
         log.debug("{}: Issuer initialized with did: {} and key: {}", name, issuerDid, issuerKey);
     }
 
-    public CompletableFuture<SchemaKey> createAndSendSchema(String name, String version, String... attrNames) throws IndyException, JsonProcessingException {
+    public CompletableFuture<SchemaKey> createAndSendSchema( String name, String version, String... attrNames ) throws IndyException, JsonProcessingException {
         SchemaDefinition schemaDefinition = new SchemaDefinition(name, version, Arrays.asList(attrNames));
         return createAndSendSchema(schemaDefinition);
     }
 
-    public CompletableFuture<SchemaKey> createAndSendSchema(SchemaDefinition schemaDefinition) throws IndyException, JsonProcessingException {
+    public CompletableFuture<SchemaKey> createAndSendSchema( SchemaDefinition schemaDefinition ) throws IndyException, JsonProcessingException {
         SchemaKey schemaKey = SchemaKey.fromSchema(schemaDefinition, issuerDid);
 
         log.debug("{}: Creating schemaDefinition: {} with did: {}", this.name, schemaDefinition.toJSON(), issuerDid);
 
         return Ledger.buildSchemaRequest(issuerDid, schemaDefinition.toJSON())
-                .thenCompose(wrapException(request -> {
-                    log.debug("{}: Submitting buildSchema request {}", this.name, request);
-                    return signAndSubmitRequest(request, issuerDid);
-                }))
-                .thenApply(requestResponse -> schemaKey);
+                     .thenCompose(wrapException(request -> {
+                         log.debug("{}: Submitting buildSchema request {}", this.name, request);
+                         return signAndSubmitRequest(request, issuerDid);
+                     }))
+                     .thenApply(requestResponse -> schemaKey);
     }
 
     public CompletableFuture<String> defineClaim(SchemaKey schemaKey) throws JsonProcessingException, IndyException {

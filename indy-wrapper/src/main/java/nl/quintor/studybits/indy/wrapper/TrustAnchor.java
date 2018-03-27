@@ -44,7 +44,7 @@ public class TrustAnchor extends WalletOwner {
                 );
     }
 
-    public Verinym createVerinymRequest(String targetDid) throws IndyException, JsonProcessingException {
+    public Verinym createVerinymRequest( String targetDid ) throws IndyException, JsonProcessingException {
         log.info("{} Creating verinym request for targetDid: {}", name, targetDid);
 
         return new Verinym(wallet.getMainDid(), wallet.getMainKey(), targetDid);

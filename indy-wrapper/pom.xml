@@ -4,14 +4,21 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>nl.quintor.studybits</groupId>
+        <artifactId>maven-parent</artifactId>
+        <version>0.1</version>
+    </parent>
+
+    <artifactId>indy-wrapper</artifactId>
+    <version>0.1-SNAPSHOT</version>
+
     <properties>
+        <start-class>nl.quintor.studybits.indy.wrapper.Main</start-class>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <groupId>nl.quintor.studybits</groupId>
-    <artifactId>indy-wrapper</artifactId>
-    <version>0.1</version>
 
     <repositories>
         <repository>
@@ -79,12 +86,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -97,10 +104,9 @@
                     <!-- MainClass in mainfest make a executable jar -->
                     <archive>
                         <manifest>
-                            <mainClass>nl.quintor.studybits.university.Main</mainClass>
+                            <mainClass>${start-class}</mainClass>
                         </manifest>
                     </archive>
-
                 </configuration>
                 <executions>
                     <execution>

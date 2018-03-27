@@ -13,10 +13,10 @@ import java.util.Map;
 public class ClaimReferent implements Serializable {
     private String referent;
     private Map<String, String> attrs;
-    @JsonProperty("schema_key")
+    @JsonProperty( "schema_key" )
     private SchemaKey schemaKey;
-    @JsonProperty("issuer_did")
+    @JsonProperty( "issuer_did" )
     private String issuerDid;
-    @JsonProperty("revoc_reg_seq_no")
+    @JsonProperty( "revoc_reg_seq_no" )
     private Integer revocRegSeqNo;
 }

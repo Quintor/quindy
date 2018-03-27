@@ -29,6 +29,7 @@ public class IndyWallet implements AutoCloseable {
 
     public IndyWallet( String name ) throws IndyException, ExecutionException, InterruptedException {
         this.wallet = Wallet.openWallet(name, null, null).get();
+
         this.name = name;
     }
 

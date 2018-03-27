@@ -9,14 +9,14 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class ClaimIdentifier implements Serializable {
-    @JsonProperty("schema_key")
+    @JsonProperty( "schema_key" )
     private SchemaKey schemaKey;
-    @JsonProperty("issuer_did")
+    @JsonProperty( "issuer_did" )
     private String issuerDid;
-    @JsonProperty("rev_reg_seq_no")
+    @JsonProperty( "rev_reg_seq_no" )
     private Integer revRegSeqNo;
 
-    public ClaimIdentifier(ClaimReferent claimReferent) {
+    public ClaimIdentifier( ClaimReferent claimReferent ) {
         this(claimReferent.getSchemaKey(), claimReferent.getIssuerDid(), claimReferent.getRevocRegSeqNo());
     }
 }

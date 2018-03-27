@@ -18,23 +18,24 @@ import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapBiConsumerExc
 /**
  * EntitiesFromLedger holds schemas, claimDefs, and in the future revocation registries for a series of claim referents.
  * The Strings in the respective maps are the claim referents.
- */
-public class EntitiesFromLedger {
+ */ public class EntitiesFromLedger {
     private Map<String, Schema> schemas;
     private Map<String, JsonNode> claimDefs;
     // TODO: Revocation
     // private Map<String, JsonNode> revRegs;
 
     public static Collector<EntitiesForClaimReferent, ?, EntitiesFromLedger> collector() {
-        return Collector.of(() -> new EntitiesFromLedger(new HashMap<>(), new HashMap<>()),
-                wrapBiConsumerException((EntitiesFromLedger entitiesFromLedger, EntitiesForClaimReferent entitiesForClaimReferent) -> {
-                    entitiesFromLedger.getSchemas().put(entitiesForClaimReferent.getReferent(), entitiesForClaimReferent.getSchema());
-                        entitiesFromLedger.getClaimDefs().put(entitiesForClaimReferent.getReferent(), JSONUtil.mapper.readValue(entitiesForClaimReferent.getClaimDef(), JsonNode.class));
-                }), (entities1, entities2) -> {
-                    entities1.getSchemas().putAll(entities2.getSchemas());
-                    entities1.getClaimDefs().putAll(entities2.getClaimDefs());
-                    return entities1;
-                }
-                );
+        return Collector.of(() -> new EntitiesFromLedger(new HashMap<>(), new HashMap<>()), wrapBiConsumerException(( EntitiesFromLedger entitiesFromLedger, EntitiesForClaimReferent entitiesForClaimReferent ) -> {
+            entitiesFromLedger.getSchemas()
+                              .put(entitiesForClaimReferent.getReferent(), entitiesForClaimReferent.getSchema());
+            entitiesFromLedger.getClaimDefs()
+                              .put(entitiesForClaimReferent.getReferent(), JSONUtil.mapper.readValue(entitiesForClaimReferent.getClaimDef(), JsonNode.class));
+        }), ( entities1, entities2 ) -> {
+            entities1.getSchemas()
+                     .putAll(entities2.getSchemas());
+            entities1.getClaimDefs()
+                     .putAll(entities2.getClaimDefs());
+            return entities1;
+        });
     }
 }

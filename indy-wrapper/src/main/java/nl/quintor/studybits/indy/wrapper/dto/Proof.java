@@ -15,7 +15,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class Proof implements Serializable, AuthCryptable {
     private JsonNode proof;
-    @JsonProperty("requested_proof")
+    @JsonProperty( "requested_proof" )
     private RequestedProof requestedProof;
     private Map<String, ClaimIdentifier> identifiers;
 
@@ -27,12 +27,12 @@ public class Proof implements Serializable, AuthCryptable {
     @NoArgsConstructor
     public static class RequestedProof {
         private Map<String, String> predicates;
-        @JsonProperty("self_attested_attrs")
+        @JsonProperty( "self_attested_attrs" )
         private Map<String, String> selfAttestedAttributes;
-        @JsonProperty("revealed_attrs")
+        @JsonProperty( "revealed_attrs" )
         private Map<String, List<String>> revealedAttributes;
 
-        @JsonProperty("unrevealed_attrs")
+        @JsonProperty( "unrevealed_attrs" )
         private JsonNode unrevealedAttrs;
     }
 }
