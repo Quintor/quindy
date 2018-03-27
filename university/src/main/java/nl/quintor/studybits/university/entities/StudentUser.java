@@ -24,7 +24,7 @@ public class StudentUser {
     private Long id;
 
     @MapsId
-    @OneToOne(mappedBy = "studentUser", optional = false)
+    @OneToOne(mappedBy = "studentUser", optional = false, orphanRemoval = true)
     @JoinColumn(name = "student_user_id")
     private User user;
 
@@ -32,7 +32,7 @@ public class StudentUser {
     @Column(nullable = false)
     private Set<String> academicYears = new HashSet<>();
 
-    @OneToMany(mappedBy = "studentUser", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "studentUser", cascade = CascadeType.ALL, orphanRemoval = true)
     @Column(nullable = false)
     private List<TranscriptRecord> transcriptRecords = new ArrayList<>();
 

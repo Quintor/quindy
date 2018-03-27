@@ -1,5 +1,6 @@
 package nl.quintor.studybits.university.controllers.test;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.university.Seeder;
 import nl.quintor.studybits.university.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,13 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/test")
+@Slf4j
 public class TestController {
     @Autowired
     private AdminUserRepository adminUserRepository;
     @Autowired
     private ClaimRecordRepository claimRecordRepository;
-    @Autowired
-    private StudentClaimRepository studentClaimRepository;
     @Autowired
     private StudentUserRepository studentUserRepository;
     @Autowired
@@ -26,11 +26,15 @@ public class TestController {
 
     @DeleteMapping("/nuke")
     public void nuke() {
+        log.debug("Deleting admin users");
         adminUserRepository.deleteAll();
-        studentClaimRepository.deleteAll();
+        log.debug("Deleting claim records");
         claimRecordRepository.deleteAll();
+        log.debug("Deleting student users");
         studentUserRepository.deleteAll();
+        log.debug("Deleting users");
         userRepository.deleteAll();
+        log.debug("Seeding");
         seeder.seed(false);
     }
 

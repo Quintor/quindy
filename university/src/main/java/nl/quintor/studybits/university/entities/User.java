@@ -43,7 +43,7 @@ public class User {
     @Column(nullable = false)
     private List<ClaimRecord> claims = new ArrayList<>();
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @PrimaryKeyJoinColumn
     private StudentUser studentUser;
 
