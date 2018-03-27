@@ -41,7 +41,7 @@ public class ClaimController {
         return Validate.notNull(studentClaimProviderMap.get(schemaName.toLowerCase()), "Unknown schema.");
     }
 
-    @GetMapping("")
+    @GetMapping
     List<StudentClaimInfo> findAllClaims() {
         return claimService
                 .findAvailableClaims(userContext.currentUserId())

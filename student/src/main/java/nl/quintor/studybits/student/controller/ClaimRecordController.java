@@ -9,38 +9,38 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@AllArgsConstructor( onConstructor = @__( @Autowired ) )
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 @RestController
-@RequestMapping( "/student/{studentId}/claims" )
+@RequestMapping("/student/{studentId}/claims")
 public class ClaimRecordController {
     private final ClaimRecordService claimRecordService;
 
-    @PostMapping()
-    ClaimRecord createClaimRecord( @PathVariable Long studentId, @RequestBody Claim claim ) {
+    @PostMapping
+    ClaimRecord createClaimRecord(@PathVariable Long studentId, @RequestBody Claim claim) {
         return claimRecordService.createAndSave(studentId, claim);
     }
 
-    @GetMapping()
-    List<ClaimRecord> findAllClaims( @PathVariable Long studentId ) {
+    @GetMapping
+    List<ClaimRecord> findAllClaims(@PathVariable Long studentId) {
         return claimRecordService.findAllClaims(studentId);
     }
 
-    @GetMapping( "/{claimId}" )
-    ClaimRecord findById( @PathVariable Long studentId, @PathVariable Long claimId ) {
+    @GetMapping("/{claimId}")
+    ClaimRecord findById(@PathVariable Long studentId, @PathVariable Long claimId) {
         // TODO: Add ownership check.
 
         return claimRecordService.findById(claimId)
-                                 .orElseThrow(() -> new IllegalArgumentException("Claim with id not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Claim with id not found."));
     }
 
-    @PutMapping( "/{claimId}" )
-    void updateClaimById( @PathVariable Long studentId, @PathVariable Long claimId, @RequestBody ClaimRecord claimRecord ) {
+    @PutMapping("/{claimId}")
+    void updateClaimById(@PathVariable Long studentId, @PathVariable Long claimId, @RequestBody ClaimRecord claimRecord) {
         claimRecordService.updateClaimById(claimId, claimRecord);
     }
 
-    @GetMapping( "/fetch" )
-    void updateClaims( @PathVariable Long studentId ) {
-        claimRecordService.findAllClaims(studentId);
+    @GetMapping("/fetch")
+    void fetchNewClaims(@PathVariable Long studentId) throws Exception {
+        claimRecordService.fetchAndSaveNewClaimsForStudentId(studentId);
     }
 }
 
