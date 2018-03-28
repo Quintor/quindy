@@ -1,5 +1,6 @@
 package nl.quintor.studybits.university.controllers.student;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.university.UserContext;
 import nl.quintor.studybits.university.helpers.LinkHelper;
 import nl.quintor.studybits.university.models.AuthEncryptedMessageModel;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/{universityName}/student/{userName}/claims")
 public class ClaimController {
@@ -56,7 +58,9 @@ public class ClaimController {
     AuthEncryptedMessageModel getClaimOffer(@PathVariable String schemaName, @PathVariable Long studentClaimId) {
         ClaimProvider provider = getProvider(schemaName);
         AuthEncryptedMessageModel resultModel = provider.getClaimOffer(userContext.currentUserId(), studentClaimId);
-        return linkHelper.withLink(resultModel, ClaimController.class, x -> x.getClaim(schemaName, null));
+        AuthEncryptedMessageModel withLink = linkHelper.withLink(resultModel, ClaimController.class, x -> x.getClaim(schemaName, null));
+        log.debug("Creating getClaimOffer response with resultModel and link(s) {}", withLink.getLinks());
+        return withLink;
     }
 
     @PostMapping("/{schemaName}")

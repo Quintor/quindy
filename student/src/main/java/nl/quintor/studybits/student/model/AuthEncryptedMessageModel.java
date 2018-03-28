@@ -13,4 +13,7 @@ import org.springframework.hateoas.ResourceSupport;
 public class AuthEncryptedMessageModel extends ResourceSupport {
     private byte[] message;
     private String did;
+
+//    @JsonProperty("_links")
+//    private Map<String, Map<String, String>> links;
 }

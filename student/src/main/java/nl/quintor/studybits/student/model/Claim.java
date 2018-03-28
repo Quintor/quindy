@@ -15,6 +15,8 @@ public class Claim implements AuthCryptable {
     @GeneratedValue
     private Long id;
     @OneToOne
+    private Student owner;
+    @OneToOne
     private SchemaKey schemaKey;
     private Integer revReqSeqNo;
     private String values;

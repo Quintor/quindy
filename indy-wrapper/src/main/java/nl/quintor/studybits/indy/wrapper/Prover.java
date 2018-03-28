@@ -45,13 +45,7 @@ public class Prover extends WalletOwner {
                         .thenCompose(wrapException(claimDefJson -> {
                             log.debug("{} creating claim request with claimDefJson {}", name, claimDefJson);
                             return Anoncreds.proverCreateAndStoreClaimReq(wallet.getWallet(), pairwiseResult.getMyDid(),
-                                    claimOffer.toJSON(), claimDefJson, this.masterSecretName)
-                                    .thenCompose(wrapException(claimReqJsonStorageResponse -> {
-                                        log.debug("{} Got claim request storage response {}", name, claimReqJsonStorageResponse);
-                                        return Anoncreds.proverCreateAndStoreClaimReq(wallet.getWallet(), pairwiseResult
-                                                        .getMyDid(),
-                                                claimOffer.toJSON(), claimDefJson, this.masterSecretName);
-                                    }));
+                                    claimOffer.toJSON(), claimDefJson, this.masterSecretName);
                         })).thenApply(wrapException(claimRequestJson -> {
                             ClaimRequest claimRequest = JSONUtil.mapper.readValue(claimRequestJson, ClaimRequest.class);
                             claimRequest.setTheirDid(theirDid);
