@@ -1,5 +1,6 @@
 package nl.quintor.studybits.university.services;
 
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import nl.quintor.studybits.indy.wrapper.Issuer;
 import nl.quintor.studybits.indy.wrapper.dto.*;
@@ -18,19 +19,13 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 
 @Service
+@AllArgsConstructor(onConstructor=@__(@Autowired))
 public abstract class ClaimProvider<T extends nl.quintor.studybits.university.dto.Claim> {
 
-    @Autowired
-    protected IssuerService issuerService;
-
-    @Autowired
-    protected ClaimRecordRepository claimRecordRepository;
-
-    @Autowired
-    protected UserRepository userRepository;
-
-    @Autowired
-    protected Mapper mapper;
+    protected final UniversityService universityService;
+    protected final ClaimRecordRepository claimRecordRepository;
+    protected final UserRepository userRepository;
+    protected final Mapper mapper;
 
     protected AuthEncryptedMessage toEntity(AuthcryptedMessage authcryptedMessage) {
         return mapper.map(authcryptedMessage, AuthEncryptedMessage.class);
@@ -81,7 +76,7 @@ public abstract class ClaimProvider<T extends nl.quintor.studybits.university.dt
         if (claimRecord.getClaimMessage() != null) {
             return toModel(claimRecord.getClaimOfferMessage());
         }
-        Issuer issuer = issuerService.getIssuer(user.getUniversity().getName());
+        Issuer issuer = universityService.getIssuer(user.getUniversity().getName());
         nl.quintor.studybits.university.dto.Claim claim = getClaimForClaimRecord(claimRecord);
         ClaimOffer claimOffer = createClaimOffer(issuer, claimRecord.getUser(), claim.getSchemaDefinition());
         AuthEncryptedMessage authEncryptedMessage = authEncrypt(issuer, claimOffer);
@@ -103,7 +98,7 @@ public abstract class ClaimProvider<T extends nl.quintor.studybits.university.dt
     @Transactional
     public AuthEncryptedMessageModel getClaim(Long userId, AuthEncryptedMessageModel authEncryptedMessageModel) {
         User user = getConnectedUserById(userId);
-        Issuer issuer = issuerService.getIssuer(user.getUniversity().getName());
+        Issuer issuer = universityService.getIssuer(user.getUniversity().getName());
         ClaimRequest claimRequest = authDecrypt(issuer, authEncryptedMessageModel, ClaimRequest.class);
         ClaimRecord claimRecord = getClaimRecord(claimRequest);
         Validate.validState(claimRecord.getUser().getId().equals(userId), "Claim record user mismatch.");

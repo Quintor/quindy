@@ -1,12 +1,16 @@
 package nl.quintor.studybits.university;
 
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.Issuer;
 import nl.quintor.studybits.indy.wrapper.dto.SchemaDefinition;
 import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
+import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
+import nl.quintor.studybits.university.dto.Claim;
 import nl.quintor.studybits.university.dto.ClaimUtils;
 import nl.quintor.studybits.university.dto.Enrolment;
+import nl.quintor.studybits.university.dto.Transcript;
 import nl.quintor.studybits.university.entities.AdminUser;
 import nl.quintor.studybits.university.entities.StudentUser;
 import nl.quintor.studybits.university.entities.University;
@@ -16,33 +20,27 @@ import nl.quintor.studybits.university.repositories.UniversityRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import nl.quintor.studybits.university.services.EnrolmentService;
 import nl.quintor.studybits.university.services.TranscriptService;
+import nl.quintor.studybits.university.services.UniversityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
 @Slf4j
+@AllArgsConstructor(onConstructor=@__(@Autowired))
 public class Seeder {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private UniversityRepository universityRepository;
-
-    @Autowired
-    private Issuer[] issuers;
-
-    @Autowired
-    private EnrolmentService enrolmentService;
-
-    @Autowired
-    private TranscriptService transcriptService;
+    private final UserRepository userRepository;
+    private final UniversityRepository universityRepository;
+    private final UniversityService universityService;
+    private final EnrolmentService enrolmentService;
+    private final TranscriptService transcriptService;
 
     @EventListener
     public void seed(ContextRefreshedEvent event) {
@@ -53,14 +51,11 @@ public class Seeder {
 
     public void seed(boolean withLedger) {
         log.info("Seeding started...");
-        List<University> universities;
-        if (withLedger) {
-            universities = seedUniversities();
-            seedClaimDefinitions("rug", Enrolment.class);
-        } else {
-            universities = universityRepository.findAll();
-        }
 
+        if (withLedger) {
+            seedUniversities();
+        }
+        List<University> universities = universityRepository.findAll();
         Map<String, University> universityMap = convertToMap(universities, x -> x.getName().toLowerCase());
         seedAdmins(universityMap);
         List<User> students = seedStudents(universityMap);
@@ -75,32 +70,15 @@ public class Seeder {
         return userRepository.findAll().isEmpty();
     }
 
-    private Optional<Issuer> getIssuerByName(String name) {
-        return Arrays.stream(issuers)
-                .filter(i -> name.equalsIgnoreCase(i.getName()))
-                .findFirst();
-    }
-
-    private List<University> seedUniversities() {
-        List<University> universities = Arrays
-                .stream(issuers)
-                .map(x -> createUniversity(x.getName()))
-                .collect(Collectors.toList());
-        return universityRepository.saveAll(universities);
-    }
-
-    private void seedClaimDefinitions(String universityName, Class<?>... claimTypes) {
-        Issuer issuer = getIssuerByName(universityName)
-                .orElseThrow(() -> new IllegalStateException(String.format("Issuer for %s university not found!", universityName)));
-        Arrays.stream(claimTypes).map(ClaimUtils::getSchemaDefinition)
-                .forEach(schemaDefinition -> defineSchema(issuer, schemaDefinition));
-    }
-
-    @SneakyThrows
-    private void defineSchema(Issuer issuer, SchemaDefinition schemaDefinition) {
-        log.info("Issuer {} defining schema definition '{}', version: '{}'.", issuer.getName(), schemaDefinition.getName(), schemaDefinition.getVersion());
-        SchemaKey schemaKey = issuer.createAndSendSchema(schemaDefinition).get();
-        issuer.defineClaim(schemaKey).get();
+    private void seedUniversities() {
+        universityService.create("Rug");
+        universityService.create("Gent");
+        SchemaKey enrolmentSchemaKey = universityService.defineSchema("rug", ClaimUtils.getSchemaDefinition(Enrolment.class));
+        SchemaKey transcriptSchemaKey = universityService.defineSchema("rug", ClaimUtils.getSchemaDefinition(Transcript.class));
+        universityService.addClaimSchema("rug", enrolmentSchemaKey, true);
+        universityService.addClaimSchema("rug", transcriptSchemaKey, true);
+        universityService.addClaimSchema("gent", enrolmentSchemaKey, false);
+        universityService.addClaimSchema("gent", transcriptSchemaKey, false);
     }
 
 
@@ -131,10 +109,6 @@ public class Seeder {
         return userRepository.saveAll(users);
     }
 
-    private University createUniversity(String name) {
-        log.info("Creating {} university...", name);
-        return new University(null, name, new HashSet<>());
-    }
 
     private User createStudent(String userName, String firstName, String lastName, String ssn, University university) {
         log.info("Creating admin user {} for university {}...", userName, university.getName());

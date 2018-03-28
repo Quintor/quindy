@@ -1,5 +1,6 @@
 package nl.quintor.studybits.university.controllers.admin;
 
+import lombok.AllArgsConstructor;
 import nl.quintor.studybits.university.UserContext;
 import nl.quintor.studybits.university.models.UserModel;
 import nl.quintor.studybits.university.services.StudentService;
@@ -10,15 +11,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/{universityName}/admin/{userName}/students")
+@AllArgsConstructor(onConstructor=@__(@Autowired))
 public class StudentController {
 
-    @Autowired
-    private UserContext userContext;
+    private final UserContext userContext;
+    private final StudentService studentService;
 
-    @Autowired
-    private StudentService studentService;
-
-    @GetMapping("")
+    @GetMapping
     List<UserModel> findAll() {
         return studentService.findAllForUniversity(userContext.currentUniversityName());
     }
@@ -29,7 +28,7 @@ public class StudentController {
                 .orElseThrow(() -> new IllegalArgumentException("UserModel user name not found for university."));
     }
 
-    @PostMapping("")
+    @PostMapping
     UserModel createStudent(@RequestBody UserModel userModel) {
         return studentService.createStudent(userContext.currentUniversityName(), userModel);
     }

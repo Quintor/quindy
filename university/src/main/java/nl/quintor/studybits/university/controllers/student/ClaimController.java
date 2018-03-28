@@ -19,13 +19,10 @@ import java.util.stream.Collectors;
 @RequestMapping("/{universityName}/student/{userName}/claims")
 public class ClaimController {
 
-    private UserContext userContext;
-
-    private LinkHelper linkHelper;
-
-    private ClaimService claimService;
-
-    private Map<String, ClaimProvider> studentClaimProviderMap;
+    private final UserContext userContext;
+    private final LinkHelper linkHelper;
+    private final ClaimService claimService;
+    private final Map<String, ClaimProvider> studentClaimProviderMap;
 
     @Autowired
     ClaimController(UserContext userContext, LinkHelper linkHelper, ClaimService claimService, ClaimProvider[] claimProviders) {
@@ -41,7 +38,7 @@ public class ClaimController {
         return Validate.notNull(studentClaimProviderMap.get(schemaName.toLowerCase()), "Unknown schema.");
     }
 
-    @GetMapping("")
+    @GetMapping
     List<StudentClaimInfo> findAllClaims() {
         return claimService
                 .findAvailableClaims(userContext.currentUserId())

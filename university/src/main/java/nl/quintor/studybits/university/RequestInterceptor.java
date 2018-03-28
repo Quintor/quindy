@@ -1,5 +1,6 @@
 package nl.quintor.studybits.university;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,33 +14,23 @@ import java.util.Map;
 
 @Slf4j
 @Component
+@AllArgsConstructor( onConstructor = @__( @Autowired ) )
 public class RequestInterceptor extends HandlerInterceptorAdapter {
 
-    @Autowired
-    private UserContext userContext;
+    private final UserContext userContext;
 
-    /**
-     * This is not a good practice to use sysout. Always integrate any logger
-     * with your application. We will discuss about integrating logger with
-     * spring boot application in some later article
-     */
     @Override
     public boolean preHandle(HttpServletRequest request,
-                             HttpServletResponse response, Object object) throws Exception {
+                             HttpServletResponse response, Object object) {
         try {
             Map pathVariables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
             String universityName = (String) pathVariables.get("universityName");
             String userName = (String) pathVariables.get("userName");
-            //String universityName = ServletRequestUtils.getStringParameter(request, "universityName");
-            //String userName = ServletRequestUtils.getStringParameter(request, "userName");
             userContext.setCurrentUser(universityName, userName);
             log.debug("request to university {} from user {}.", universityName, userName);
         } catch (Exception e) {
-            log.warn("Request did not have university and user context");
-            return true;
+            log.error("Request did not have university and user context", e);
         }
-
-
         return true;
     }
 

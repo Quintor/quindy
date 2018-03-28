@@ -1,6 +1,7 @@
 package nl.quintor.studybits.university.controllers.admin;
 
-import nl.quintor.studybits.university.models.University;
+import lombok.AllArgsConstructor;
+import nl.quintor.studybits.university.models.UniversityModel;
 import nl.quintor.studybits.university.services.UniversityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,13 +12,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/{universityName}/admin/claims")
+@AllArgsConstructor(onConstructor=@__(@Autowired))
 public class UniversityController {
 
-    @Autowired
-    private UniversityService universityService;
+    private final UniversityService universityService;
 
     @GetMapping
-    List<University> findAll() {
+    List<UniversityModel> findAll() {
         return universityService.findAll();
     }
 }

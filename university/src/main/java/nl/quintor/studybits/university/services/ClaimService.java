@@ -1,5 +1,6 @@
 package nl.quintor.studybits.university.services;
 
+import lombok.AllArgsConstructor;
 import nl.quintor.studybits.university.entities.ClaimRecord;
 import nl.quintor.studybits.university.models.StudentClaimInfo;
 import nl.quintor.studybits.university.repositories.ClaimRecordRepository;
@@ -11,12 +12,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor(onConstructor=@__(@Autowired))
 public class ClaimService {
 
-    @Autowired
-    protected Mapper mapper;
-    @Autowired
-    private ClaimRecordRepository claimRecordRepository;
+    private final ClaimRecordRepository claimRecordRepository;
+    private final Mapper mapper;
 
     private StudentClaimInfo toStudentClaimInfo( Object claimRecord ) {
         return mapper.map(claimRecord, StudentClaimInfo.class);
