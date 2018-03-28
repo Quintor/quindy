@@ -1,7 +1,7 @@
 package nl.quintor.studybits.university;
 
 import lombok.AllArgsConstructor;
-import nl.quintor.studybits.university.models.UserIdentity;
+import nl.quintor.studybits.university.dto.UserIdentity;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;

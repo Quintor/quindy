@@ -32,6 +32,6 @@ public class ClaimSchema {
     private String schemaIssuerDid;
 
     @Column(nullable = false)
-    private Boolean canIssueClaim;
+    private Boolean claimDefined;
 
 }

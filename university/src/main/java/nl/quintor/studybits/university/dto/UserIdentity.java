@@ -1,4 +1,4 @@
-package nl.quintor.studybits.university.models;
+package nl.quintor.studybits.university.dto;
 
 import lombok.Data;
 

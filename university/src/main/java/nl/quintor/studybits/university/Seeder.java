@@ -73,12 +73,15 @@ public class Seeder {
     private void seedUniversities() {
         universityService.create("Rug");
         universityService.create("Gent");
-        SchemaKey enrolmentSchemaKey = universityService.defineSchema("rug", ClaimUtils.getSchemaDefinition(Enrolment.class));
-        SchemaKey transcriptSchemaKey = universityService.defineSchema("rug", ClaimUtils.getSchemaDefinition(Transcript.class));
-        universityService.addClaimSchema("rug", enrolmentSchemaKey, true);
-        universityService.addClaimSchema("rug", transcriptSchemaKey, true);
-        universityService.addClaimSchema("gent", enrolmentSchemaKey, false);
-        universityService.addClaimSchema("gent", transcriptSchemaKey, false);
+        SchemaDefinition enrolmentSchemaDefinition = ClaimUtils.getSchemaDefinition(Enrolment.class);
+        SchemaKey enrolmentSchemaKey = universityService.defineSchema("rug", enrolmentSchemaDefinition);
+        universityService.defineClaim("rug", enrolmentSchemaDefinition);
+        universityService.addSchema("gent", enrolmentSchemaKey);
+
+        SchemaDefinition transcriptSchemaDefinition = ClaimUtils.getSchemaDefinition(Transcript.class);
+        SchemaKey transcriptSchemaKey = universityService.defineSchema("rug", transcriptSchemaDefinition);
+        universityService.defineClaim("rug", transcriptSchemaDefinition);
+        universityService.addSchema("gent", transcriptSchemaKey);
     }
 
 
