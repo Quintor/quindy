@@ -2,6 +2,7 @@ package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.indy.wrapper.dto.AuthCryptable;
 import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
+@Slf4j
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class ClaimRecordService {
     private ClaimRecordRepository claimRecordRepository;
@@ -76,16 +78,17 @@ public class ClaimRecordService {
         claimRecordRepository.deleteAll();
     }
 
-    public void fetchAndSaveNewClaimsForStudentId(Long studentId) throws Exception {
+    public void getAndSaveNewClaimsForStudentId(Long studentId) throws Exception {
         Student student = studentService.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
-        Prover prover = studentService.getProverForStudent(student);
 
-        getAllClaimInfo(student)
-                .map(this::getClaimOfferForInfo)
-                .map(AsyncUtil.wrapException(claimOffer -> getClaimForOffer(claimOffer, prover)))
-                .filter(claim -> !claimRecordRepository.existsByClaim(claim))
-                .forEach(claim -> createAndSave(studentId, claim));
+        try (Prover prover = studentService.getProverForStudent(student)) {
+            getAllClaimInfo(student)
+                    .map(this::getClaimOfferForInfo)
+                    .map(AsyncUtil.wrapException(claimOffer -> getClaimForOffer(claimOffer, prover)))
+                    .filter(claim -> !claimRecordRepository.existsByClaim(claim))
+                    .forEach(claim -> createAndSave(studentId, claim));
+        }
     }
 
     private Stream<StudentClaimInfo> getAllClaimInfo(Student student) {
@@ -96,8 +99,8 @@ public class ClaimRecordService {
                 .flatMap(List::stream);
     }
 
-    private AuthEncryptedMessageModel getClaimOfferForInfo(StudentClaimInfo claimInfos) {
-        return new RestTemplate().getForObject(claimInfos.getLink("self").toString(), AuthEncryptedMessageModel.class);
+    private AuthEncryptedMessageModel getClaimOfferForInfo(StudentClaimInfo claimInfo) {
+        return new RestTemplate().getForObject(claimInfo.getLink("self").getHref(), AuthEncryptedMessageModel.class);
     }
 
     private Claim getClaimForOffer(AuthEncryptedMessageModel claimOffer, Prover prover) throws Exception {
@@ -107,10 +110,11 @@ public class ClaimRecordService {
 
     private List<StudentClaimInfo> getAllStudentClaimInfo(University university, Student student) {
         String path = UriComponentsBuilder
-                .fromPath(university.getEndpoint())
+                .fromHttpUrl(university.getEndpoint())
                 .path(university.getName())
-                .path("/claims")
+                .path("/student/")
                 .path(student.getUsername())
+                .path("/claims")
                 .build()
                 .toString();
 
@@ -119,21 +123,28 @@ public class ClaimRecordService {
         }).getBody();
     }
 
-    @SneakyThrows
-    private AuthcryptedMessage getEncryptedClaimForOffer(AuthEncryptedMessageModel messageModel, Prover prover) {
+    private AuthcryptedMessage getEncryptedClaimForOffer(AuthEncryptedMessageModel messageModel, Prover prover) throws Exception {
         AuthcryptedMessage authcryptedMessage = mapper.map(messageModel, AuthcryptedMessage.class);
 
         return decryptAuthcryptedMessage(authcryptedMessage, prover, ClaimOffer.class)
-                .thenCompose(AsyncUtil.wrapException(prover::createClaimRequest))
+                .thenCompose(AsyncUtil.wrapException(claimOffer -> {
+                    log.debug("Creating ClaimRequest with claimOffer {}", claimOffer);
+                    return prover.createClaimRequest(claimOffer);
+                }))
                 .thenApply(HttpEntity::new)
-                .thenApply(entity -> new RestTemplate().postForEntity(messageModel.getLink("self")
-                        .toString(), entity, AuthcryptedMessage.class))
+                .thenApply(entity -> {
+                    log.debug("Retrieving AuthcryptedMessage from University with link {} and entity {}", messageModel.getLink("self")
+                            .getHref(), entity);
+                    return new RestTemplate().postForEntity(messageModel.getLink("self")
+                            .getHref(), entity, AuthcryptedMessage.class);
+                })
                 .thenApply(HttpEntity::getBody)
                 .get();
     }
 
     @SneakyThrows
     private <T extends AuthCryptable> CompletableFuture<T> decryptAuthcryptedMessage(AuthcryptedMessage authMessage, Prover prover, Class<T> type) {
+        log.debug("Decrypting AuthcryptedMessage {} with prover {} to class {}", authMessage, prover, type);
         return prover.authDecrypt(authMessage, type);
     }
 }

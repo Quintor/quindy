@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
 
 
 @Service
-@AllArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class StudentService {
     private StudentRepository studentRepository;
     private UniversityService universityService;
@@ -48,7 +48,13 @@ public class StudentService {
 
         University university = universityService.findByName(uniName)
                 .orElseThrow(() -> new IllegalArgumentException("University with id not found"));
+
         MetaWallet metaWallet = metaWalletService.createAndSave(username);
+        try (IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(metaWallet)) {
+            Prover prover = new Prover(username, indyPool, indyWallet, username);
+            prover.init();
+        }
+
         Student student = new Student(null, username, university, metaWallet);
 
         return studentRepository.save(student);
@@ -116,7 +122,7 @@ public class StudentService {
 
     public Prover getProverForStudent(Student student) throws Exception {
         IndyWallet wallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
-        return new Prover(student.getUsername(), indyPool, wallet);
+        return new Prover(student.getUsername(), indyPool, wallet, student.getUsername());
     }
 }
 

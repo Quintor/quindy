@@ -7,6 +7,7 @@ import nl.quintor.studybits.indy.wrapper.dto.SchemaDefinition;
 import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
 import nl.quintor.studybits.university.dto.ClaimUtils;
 import nl.quintor.studybits.university.dto.Enrolment;
+import nl.quintor.studybits.university.dto.Transcript;
 import nl.quintor.studybits.university.entities.AdminUser;
 import nl.quintor.studybits.university.entities.StudentUser;
 import nl.quintor.studybits.university.entities.University;
@@ -56,7 +57,7 @@ public class Seeder {
         List<University> universities;
         if (withLedger) {
             universities = seedUniversities();
-            seedClaimDefinitions("rug", Enrolment.class);
+            seedClaimDefinitions("rug", Enrolment.class, Transcript.class);
         } else {
             universities = universityRepository.findAll();
         }

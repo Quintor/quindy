@@ -51,43 +51,46 @@ public class WalletOwner implements AutoCloseable {
 
         return wallet.newDid()
                 .thenApply(
-                        (myDid) -> new ConnectionResponse(myDid.getDid(), myDid.getVerkey(), connectionRequest.getNonce(), connectionRequest.getDid()))
+                        (myDid) -> new ConnectionResponse(myDid.getDid(), myDid.getVerkey(), connectionRequest.getNonce(), connectionRequest
+                                .getDid()))
                 .thenCompose(wrapException((ConnectionResponse connectionResponse) ->
                         getKeyForDid(connectionRequest.getDid())
-                        .thenCompose(wrapException(key -> storeDidAndPairwise(connectionResponse.getDid(), connectionRequest.getDid(), connectionResponse.getVerkey(), key)))
-                        .thenApply((_void) -> connectionResponse)));
+                                .thenCompose(wrapException(key -> storeDidAndPairwise(connectionResponse.getDid(), connectionRequest
+                                        .getDid(), connectionResponse.getVerkey(), key)))
+                                .thenApply((_void) -> connectionResponse)));
     }
 
-    CompletableFuture<Void> storeDidAndPairwise(String myDid, String theirDid, String myKey, String theirKey)  throws JsonProcessingException, IndyException {
+    CompletableFuture<Void> storeDidAndPairwise(String myDid, String theirDid, String myKey, String theirKey) throws JsonProcessingException, IndyException {
         log.debug("{} Called storeDidAndPairwise: myDid: {}, theirDid: {}", name, myDid, theirDid);
 
         return Did.storeTheirDid(wallet.getWallet(), new TheirDidInfo(theirDid, theirKey).toJSON())
                 .thenCompose(wrapException(
                         (storeDidResponse) -> {
                             log.debug("{} Creating pairwise theirDid: {}, myDid: {}, metadata: {}", name, theirDid, myDid, "");
-                            return Pairwise.createPairwise(wallet.getWallet(), theirDid, myDid,"");
+                            return Pairwise.createPairwise(wallet.getWallet(), theirDid, myDid, "");
 
                         }));
     }
 
-    public CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid( String theirDid ) throws IndyException {
+    public CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid(String theirDid) throws IndyException {
         log.debug("{} Called getPairwise by their did: {}", name, theirDid);
         return Pairwise.getPairwise(wallet.getWallet(), theirDid)
                 .thenApply(wrapException(json -> JSONUtil.mapper.readValue(json, GetPairwiseResult.class)));
     }
 
     CompletableFuture<String> getKeyForDid(String did) throws IndyException {
-                log.debug("{} Called getKeyForDid: {}", name, did);
-                return Did.keyForDid(pool.getPool(), wallet.getWallet(), did)
-                        .thenApply(key -> {
-                            log.debug("{} Got key for did {} key {}", name, did, key);
-                            return key;
-                        });
+        log.debug("{} Called getKeyForDid: {}", name, did);
+        return Did.keyForDid(pool.getPool(), wallet.getWallet(), did)
+                .thenApply(key -> {
+                    log.debug("{} Got key for did {} key {}", name, did, key);
+                    return key;
+                });
 
     }
 
     CompletableFuture<Schema> getSchema(String did, SchemaKey schemaKey) throws JsonProcessingException, IndyException {
-        log.debug("{}: Calling buildGetSchemaRequest with submitter: {} destination {} GetSchema {}", name, did, schemaKey.getDid(), GetSchema.fromSchemaKey(schemaKey).toJSON());
+        log.debug("{}: Calling buildGetSchemaRequest with submitter: {} destination {} GetSchema {}", name, did, schemaKey
+                .getDid(), GetSchema.fromSchemaKey(schemaKey).toJSON());
         return Ledger.buildGetSchemaRequest(did, schemaKey.getDid(), GetSchema.fromSchemaKey(schemaKey).toJSON())
                 .thenCompose(wrapException(this::submitRequest))
                 .thenApply(wrapException(getSchemaResponse -> {
@@ -106,18 +109,21 @@ public class WalletOwner implements AutoCloseable {
                 .thenApply(wrapException(response -> JSONUtil.mapper.readTree(response).at("/result").toString()));
     }
 
-    CompletableFuture<EntitiesFromLedger> getEntitiesFromLedger( Map<String, ClaimIdentifier> identifiers ) {
+    CompletableFuture<EntitiesFromLedger> getEntitiesFromLedger(Map<String, ClaimIdentifier> identifiers) {
         List<CompletableFuture<EntitiesForClaimReferent>> entityFutures = identifiers.entrySet()
-                                                                                     .stream()
-                                                                                     .map(wrapException(( Map.Entry<String, ClaimIdentifier> stringClaimIdentifierEntry ) -> getSchema(wallet.getMainDid(), stringClaimIdentifierEntry.getValue()
-                                                                                                                                                                                                                                      .getSchemaKey()).thenCompose(wrapException(( Schema schema ) -> getClaimDef(wallet.getMainDid(), schema, stringClaimIdentifierEntry.getValue()
-                                                                                                                                                                                                                                                                                                                                                                         .getIssuerDid()).thenApply(claimDef -> new EntitiesForClaimReferent(schema, claimDef, stringClaimIdentifierEntry.getKey()))))))
-                                                                                     .collect(Collectors.toList());
+                .stream()
+                .map(wrapException((Map.Entry<String, ClaimIdentifier> stringClaimIdentifierEntry) -> getSchema(wallet.getMainDid(), stringClaimIdentifierEntry
+                        .getValue()
+                        .getSchemaKey()).thenCompose(wrapException((Schema schema) -> getClaimDef(wallet.getMainDid(), schema, stringClaimIdentifierEntry
+                        .getValue()
+                        .getIssuerDid()).thenApply(claimDef -> new EntitiesForClaimReferent(schema, claimDef, stringClaimIdentifierEntry
+                        .getKey()))))))
+                .collect(Collectors.toList());
 
         return CompletableFuture.allOf(entityFutures.toArray(new CompletableFuture[0]))
-                                .thenApply(_void -> entityFutures.stream()
-                                                                 .map(CompletableFuture::join)
-                                                                 .collect(EntitiesFromLedger.collector()));
+                .thenApply(_void -> entityFutures.stream()
+                        .map(CompletableFuture::join)
+                        .collect(EntitiesFromLedger.collector()));
     }
 
     public CompletableFuture<AnoncryptedMessage> anoncrypt(AnonCryptable message) throws JsonProcessingException, IndyException {
@@ -133,32 +139,35 @@ public class WalletOwner implements AutoCloseable {
     public <T extends AnonCryptable> CompletableFuture<T> anonDecrypt(AnoncryptedMessage message, Class<T> valueType) throws IndyException {
         return getKeyForDid(message.getTargetDid())
                 .thenCompose(wrapException(key -> Crypto.anonDecrypt(wallet.getWallet(), key, message.getMessage())))
-                .thenApply(wrapException((decryptedMessage) -> JSONUtil.mapper.readValue(new String(decryptedMessage, Charset.forName("utf8")), valueType)));
+                .thenApply(wrapException((decryptedMessage) -> JSONUtil.mapper.readValue(new String(decryptedMessage, Charset
+                        .forName("utf8")), valueType)));
     }
 
-    public CompletableFuture<AuthcryptedMessage> authcrypt( AuthCryptable message ) throws JsonProcessingException, IndyException {
+    public CompletableFuture<AuthcryptedMessage> authcrypt(AuthCryptable message) throws JsonProcessingException, IndyException {
         log.debug("{} Authcrypting message: {}, theirDid: {}", name, message.toJSON(), message.getTheirDid());
-        return getKeyForDid(message.getTheirDid()).thenCompose(wrapException(( String theirKey ) -> {
-            return getPairwiseByTheirDid(message.getTheirDid()).thenCompose(wrapException(( GetPairwiseResult getPairwiseResult ) -> getKeyForDid(getPairwiseResult.getMyDid()).thenCompose(wrapException(( String myKey ) -> {
+        return getKeyForDid(message.getTheirDid()).thenCompose(wrapException((String theirKey) -> {
+            return getPairwiseByTheirDid(message.getTheirDid()).thenCompose(wrapException((GetPairwiseResult getPairwiseResult) -> getKeyForDid(getPairwiseResult
+                            .getMyDid()).thenCompose(wrapException((String myKey) -> {
                         log.debug("{} Authcrypting with keys myKey {}, theirKey {}", name, myKey, theirKey);
                         return Crypto.authCrypt(wallet.getWallet(), myKey, theirKey, message.toJSON()
-                                                                                            .getBytes(Charset.forName("utf8")))
-                                     .thenApply(cryptedMessage -> new AuthcryptedMessage(cryptedMessage, getPairwiseResult.getMyDid()));
+                                .getBytes(Charset.forName("utf8")))
+                                .thenApply(cryptedMessage -> new AuthcryptedMessage(cryptedMessage, getPairwiseResult.getMyDid()));
                     })))
-                            );
-                }));
+            );
+        }));
     }
 
     public <T extends AuthCryptable> CompletableFuture<T> authDecrypt(AuthcryptedMessage message, Class<T> valueType) throws IndyException {
         return getPairwiseByTheirDid(message.getDid())
                 .thenCompose(wrapException(pairwiseResult -> getKeyForDid(pairwiseResult.getMyDid())
                         .thenCompose(wrapException(key -> Crypto.authDecrypt(wallet.getWallet(), key, message.getMessage())
-                        .thenApply(wrapException((decryptedMessage) -> {
-                            assert decryptedMessage.getVerkey().equals(key);
-                            T decryptedObject = JSONUtil.mapper.readValue(new String(decryptedMessage.getDecryptedMessage(), Charset.forName("utf8")), valueType);
-                            decryptedObject.setTheirDid(message.getDid());
-                            return decryptedObject;
-                        }))))))
+                                .thenApply(wrapException((decryptedMessage) -> {
+                                    assert decryptedMessage.getVerkey().equals(key);
+                                    T decryptedObject = JSONUtil.mapper.readValue(new String(decryptedMessage.getDecryptedMessage(), Charset
+                                            .forName("utf8")), valueType);
+                                    decryptedObject.setTheirDid(message.getDid());
+                                    return decryptedObject;
+                                }))))))
                 ;
     }
 

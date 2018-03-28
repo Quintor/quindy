@@ -50,4 +50,13 @@ public class BaseIT {
                 .extract()
                 .path("id");
     }
+
+    void onboardStudent(Integer studentId, Integer universityId) {
+        givenCorrectHeaders(STUDENT)
+                .queryParam("student", studentId)
+                .queryParam("university", universityId)
+                .post("/student/onboard")
+                .then()
+                .assertThat().statusCode(200);
+    }
 }

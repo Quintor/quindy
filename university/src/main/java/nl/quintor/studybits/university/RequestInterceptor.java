@@ -24,22 +24,17 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
      * spring boot application in some later article
      */
     @Override
-    public boolean preHandle(HttpServletRequest request,
-                             HttpServletResponse response, Object object) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object object) throws Exception {
         try {
             Map pathVariables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
             String universityName = (String) pathVariables.get("universityName");
             String userName = (String) pathVariables.get("userName");
-            //String universityName = ServletRequestUtils.getStringParameter(request, "universityName");
-            //String userName = ServletRequestUtils.getStringParameter(request, "userName");
             userContext.setCurrentUser(universityName, userName);
             log.debug("request to university {} from user {}.", universityName, userName);
         } catch (Exception e) {
             log.warn("Request did not have university and user context");
             return true;
         }
-
-
         return true;
     }
 

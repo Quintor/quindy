@@ -38,9 +38,9 @@ public class ClaimRecordController {
         claimRecordService.updateClaimById(claimId, claimRecord);
     }
 
-    @GetMapping("/fetch")
-    void fetchNewClaims(@PathVariable Long studentId) throws Exception {
-        claimRecordService.fetchAndSaveNewClaimsForStudentId(studentId);
+    @GetMapping("/new")
+    void getNewClaims(@PathVariable Long studentId) throws Exception {
+        claimRecordService.getAndSaveNewClaimsForStudentId(studentId);
     }
 }
 

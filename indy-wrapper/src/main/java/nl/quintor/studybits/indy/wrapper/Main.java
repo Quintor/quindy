@@ -34,9 +34,9 @@ public class Main {
         Issuer thrift = new Issuer("Thrift", indyPool, IndyWallet.create(indyPool, "thrift_wallet", null));
         onboardIssuer(steward, thrift);
 
-        Prover alice = new Prover("Alice", indyPool, IndyWallet.create(indyPool, "alice_wallet", null));
+        Prover alice = new Prover("Alice", indyPool, IndyWallet.create(indyPool, "alice_wallet", null), "alice_master_secret");
         String aliceFaberDid = onboardWalletOwner(faber, alice);
-        alice.init("alice_master_secret");
+        alice.init();
 
         String aliceAcmeDid = onboardWalletOwner(acme, alice);
 

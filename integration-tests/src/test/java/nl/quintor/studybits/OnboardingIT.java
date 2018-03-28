@@ -8,11 +8,6 @@ public class OnboardingIT extends BaseIT {
         Integer universityId = registerUniversity("Rug");
         Integer studentId = registerStudent("student1", "Rug");
 
-        givenCorrectHeaders(STUDENT)
-                .queryParam("student", studentId)
-                .queryParam("university", universityId)
-                .post("/student/onboard")
-                .then()
-                .assertThat().statusCode(200);
+        onboardStudent(studentId, universityId);
     }
 }

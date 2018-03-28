@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.Embeddable;
+import javax.persistence.Lob;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,6 +14,7 @@ import javax.persistence.Embeddable;
 @Setter
 @Embeddable
 public class AuthEncryptedMessage {
+    @Lob
     private byte[] message;
     private String did;
 }
