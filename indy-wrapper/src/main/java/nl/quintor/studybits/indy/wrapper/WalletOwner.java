@@ -126,7 +126,7 @@ public class WalletOwner implements AutoCloseable {
                         .collect(EntitiesFromLedger.collector()));
     }
 
-    public CompletableFuture<AnoncryptedMessage> anoncrypt(AnonCryptable message) throws JsonProcessingException, IndyException {
+    public CompletableFuture<AnoncryptedMessage> anonEncrypt(AnonCryptable message) throws JsonProcessingException, IndyException {
         log.debug("{} Anoncrypting message: {}, with did: {}", name, message.toJSON(), message.getTheirDid());
         return getKeyForDid(message.getTheirDid())
                 .thenCompose(wrapException((String key) -> {
@@ -143,7 +143,7 @@ public class WalletOwner implements AutoCloseable {
                         .forName("utf8")), valueType)));
     }
 
-    public CompletableFuture<AuthcryptedMessage> authcrypt(AuthCryptable message) throws JsonProcessingException, IndyException {
+    public CompletableFuture<AuthcryptedMessage> authEncrypt(AuthCryptable message) throws JsonProcessingException, IndyException {
         log.debug("{} Authcrypting message: {}, theirDid: {}", name, message.toJSON(), message.getTheirDid());
         return getKeyForDid(message.getTheirDid()).thenCompose(wrapException((String theirKey) -> {
             return getPairwiseByTheirDid(message.getTheirDid()).thenCompose(wrapException((GetPairwiseResult getPairwiseResult) -> getKeyForDid(getPairwiseResult

@@ -58,7 +58,6 @@ public class Prover extends WalletOwner {
         return createClaimRequest(claimOffer.getTheirDid(), claimOffer);
     }
 
-
     CompletableFuture<Void> storeClaimOffer(ClaimOffer claimOffer) throws IndyException, JsonProcessingException {
         return Anoncreds.proverStoreClaimOffer(wallet.getWallet(), claimOffer.toJSON());
     }

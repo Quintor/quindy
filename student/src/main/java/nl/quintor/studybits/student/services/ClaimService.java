@@ -18,8 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -85,46 +87,49 @@ public class ClaimService {
     }
 
     private Claim getClaimForClaimOffer(AuthEncryptedMessageModel claimOffer, Prover prover, Student owner) throws Exception {
-        return this.getEncryptedClaimForOffer(claimOffer, prover)
-                .thenCompose(msg -> decryptAuthcryptedMessage(msg, prover, Claim.class))
-                .thenApply(this::toModel)
-                .thenApply(claim -> {
-                    claim.setOwner(owner);
-                    return claim;
-                })
-                .get();
+        AuthcryptedMessage authcryptedMessage = getEncryptedClaimForOffer(claimOffer, prover);
+        Claim claim = decryptAuthcryptedMessage(authcryptedMessage, prover, Claim.class).get();
+        claim.setOwner(owner);
+        return claim;
     }
 
     private Stream<StudentClaimInfo> getAllStudentClaimInfo(University university, Student student) {
-        String path = UriComponentsBuilder
+        URI path = UriComponentsBuilder
                 .fromHttpUrl(university.getEndpoint())
                 .path(university.getName())
                 .path("/student/")
                 .path(student.getUsername())
                 .path("/claims")
-                .build()
-                .toString();
+                .build().toUri();
 
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate.exchange(path, HttpMethod.GET, null, new ParameterizedTypeReference<List<StudentClaimInfo>>() {
         }).getBody().stream();
     }
 
-    private CompletableFuture<AuthcryptedMessage> getEncryptedClaimForOffer(AuthEncryptedMessageModel messageModel, Prover prover) throws Exception {
-        AuthcryptedMessage authcryptedMessage = mapper.map(messageModel, AuthcryptedMessage.class);
+    private AuthcryptedMessage getEncryptedClaimForOffer(AuthEncryptedMessageModel encryptedClaimOffer, Prover prover) throws Exception {
+        AuthcryptedMessage claimOffer = mapper.map(encryptedClaimOffer, AuthcryptedMessage.class);
+        AuthEncryptedMessageModel encryptedClaimRequest = getEncryptedClaimRequestForClaimOffer(claimOffer, prover);
 
-        return decryptAuthcryptedMessage(authcryptedMessage, prover, ClaimOffer.class)
+        log.debug("Retrieving Claim from University with claimOffer {} ", claimOffer);
+        RestTemplate restTemplate = new RestTemplate();
+        AuthEncryptedMessageModel response = restTemplate.postForObject(encryptedClaimOffer.getLink("self")
+                .getHref(), encryptedClaimRequest, AuthEncryptedMessageModel.class);
+        return mapper.map(response, AuthcryptedMessage.class);
+    }
+
+    private AuthEncryptedMessageModel getEncryptedClaimRequestForClaimOffer(AuthcryptedMessage encryptedClaimOffer, Prover prover) throws ExecutionException, InterruptedException {
+        return decryptAuthcryptedMessage(encryptedClaimOffer, prover, ClaimOffer.class)
                 .thenCompose(AsyncUtil.wrapException(claimOffer -> {
-                    log.debug("Creating ClaimRequest with claimOffer {}", claimOffer);
+                    log.info("Creating ClaimRequest with claimOffer {}", claimOffer);
                     return prover.createClaimRequest(claimOffer);
                 }))
-                .thenApply(claimOffer -> {
-                    log.debug("Retrieving AuthcryptedMessage from University with messageModel {} ", messageModel);
-                    RestTemplate restTemplate = new RestTemplate();
-                    return restTemplate.postForObject(messageModel.getLink("self")
-                            .getHref(), claimOffer, AuthEncryptedMessageModel.class);
-                })
-                .thenApply(authEncryptedMessageModel -> mapper.map(authEncryptedMessageModel, AuthcryptedMessage.class));
+                .thenCompose(AsyncUtil.wrapException(claimRequest -> {
+                    log.info("AuthEncrypting ClaimRequest {} with Prover.", claimRequest);
+                    return prover.authEncrypt(claimRequest);
+                }))
+                .thenApply(encryptedClaimRequest -> mapper.map(encryptedClaimRequest, AuthEncryptedMessageModel.class))
+                .get();
     }
 
     @SneakyThrows

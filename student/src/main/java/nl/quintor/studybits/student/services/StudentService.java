@@ -115,7 +115,7 @@ public class StudentService {
     private AnoncryptedMessage acceptConnectionRequest(Student student, ConnectionRequest connectionRequest) throws Exception {
         try (Prover prover = getProverForStudent(student)) {
             return prover.acceptConnectionRequest(connectionRequest)
-                    .thenCompose(AsyncUtil.wrapException(prover::anoncrypt))
+                    .thenCompose(AsyncUtil.wrapException(prover::anonEncrypt))
                     .get();
         }
     }
