@@ -44,7 +44,7 @@ public class TrustAnchor extends WalletOwner {
                 );
     }
 
-    public Verinym createVerinymRequest( String targetDid ) throws IndyException, JsonProcessingException {
+    public Verinym createVerinymRequest( String targetDid ) {
         log.info("{} Creating verinym request for targetDid: {}", name, targetDid);
 
         return new Verinym(wallet.getMainDid(), wallet.getMainKey(), targetDid);
@@ -65,7 +65,7 @@ public class TrustAnchor extends WalletOwner {
 
         return sendNym(connectionResponse.getDid(), connectionResponse.getVerkey(), connectionRequest.getRole())
                 .thenCompose(wrapException((nymResponse) ->
-                        storeDidAndPairwise(connectionRequest.getDid(), connectionResponse.getDid(), connectionRequest.getVerkey(), connectionResponse.getVerkey())))
+                        storeDidAndPairwise(connectionRequest.getDid(), connectionResponse.getDid(), connectionResponse.getVerkey())))
                 .thenApply((void_) -> {
                     log.debug("Removing connectionRequest with nonce {}", connectionRequest.getNonce());
                     rolesByDid.put(connectionResponse.getDid(), connectionRequest.getRole());
