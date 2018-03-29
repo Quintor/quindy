@@ -9,6 +9,7 @@ import nl.quintor.studybits.university.entities.TranscriptRecord;
 import nl.quintor.studybits.university.entities.User;
 import nl.quintor.studybits.university.models.TranscriptModel;
 import nl.quintor.studybits.university.repositories.ClaimRecordRepository;
+import nl.quintor.studybits.university.repositories.TranscriptRecordRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
@@ -16,15 +17,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class TranscriptService extends ClaimProvider<Transcript> {
 
+    private TranscriptRecordRepository transcriptRecordRepository;
+    private StudentService studentService;
+
     @Autowired
-    public TranscriptService(UniversityService universityService, ClaimRecordRepository claimRecordRepository, UserRepository userRepository, Mapper mapper) {
+    public TranscriptService(UniversityService universityService, ClaimRecordRepository claimRecordRepository, UserRepository userRepository, Mapper mapper, TranscriptRecordRepository transcriptRecordRepository, StudentService studentService) {
         super(universityService, claimRecordRepository, userRepository, mapper);
+        this.transcriptRecordRepository = transcriptRecordRepository;
     }
 
     private TranscriptRecord toEntity(TranscriptModel transcriptModel) {
@@ -34,6 +41,13 @@ public class TranscriptService extends ClaimProvider<Transcript> {
     @Override
     public String getSchemaName() {
         return ClaimUtils.getSchemaName(Transcript.class);
+    }
+
+    public List<TranscriptRecord> findAllByUniversity(String universityName) {
+        return studentService.findAllForUniversity(universityName)
+                .stream()
+                .flatMap(user -> transcriptRecordRepository.findAllByStudentUser(user).stream())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -71,7 +85,7 @@ public class TranscriptService extends ClaimProvider<Transcript> {
                 .findFirst();
     }
 
-    public Transcript createTranscript(User user, TranscriptRecord transcriptRecord) {
+    private Transcript createTranscript(User user, TranscriptRecord transcriptRecord) {
         return new Transcript(
                 user.getFirstName(),
                 user.getLastName(),

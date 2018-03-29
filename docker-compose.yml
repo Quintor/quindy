@@ -21,7 +21,7 @@ services:
       test: curl -f http://localhost:8095/test/health || exit 1
       interval: 5s
       timeout: 2s
-      retries: 25
+      retries: 35
   backend-university:
     depends_on:
       - pool
