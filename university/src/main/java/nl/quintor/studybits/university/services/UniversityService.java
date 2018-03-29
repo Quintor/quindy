@@ -9,8 +9,6 @@ import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.university.dto.AuthCryptableResult;
 import nl.quintor.studybits.university.dto.Claim;
 import nl.quintor.studybits.university.entities.*;
-import nl.quintor.studybits.university.models.AuthEncryptedMessageModel;
-import nl.quintor.studybits.university.models.UniversityModel;
 import nl.quintor.studybits.university.repositories.ClaimSchemaRepository;
 import nl.quintor.studybits.university.repositories.UniversityRepository;
 import org.apache.commons.lang3.Validate;
@@ -19,12 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor(onConstructor=@__(@Autowired))

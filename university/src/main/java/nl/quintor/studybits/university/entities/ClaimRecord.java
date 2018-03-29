@@ -30,8 +30,6 @@ public class ClaimRecord {
     @Column(nullable = false)
     private String claimVersion;
 
-    private String claimNonce;
-
     @Column(nullable = false)
     private String claimLabel;
 

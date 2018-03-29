@@ -63,16 +63,16 @@ public class ClaimController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/{schemaName}/{studentClaimId}")
-    AuthEncryptedMessageModel getClaimOffer(@PathVariable String schemaName, @PathVariable Long studentClaimId) {
+    @GetMapping("/{schemaName}/{claimRecordId}")
+    AuthEncryptedMessageModel getClaimOffer(@PathVariable String schemaName, @PathVariable Long claimRecordId) {
         ClaimProvider provider = getProvider(schemaName);
-        AuthcryptedMessage result = provider.getClaimOffer(userContext.currentUserId(), studentClaimId);
-        return linkHelper.withLink(toModel(result), ClaimController.class, x -> x.getClaim(schemaName, null));
+        AuthcryptedMessage result = provider.getClaimOffer(userContext.currentUserId(), claimRecordId);
+        return linkHelper.withLink(toModel(result), ClaimController.class, x -> x.getClaim(schemaName, claimRecordId,null));
     }
 
-    @PostMapping("/{schemaName}")
-    AuthEncryptedMessageModel getClaim(@PathVariable String schemaName, @RequestBody AuthEncryptedMessageModel authEncryptedMessageModel) {
+    @PostMapping("/{schemaName}/{claimRecordId}")
+    AuthEncryptedMessageModel getClaim(@PathVariable String schemaName, @PathVariable Long claimRecordId, @RequestBody AuthEncryptedMessageModel authEncryptedMessageModel) {
         ClaimProvider provider = getProvider(schemaName);
-        return toModel(provider.getClaim(userContext.currentUserId(), toDto(authEncryptedMessageModel)));
+        return toModel(provider.getClaim(userContext.currentUserId(), claimRecordId, toDto(authEncryptedMessageModel)));
     }
 }

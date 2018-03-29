@@ -2,7 +2,6 @@ package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import nl.quintor.studybits.indy.wrapper.Issuer;
 import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.university.dto.AuthCryptableResult;
 import nl.quintor.studybits.university.dto.Claim;
@@ -15,7 +14,6 @@ import nl.quintor.studybits.university.repositories.UserRepository;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -55,7 +53,7 @@ public abstract class ClaimProvider<T extends Claim> {
      */
     protected void addAvailableClaim(Long userId, T claim) {
         User user = userRepository.getOne(userId);
-        ClaimRecord claimRecord = new ClaimRecord(null, user, claim.getSchemaName(), claim.getSchemaVersion(), null, claim.getLabel(), null, null);
+        ClaimRecord claimRecord = new ClaimRecord(null, user, claim.getSchemaName(), claim.getSchemaVersion(), claim.getLabel(), null, null);
         claimRecordRepository.save(claimRecord);
     }
 
@@ -78,7 +76,6 @@ public abstract class ClaimProvider<T extends Claim> {
         Claim claim = getClaimForClaimRecord(claimRecord);
         AuthCryptableResult<ClaimOffer> result = universityService
                 .createClaimOffer(universityName, claimRecord.getUser(), claim.getSchemaDefinition());
-        claimRecord.setClaimNonce(result.getAuthCryptable().getNonce());
         claimRecord.setClaimOfferMessage(result.getAuthEncryptedMessage());
         claimRecordRepository.saveAndFlush(claimRecord);
         return result.getAuthcryptedMessage();
@@ -94,11 +91,10 @@ public abstract class ClaimProvider<T extends Claim> {
      */
     @SneakyThrows
     @Transactional
-    public AuthcryptedMessage getClaim(Long userId, AuthcryptedMessage authcryptedMessage) {
-        User user = getConnectedUserById(userId);
-        String universityName = user.getUniversity().getName();
+    public AuthcryptedMessage getClaim(Long userId, Long claimRecordId, AuthcryptedMessage authcryptedMessage) {
+        ClaimRecord claimRecord = getClaimRecord(userId, claimRecordId);
+        String universityName = claimRecord.getUser().getUniversity().getName();
         ClaimRequest claimRequest = universityService.authDecrypt(universityName, authcryptedMessage, ClaimRequest.class);
-        ClaimRecord claimRecord = getClaimRecord(userId, claimRequest);
         if (claimRecord.getClaimMessage() != null) {
             return toDto(claimRecord.getClaimMessage());
         }
@@ -110,30 +106,12 @@ public abstract class ClaimProvider<T extends Claim> {
         return result.getAuthcryptedMessage();
     }
 
-    protected User getConnectedUserById(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalStateException("User not found."));
-        Validate.validState(user.getConnection() != null, "User onboarding incomplete!");
-        return user;
-    }
-
     protected ClaimRecord getClaimRecord(Long userId, Long claimRecordId) {
         ClaimRecord claimRecord = claimRecordRepository
                 .findById(claimRecordId)
                 .orElseThrow(() -> new IllegalArgumentException("Claim record not found."));
         Validate.validState(claimRecord.getUser().getId().equals(userId), "Claim record user mismatch.");
-        return claimRecord;
-    }
-
-    protected ClaimRecord getClaimRecord(Long userId, ClaimRequest claimRequest) {
-        ClaimRecord example = new ClaimRecord();
-        example.setClaimName(claimRequest.getSchemaKey().getName());
-        example.setClaimVersion(claimRequest.getSchemaKey().getVersion());
-        example.setClaimNonce(claimRequest.getNonce());
-        ClaimRecord claimRecord = claimRecordRepository
-                .findOne(Example.of(example))
-                .orElseThrow(() -> new IllegalArgumentException("Claim record not found."));
-        Validate.validState(claimRecord.getUser().getId().equals(userId), "Claim record user mismatch.");
+        Validate.validState(claimRecord.getUser().getConnection() != null, "User onboarding incomplete!");
         return claimRecord;
     }
 
