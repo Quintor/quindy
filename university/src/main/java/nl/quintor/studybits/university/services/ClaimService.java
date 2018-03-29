@@ -16,17 +16,8 @@ import java.util.stream.Collectors;
 public class ClaimService {
 
     private final ClaimRecordRepository claimRecordRepository;
-    private final Mapper mapper;
 
-    private StudentClaimInfo toStudentClaimInfo( Object claimRecord ) {
-        return mapper.map(claimRecord, StudentClaimInfo.class);
-    }
-
-    public List<StudentClaimInfo> findAvailableClaims( Long userId ) {
-        List<ClaimRecord> claimRecords = claimRecordRepository.findAllByUserId(userId);
-
-        return claimRecords.stream()
-                           .map(this::toStudentClaimInfo)
-                           .collect(Collectors.toList());
+    public List<ClaimRecord> findAvailableClaims( Long userId ) {
+        return claimRecordRepository.findAllByUserId(userId);
     }
 }

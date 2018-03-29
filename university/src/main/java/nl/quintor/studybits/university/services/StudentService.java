@@ -25,44 +25,33 @@ public class StudentService {
     private final UniversityRepository universityRepository;
     private final Mapper mapper;
 
-    private UserModel toModel(User user) {
-        return mapper.map(user, UserModel.class);
-    }
-
     private User toEntity(UserModel userModel) {
         return mapper.map(userModel, User.class);
     }
 
-    public List<UserModel> findAllStudents() {
+    public List<User> findAllStudents() {
         return userRepository
-                .findAllByStudentUserIsNotNull()
-                .stream()
-                .map(this::toModel)
-                .collect(Collectors.toList());
+                .findAllByStudentUserIsNotNull();
     }
 
-    public List<UserModel> findAllForUniversity(String universityName) {
+    public List<User> findAllForUniversity(String universityName) {
         return userRepository
-                .findAllByStudentUserIsNotNullAndUniversityNameIgnoreCase(universityName)
-                .stream()
-                .map(this::toModel)
-                .collect(Collectors.toList());
+                .findAllByStudentUserIsNotNullAndUniversityNameIgnoreCase(universityName);
     }
 
-    public Optional<UserModel> findByUniversityAndUserName(String universityName, String userName) {
+    public Optional<User> findByUniversityAndUserName(String universityName, String userName) {
         return userRepository
-                .findAllByStudentUserIsNotNullAndUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName)
-                .map(this::toModel);
+                .findAllByStudentUserIsNotNullAndUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName);
     }
 
-    public UserModel createStudent(String universityName, UserModel userModel) {
+    public User createStudent(String universityName, UserModel userModel) {
         User user = toEntity(userModel);
         University university = universityRepository.findByNameIgnoreCase(universityName)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown university."));
         user.setUniversity(university);
         StudentUser studentUser = new StudentUser(null, user, new HashSet<>(), new ArrayList<>());
         user.setStudentUser(studentUser);
-        return toModel(userRepository.save(user));
+        return userRepository.save(user);
     }
 
 }

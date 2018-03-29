@@ -41,13 +41,7 @@ public abstract class ClaimProvider<T extends Claim> {
         return mapper.map(authEncryptedMessage, AuthEncryptedMessageModel.class);
     }
 
-    protected AuthEncryptedMessageModel toModel(AuthcryptedMessage authcryptedMessage) {
-        return mapper.map(authcryptedMessage, AuthEncryptedMessageModel.class);
-    }
 
-    protected AuthcryptedMessage toDto(AuthEncryptedMessageModel authEncryptedMessageModel) {
-        return mapper.map(authEncryptedMessageModel, AuthcryptedMessage.class);
-    }
 
     public abstract String getSchemaName();
 
@@ -75,10 +69,10 @@ public abstract class ClaimProvider<T extends Claim> {
      */
     @SneakyThrows
     @Transactional
-    public AuthEncryptedMessageModel getClaimOffer(Long userId, Long claimRecordId) {
+    public AuthcryptedMessage getClaimOffer(Long userId, Long claimRecordId) {
         ClaimRecord claimRecord = getClaimRecord(userId, claimRecordId);
         if (claimRecord.getClaimMessage() != null) {
-            return toModel(claimRecord.getClaimOfferMessage());
+            return toDto(claimRecord.getClaimOfferMessage());
         }
         String universityName = claimRecord.getUser().getUniversity().getName();
         Claim claim = getClaimForClaimRecord(claimRecord);
@@ -87,7 +81,7 @@ public abstract class ClaimProvider<T extends Claim> {
         claimRecord.setClaimNonce(result.getAuthCryptable().getNonce());
         claimRecord.setClaimOfferMessage(result.getAuthEncryptedMessage());
         claimRecordRepository.saveAndFlush(claimRecord);
-        return result.getAuthEncryptedMessageModel();
+        return result.getAuthcryptedMessage();
     }
 
     /**
@@ -95,25 +89,25 @@ public abstract class ClaimProvider<T extends Claim> {
      * Note: The cached message will be returned if the claim was requested earlier and therefore already written
      *       to the ledger.
      * @param userId The user id.
-     * @param authEncryptedMessageModel The authcrypted ClaimRequest message that was provided to the client by Indy.
+     * @param authcryptedMessage The authcrypted ClaimRequest message that was provided to the client by Indy.
      * @return Authcrypted claim.
      */
     @SneakyThrows
     @Transactional
-    public AuthEncryptedMessageModel getClaim(Long userId, AuthEncryptedMessageModel authEncryptedMessageModel) {
+    public AuthcryptedMessage getClaim(Long userId, AuthcryptedMessage authcryptedMessage) {
         User user = getConnectedUserById(userId);
         String universityName = user.getUniversity().getName();
-        ClaimRequest claimRequest = universityService.authDecrypt(universityName, toDto(authEncryptedMessageModel), ClaimRequest.class);
+        ClaimRequest claimRequest = universityService.authDecrypt(universityName, authcryptedMessage, ClaimRequest.class);
         ClaimRecord claimRecord = getClaimRecord(userId, claimRequest);
         if (claimRecord.getClaimMessage() != null) {
-            return toModel(claimRecord.getClaimMessage());
+            return toDto(claimRecord.getClaimMessage());
         }
         T claim = getClaimForClaimRecord(claimRecord);
         AuthCryptableResult<nl.quintor.studybits.indy.wrapper.dto.Claim> result = universityService
                 .createClaim(universityName, claimRequest, claim);
         claimRecord.setClaimOfferMessage(result.getAuthEncryptedMessage());
         claimRecordRepository.saveAndFlush(claimRecord);
-        return result.getAuthEncryptedMessageModel();
+        return result.getAuthcryptedMessage();
     }
 
     protected User getConnectedUserById(Long userId) {

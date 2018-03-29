@@ -4,7 +4,6 @@ import lombok.Data;
 import nl.quintor.studybits.indy.wrapper.dto.AuthCryptable;
 import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
 import nl.quintor.studybits.university.entities.AuthEncryptedMessage;
-import nl.quintor.studybits.university.models.AuthEncryptedMessageModel;
 
 @Data
 public class AuthCryptableResult<T extends AuthCryptable> {
@@ -13,9 +12,5 @@ public class AuthCryptableResult<T extends AuthCryptable> {
 
     public AuthEncryptedMessage getAuthEncryptedMessage() {
         return new AuthEncryptedMessage(authcryptedMessage.getMessage(), authcryptedMessage.getDid());
-    }
-
-    public AuthEncryptedMessageModel getAuthEncryptedMessageModel() {
-        return new AuthEncryptedMessageModel(authcryptedMessage.getMessage(), authcryptedMessage.getDid());
     }
 }

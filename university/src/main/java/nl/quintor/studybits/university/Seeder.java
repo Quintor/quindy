@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 public class Seeder {
 
     private final UserRepository userRepository;
-    private final UniversityRepository universityRepository;
     private final UniversityService universityService;
     private final EnrolmentService enrolmentService;
     private final TranscriptService transcriptService;
@@ -51,18 +50,10 @@ public class Seeder {
 
     public void seed(boolean withLedger) {
         log.info("Seeding started...");
-
         if (withLedger) {
             seedUniversities();
         }
-        List<University> universities = universityRepository.findAll();
-        Map<String, University> universityMap = convertToMap(universities, x -> x.getName().toLowerCase());
-        seedAdmins(universityMap);
-        List<User> students = seedStudents(universityMap);
-        addAcademicYears(students.get(0), "2016/17");
-        addAcademicYears(students.get(1), "2016/17", "2017/18");
-        addAcademicYears(students.get(2), "2015/16", "2016/17", "2017/18");
-        addTranscript(students.get(2), new TranscriptModel("Bachelor of Science, Marketing", "graduated", "2018", "5"));
+        seedUsers();
         log.info("Seeding completed.");
     }
 
@@ -73,6 +64,7 @@ public class Seeder {
     private void seedUniversities() {
         universityService.create("Rug");
         universityService.create("Gent");
+
         SchemaDefinition enrolmentSchemaDefinition = ClaimUtils.getSchemaDefinition(Enrolment.class);
         SchemaKey enrolmentSchemaKey = universityService.defineSchema("rug", enrolmentSchemaDefinition);
         universityService.defineClaim("rug", enrolmentSchemaDefinition);
@@ -85,31 +77,28 @@ public class Seeder {
     }
 
 
-    private <T> Map<String, T> convertToMap(List<T> items, Function<T, String> keySelectFunction) {
-        return items.stream()
-                .collect(Collectors.toMap(keySelectFunction, x -> x));
-    }
+    private void seedUsers() {
+        University rug = universityService.getUniversity("rug");
 
-    private List<User> seedStudents(Map<String, University> universityMap) {
-        University rug = universityMap.get("rug");
+        User admin1 = createAdmin("admin1", "Etienne", "Nijboer", "222-11-0001", rug);
+
         User rugStudent1 = createStudent("student1", "Peter", "Ullrich", "1111-11-0001", rug);
+        addAcademicYears(rugStudent1, "2016/17");
+
         User rugStudent2 = createStudent("student2", "Margot", "Veren", "1111-11-0002", rug);
+        addAcademicYears(rugStudent2, "2016/17", "2017/18");
+
         User rugStudent3 = createStudent("student3", "Ko", "de Kraker", "1111-11-0003", rug);
-        University gent = universityMap.get("gent");
+        addAcademicYears(rugStudent3, "2015/16", "2016/17", "2017/18");
+        addTranscript(rugStudent3, new TranscriptModel("Bachelor of Science, Marketing", "graduated", "2018", "5"));
+
+        University gent = universityService.getUniversity("gent");
+        User admin2 = createAdmin("admin2", "Pim", "Otte", "222-22-0002", gent);
         User gentStudent1 = createStudent("student1", "Axelle", "Wanders", "1111-22-0001", gent);
         User gentStudent2 = createStudent("student2", "Laure", "de Vadder", "1111-22-0002", gent);
         User gentStudent3 = createStudent("student3", "Senne", "de Waal", "1111-22-0003", gent);
-        List<User> users = Arrays.asList(rugStudent1, rugStudent2, rugStudent3, gentStudent1, gentStudent2, gentStudent3);
-        return userRepository.saveAll(users);
-    }
-
-    private List<User> seedAdmins(Map<String, University> universityMap) {
-        University rug = universityMap.get("rug");
-        User admin1 = createAdmin("admin1", "Etienne", "Nijboer", "222-11-0001", rug);
-        University gent = universityMap.get("gent");
-        User admin2 = createAdmin("admin2", "Pim", "Otte", "222-22-0002", gent);
-        List<User> users = Arrays.asList(admin1, admin2);
-        return userRepository.saveAll(users);
+        List<User> users = Arrays.asList(admin1, rugStudent1, rugStudent2, rugStudent3, admin2, gentStudent1, gentStudent2, gentStudent3);
+        userRepository.saveAll(users);
     }
 
 
@@ -133,7 +122,7 @@ public class Seeder {
         if (adminUser != null) {
             adminUser.setUser(user);
         }
-        return user;
+        return userRepository.save(user);
     }
 
     private void addAcademicYears(User user, String... academicYears) {

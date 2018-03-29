@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import nl.quintor.studybits.indy.wrapper.Issuer;
 import nl.quintor.studybits.indy.wrapper.dto.*;
+import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.university.dto.AuthCryptableResult;
 import nl.quintor.studybits.university.dto.Claim;
 import nl.quintor.studybits.university.entities.*;
@@ -22,6 +23,7 @@ import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,46 +37,28 @@ public class UniversityService {
     private final IssuerService issuerService;
     private final Mapper mapper;
 
-    private UniversityModel toModel(University university ) {
-        return mapper.map(university, UniversityModel.class);
+
+    public List<University> findAll() {
+        return universityRepository.findAll();
     }
 
-    private University toEntity(UniversityModel universityModel ) {
-        return mapper.map(universityModel, University.class);
-    }
-
-//    private AuthEncryptedMessage toEntity(AuthcryptedMessage authcryptedMessage) {
-//        return mapper.map(authcryptedMessage, AuthEncryptedMessage.class);
-//    }
-//
-//    private AuthcryptedMessage toDto(AuthEncryptedMessage authEncryptedMessage) {
-//        return mapper.map(authEncryptedMessage, AuthcryptedMessage.class);
-//    }
-//
-//    private AuthEncryptedMessageModel toModel(AuthEncryptedMessage authEncryptedMessage) {
-//        return mapper.map(authEncryptedMessage, AuthEncryptedMessageModel.class);
-//    }
-//
-//    private AuthcryptedMessage toDto(AuthEncryptedMessageModel authEncryptedMessageModel) {
-//        return mapper.map(authEncryptedMessageModel, AuthcryptedMessage.class);
-//    }
-
-    public List<UniversityModel> findAll() {
-        return universityRepository.findAll()
-                                   .stream()
-                                   .map(this::toModel)
-                                   .collect(Collectors.toList());
-    }
-
-
-    public UniversityModel create(String universityName) {
+    public University create(String universityName) {
         University university = universityRepository.save(new University(null, universityName, new ArrayList<>()));
         if(!LAZY_ISSUER_CREATION) {
             issuerService.ensureIssuer(universityName);
         }
-        return toModel(university);
+        return university;
     }
 
+    public Optional<University> findUniversity(String universityName) {
+        return universityRepository
+                .findByNameIgnoreCase(universityName);
+    }
+
+    public University getUniversity(String universityName) {
+        return findUniversity(universityName)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown university."));
+    }
 
     @SneakyThrows
     @Transactional
@@ -94,7 +78,6 @@ public class UniversityService {
         universityRepository.save(university);
     }
 
-
     @SneakyThrows
     @Transactional
     public void defineClaim(String universityName, SchemaDefinition schemaDefinition) {
@@ -112,6 +95,22 @@ public class UniversityService {
         ClaimSchema claimSchema = getClaimSchema(universityName, schemaDefinition);
         return new SchemaKey(claimSchema.getSchemaName(), claimSchema.getSchemaVersion(), claimSchema.getSchemaIssuerDid());
     }
+
+    @SneakyThrows
+    public ConnectionRequest createConnectionRequest(String universityName, String userName, String role) {
+        Issuer issuer = getIssuer(universityName);
+        return issuer.createConnectionRequest(userName, role)
+                .get();
+    }
+
+    @SneakyThrows
+    public String acceptConnectionResponse(String universityName, AnoncryptedMessage anoncryptedConnectionResponseMessage) {
+        Issuer issuer = getIssuer(universityName);
+        return issuer.anonDecrypt(anoncryptedConnectionResponseMessage, ConnectionResponse.class)
+                .thenCompose(AsyncUtil.wrapException(issuer::acceptConnectionResponse))
+                .get();
+    }
+
 
     @SneakyThrows
     public AuthCryptableResult<ClaimOffer> createClaimOffer(String universityName, User user, SchemaDefinition schemaDefinition) {
@@ -144,7 +143,7 @@ public class UniversityService {
         return authDecrypt(getIssuer(universityName), authcryptedMessage, valueType);
     }
 
-    public Issuer getIssuer(String universityName) {
+    private Issuer getIssuer(String universityName) {
         return issuerService.ensureIssuer(universityName);
     }
 
@@ -171,12 +170,6 @@ public class UniversityService {
 
     private SchemaKey toSchemaKey(ClaimSchema claimSchema) {
         return new SchemaKey(claimSchema.getSchemaName(), claimSchema.getSchemaVersion(), claimSchema.getSchemaIssuerDid());
-    }
-
-    private University getUniversity(String universityName) {
-        return universityRepository
-                .findByNameIgnoreCase(universityName)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown university."));
     }
 
 }
