@@ -1,5 +1,6 @@
 package nl.quintor.studybits.university.helpers;
 
+import lombok.AllArgsConstructor;
 import nl.quintor.studybits.university.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -14,10 +15,10 @@ import static org.springframework.hateoas.core.DummyInvocationUtils.methodOn;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 @Service
+@AllArgsConstructor(onConstructor=@__(@Autowired))
 public class LinkHelper {
 
-    @Autowired
-    private UserContext userContext;
+    private final UserContext userContext;
 
     public Map<String, Object> getIdentityPathVariables() {
         return userContext.getCurrentUser().map(identity -> {

@@ -1,34 +1,95 @@
 package nl.quintor.studybits.university.services;
 
+import lombok.SneakyThrows;
+import nl.quintor.studybits.indy.wrapper.IndyPool;
+import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.indy.wrapper.Issuer;
+import nl.quintor.studybits.indy.wrapper.TrustAnchor;
+import nl.quintor.studybits.indy.wrapper.dto.*;
+import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.hyperledger.indy.sdk.wallet.WalletExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class IssuerService {
 
-    private Map<String, Issuer> issuers;
+    private final IndyPool indyPool;
+
+    private final TrustAnchor steward;
+
+    private final Map<String, Issuer> issuers = new TreeMap<>(String::compareToIgnoreCase);
 
     @Autowired
-    public IssuerService( Issuer[] issuers ) {
-        this.issuers = Arrays.stream(issuers)
-                             .collect(Collectors.toMap(x -> x.getName()
-                                                             .toLowerCase(), x -> x));
+    public IssuerService(IndyPool indyPool, @Qualifier("stewardTrustAnchor") TrustAnchor steward) {
+        this.indyPool = indyPool;
+        this.steward = steward;
     }
 
-    public Optional<Issuer> findIssuer( String universityName ) {
-        Issuer issuer = issuers.get(universityName.toLowerCase());
-        return Optional.ofNullable(issuer);
+    public Issuer ensureIssuer(String issuerName) {
+        return issuers.computeIfAbsent(issuerName, name
+                -> createIssuer(issuerName).orElseGet(() -> getIssuer(issuerName)));
     }
 
-    public Issuer getIssuer( String universityName ) {
-        return findIssuer(universityName).orElseThrow(() -> new IllegalArgumentException(String.format("Issuer not found for university '%s'.", universityName)));
+    private Optional<Issuer> createIssuer(String name) {
+        IndyWallet wallet = createIndyWallet(name);
+        return wallet != null ? Optional.of(onboardIssuer(wallet)) : Optional.empty();
     }
 
+    private Issuer getIssuer(String name) {
+        IndyWallet wallet = getIndyWallet(name);
+        return new Issuer(name, indyPool, wallet);
+    }
 
+    @SneakyThrows
+    private Issuer onboardIssuer(IndyWallet wallet) {
+        Issuer issuer = new Issuer(wallet.getName(), indyPool, wallet);
+        // Connect issuer
+        ConnectionRequest connectionRequest = steward
+                .createConnectionRequest(issuer.getName(), "TRUST_ANCHOR")
+                .get();
+        AnoncryptedMessage newcomerConnectionResponse = issuer
+                .acceptConnectionRequest(connectionRequest)
+                .thenCompose(AsyncUtil.wrapException(issuer::anoncrypt))
+                .get();
+        steward.anonDecrypt(newcomerConnectionResponse, ConnectionResponse.class)
+                .thenCompose(AsyncUtil.wrapException(steward::acceptConnectionResponse))
+                .get();
+        AuthcryptedMessage verinym = issuer
+                .authcrypt(issuer.createVerinymRequest(connectionRequest.getDid()))
+                .get();
+        steward.authDecrypt(verinym, Verinym.class)
+                .thenCompose(AsyncUtil.wrapException(steward::acceptVerinymRequest))
+                .get();
+        issuer.init();
+        return issuer;
+    }
+
+    @SneakyThrows
+    private IndyWallet getIndyWallet(String name) {
+        return new IndyWallet(name);
+    }
+
+    @SneakyThrows
+    private IndyWallet createIndyWallet(String name) {
+        try {
+            return IndyWallet.create(indyPool, name, createSeed(name));
+        } catch (Exception ex) {
+            if (ex.getCause() instanceof WalletExistsException) {
+                return null;
+            }
+            throw ex;
+        }
+
+    }
+
+    private String createSeed(String s) {
+        return StringUtils.leftPad(s, 32, '0');
+    }
 }

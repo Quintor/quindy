@@ -39,7 +39,7 @@ public class User {
     @OneToOne(cascade = CascadeType.ALL)
     private IndyConnection connection;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.MERGE)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.MERGE, orphanRemoval = true)
     @Column(nullable = false)
     private List<ClaimRecord> claims = new ArrayList<>();
 

@@ -1,5 +1,6 @@
 package nl.quintor.studybits.university.config;
 
+import lombok.AllArgsConstructor;
 import nl.quintor.studybits.indy.wrapper.IndyPool;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
 import nl.quintor.studybits.university.RequestInterceptor;
@@ -19,8 +20,12 @@ public class AppConfig implements WebMvcConfigurer {
     @Value("${indy.poolname}")
     private String poolName;
 
+    private final RequestInterceptor requestInterceptor;
+
     @Autowired
-    private RequestInterceptor requestInterceptor;
+    public AppConfig(RequestInterceptor requestInterceptor) {
+        this.requestInterceptor = requestInterceptor;
+    }
 
     @Bean
     public IndyPool indyPool() throws InterruptedException, ExecutionException, IndyException {

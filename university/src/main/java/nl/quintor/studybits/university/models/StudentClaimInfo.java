@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.hateoas.ResourceSupport;
 
 @Data
-@EqualsAndHashCode( callSuper = true )
+@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
 public class StudentClaimInfo extends ResourceSupport {

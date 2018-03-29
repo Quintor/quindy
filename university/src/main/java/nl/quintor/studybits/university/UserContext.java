@@ -1,19 +1,21 @@
 package nl.quintor.studybits.university;
 
-import nl.quintor.studybits.university.models.UserIdentity;
+import lombok.AllArgsConstructor;
+import nl.quintor.studybits.university.dto.UserIdentity;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
 @Component
+@AllArgsConstructor(onConstructor=@__(@Autowired))
 public class UserContext {
     private static final ThreadLocal<UserIdentity> currentUserIdentity = new ThreadLocal<>();
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public Optional<UserIdentity> getCurrentUser() {
         return Optional.ofNullable(currentUserIdentity.get());
@@ -21,8 +23,7 @@ public class UserContext {
 
     public void setCurrentUser(String universityName, String userName) {
         if (StringUtils.isNoneBlank(universityName, userName)) {
-            Optional<Long> userId = userRepository
-                    .findIdByUniversityNameAndUserName(universityName, userName);
+            Long userId = userRepository.findIdByUniversityNameAndUserName(universityName, userName);
             currentUserIdentity.set(new UserIdentity(userId, universityName, userName));
         } else {
             currentUserIdentity.remove();
@@ -34,7 +35,7 @@ public class UserContext {
                 .orElseThrow(() -> new IllegalArgumentException("UserIdentity information missing."));
     }
 
-    public String currentUserNameName() {
+    public String currentUserName() {
         return currentUserIdentity().getUserName();
     }
 
@@ -43,10 +44,6 @@ public class UserContext {
     }
 
     public Long currentUserId() {
-        return currentUserIdentity()
-                .getUserId()
-                .orElseThrow(() -> new IllegalArgumentException("Unknown user."));
+        return Validate.notNull(currentUserIdentity().getUserId(), "User unknown.");
     }
-
-
 }
