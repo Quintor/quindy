@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -34,12 +33,8 @@ public class StudentService {
                 .findAllByStudentUserIsNotNull();
     }
 
-    public List<StudentUser> findAllForUniversity(String universityName) {
-        return userRepository
-                .findAllByStudentUserIsNotNullAndUniversityNameIgnoreCase(universityName)
-                .stream()
-                .map(User::getStudentUser)
-                .collect(Collectors.toList());
+    public List<User> findAllForUniversity(String universityName) {
+        return userRepository.findAllByStudentUserIsNotNullAndUniversityNameIgnoreCase(universityName);
     }
 
     public Optional<User> findByUniversityAndUserName(String universityName, String userName) {

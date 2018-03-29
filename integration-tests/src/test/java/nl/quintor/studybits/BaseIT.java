@@ -5,6 +5,7 @@ import io.restassured.specification.RequestSpecification;
 import org.junit.Before;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.is;
 
 public class BaseIT {
     static final String STUDENT = "http://localhost:8095";
@@ -58,5 +59,24 @@ public class BaseIT {
                 .post("/student/onboard")
                 .then()
                 .assertThat().statusCode(200);
+    }
+
+    void getNewClaims(Integer studentId) {
+        givenCorrectHeaders(STUDENT)
+                .get("/student/{studentId}/claims/new", studentId)
+                .then()
+                .assertThat().statusCode(200);
+    }
+
+    void assertNumberOfClaimsEquals(Integer expectedNumber, Integer studentId) {
+        givenCorrectHeaders(STUDENT)
+                .get("/student/{studentId}/claims", studentId)
+                .then()
+                .assertThat().statusCode(200)
+                .body("size()", is(expectedNumber));
+    }
+
+    void assertNoClaims(Integer studentId) {
+        assertNumberOfClaimsEquals(0, studentId);
     }
 }

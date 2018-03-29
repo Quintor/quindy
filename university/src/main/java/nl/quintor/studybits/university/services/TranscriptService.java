@@ -46,6 +46,7 @@ public class TranscriptService extends ClaimProvider<Transcript> {
     public List<TranscriptRecord> findAllByUniversity(String universityName) {
         return studentService.findAllForUniversity(universityName)
                 .stream()
+                .map(User::getStudentUser)
                 .flatMap(user -> transcriptRecordRepository.findAllByStudentUser(user).stream())
                 .collect(Collectors.toList());
     }
