@@ -1,6 +1,5 @@
 package nl.quintor.studybits.student.services;
 
-import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.Prover;
@@ -10,8 +9,10 @@ import nl.quintor.studybits.indy.wrapper.dto.ClaimOffer;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.student.model.*;
 import nl.quintor.studybits.student.repositories.ClaimRepository;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -27,12 +28,18 @@ import java.util.stream.Stream;
 
 @Service
 @Slf4j
-@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class ClaimService {
+    @Autowired
     private ClaimRepository claimRepository;
+    @Autowired
     private ConnectionRecordService connectionRecordService;
+    @Autowired
     private StudentService studentService;
+    @Autowired
     private Mapper mapper;
+
+    @Value("${database.claim.hash.function}")
+    private String hashFunction;
 
     private Claim toModel(Object claim) {
         return mapper.map(claim, Claim.class);
@@ -64,7 +71,7 @@ public class ClaimService {
             getAllStudentClaimInfo(student)
                     .map(this::getClaimOfferForStudentClaimInfo)
                     .map(AsyncUtil.wrapException(claimOffer -> getClaimForClaimOffer(claimOffer, prover, student)))
-                    .filter(claim -> !claimRepository.existsById(claim.getId()))
+                    .filter(claim -> !claimRepository.existsBySignature(claim.getSignature()))
                     .forEach(claim -> {
                         log.debug("Saving new claim {} to database...", claim);
                         claimRepository.save(claim);
@@ -88,9 +95,15 @@ public class ClaimService {
 
     private Claim getClaimForClaimOffer(AuthEncryptedMessageModel claimOffer, Prover prover, Student owner) throws Exception {
         AuthcryptedMessage authcryptedMessage = getEncryptedClaimForOffer(claimOffer, prover);
-        Claim claim = decryptAuthcryptedMessage(authcryptedMessage, prover, Claim.class).get();
+        Claim claim = toModel(decryptAuthcryptedMessage(authcryptedMessage, prover, nl.quintor.studybits.indy.wrapper.dto.Claim.class)
+                .get());
         claim.setOwner(owner);
+        claim.setHashId(hashClaim(claim));
         return claim;
+    }
+
+    private String hashClaim(Claim claim) {
+        return DigestUtils.sha256Hex(claim.getValues());
     }
 
     private Stream<StudentClaimInfo> getAllStudentClaimInfo(University university, Student student) {
@@ -121,11 +134,11 @@ public class ClaimService {
     private AuthEncryptedMessageModel getEncryptedClaimRequestForClaimOffer(AuthcryptedMessage encryptedClaimOffer, Prover prover) throws ExecutionException, InterruptedException {
         return decryptAuthcryptedMessage(encryptedClaimOffer, prover, ClaimOffer.class)
                 .thenCompose(AsyncUtil.wrapException(claimOffer -> {
-                    log.info("Creating ClaimRequest with claimOffer {}", claimOffer);
+                    log.debug("Creating ClaimRequest with claimOffer {}", claimOffer);
                     return prover.createClaimRequest(claimOffer);
                 }))
                 .thenCompose(AsyncUtil.wrapException(claimRequest -> {
-                    log.info("AuthEncrypting ClaimRequest {} with Prover.", claimRequest);
+                    log.debug("AuthEncrypting ClaimRequest {} with Prover.", claimRequest);
                     return prover.authEncrypt(claimRequest);
                 }))
                 .thenApply(encryptedClaimRequest -> mapper.map(encryptedClaimRequest, AuthEncryptedMessageModel.class))

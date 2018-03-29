@@ -11,11 +11,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.hyperledger.indy.sdk.wallet.WalletExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
 
 @Service
 public class IssuerService {
@@ -56,13 +56,13 @@ public class IssuerService {
                 .get();
         AnoncryptedMessage newcomerConnectionResponse = issuer
                 .acceptConnectionRequest(connectionRequest)
-                .thenCompose(AsyncUtil.wrapException(issuer::anoncrypt))
+                .thenCompose(AsyncUtil.wrapException(issuer::anonEncrypt))
                 .get();
         steward.anonDecrypt(newcomerConnectionResponse, ConnectionResponse.class)
                 .thenCompose(AsyncUtil.wrapException(steward::acceptConnectionResponse))
                 .get();
         AuthcryptedMessage verinym = issuer
-                .authcrypt(issuer.createVerinymRequest(connectionRequest.getDid()))
+                .authEncrypt(issuer.createVerinymRequest(connectionRequest.getDid()))
                 .get();
         steward.authDecrypt(verinym, Verinym.class)
                 .thenCompose(AsyncUtil.wrapException(steward::acceptVerinymRequest))
