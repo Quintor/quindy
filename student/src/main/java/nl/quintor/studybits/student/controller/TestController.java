@@ -21,7 +21,7 @@ public class TestController {
     private final ClaimService claimService;
 
     @DeleteMapping("/nuke")
-    void nuke() throws Exception {
+    public void nuke() throws Exception {
         log.info("Deleting connection records");
         connectionRecordService.deleteAll();
         log.info("Deleting claims");
