@@ -16,7 +16,7 @@ public class MetaWalletService {
     public MetaWallet create(String username, String uniName) throws Exception {
         try (IndyWallet indyWallet = indyWalletService.create(username + "_" + uniName)) {
             MetaWallet metaWallet = new MetaWallet();
-            metaWallet.setName(username + "_" + uniName);
+            metaWallet.setName(indyWallet.getName());
             metaWallet.setMainDid(indyWallet.getMainDid());
             metaWallet.setMainKey(indyWallet.getMainKey());
 
