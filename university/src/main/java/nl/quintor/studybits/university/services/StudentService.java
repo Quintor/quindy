@@ -1,6 +1,7 @@
 package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
+import nl.quintor.studybits.university.entities.AdminUser;
 import nl.quintor.studybits.university.entities.StudentUser;
 import nl.quintor.studybits.university.entities.University;
 import nl.quintor.studybits.university.entities.User;
@@ -43,15 +44,4 @@ public class StudentService {
         return userRepository
                 .findAllByStudentUserIsNotNullAndUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName);
     }
-
-    public User createStudent(String universityName, UserModel userModel) {
-        User user = toEntity(userModel);
-        University university = universityRepository.findByNameIgnoreCase(universityName)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown university."));
-        user.setUniversity(university);
-        StudentUser studentUser = new StudentUser(null, user, new HashSet<>(), new ArrayList<>());
-        user.setStudentUser(studentUser);
-        return userRepository.save(user);
-    }
-
 }

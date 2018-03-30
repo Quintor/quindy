@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -40,26 +41,25 @@ public class TranscriptService extends ClaimProvider<Transcript> {
     protected Transcript getClaimForClaimRecord(ClaimRecord claimRecord) {
         String degree = claimRecord.getClaimLabel();
         User user = claimRecord.getUser();
-        StudentUser studentUser = user.getStudentUser();
-        Validate.validState(studentUser != null, "TranscriptRecord claim is for student users only.");
+        StudentUser studentUser = Objects.requireNonNull(user.getStudentUser(), "TranscriptRecord claim is for student users only.");
         TranscriptRecord transcriptRecord = findTranscriptRecord(studentUser, degree)
                 .orElseThrow(() -> new IllegalStateException("Invalid claim request. Student user degree not found."));
         return createTranscript(user, transcriptRecord);
     }
 
     @Transactional
-    public void addTranscript(Long userId, TranscriptModel transcriptModel) {
-        log.debug("Adding transcript '{}' to userId {}", transcriptModel, userId);
+    public void addTranscript(Long userId, String degree, String status, String year, String average) {
+        log.debug("Adding transcript '{}' to userId {}", degree, userId);
         StudentUser studentUser = userRepository
                 .findByStudentUserIsNotNullAndId(userId)
                 .map(User::getStudentUser)
                 .orElseThrow(() -> new IllegalArgumentException("Student user unknown."));
-        if (!findTranscriptRecord(studentUser, transcriptModel.getDegree()).isPresent()) {
-            TranscriptRecord transcriptRecord = studentUser.addTranscriptRecord(toEntity(transcriptModel));
+        if (!findTranscriptRecord(studentUser, degree).isPresent()) {
+            TranscriptRecord transcriptRecord = studentUser.addTranscriptRecord(degree, status, year, average);
             userRepository.saveStudentUser(studentUser);
             addAvailableClaim(userId, createTranscript(studentUser.getUser(), transcriptRecord));
         } else {
-            log.debug("TranscriptRecord '{}' already assigned to {}", transcriptModel, studentUser.getUser().getUserName());
+            log.debug("Transcript '{}' already assigned to {}", degree, studentUser.getUser().getUserName());
         }
     }
 
@@ -71,7 +71,7 @@ public class TranscriptService extends ClaimProvider<Transcript> {
                 .findFirst();
     }
 
-    public Transcript createTranscript(User user, TranscriptRecord transcriptRecord) {
+    private Transcript createTranscript(User user, TranscriptRecord transcriptRecord) {
         return new Transcript(
                 user.getFirstName(),
                 user.getLastName(),

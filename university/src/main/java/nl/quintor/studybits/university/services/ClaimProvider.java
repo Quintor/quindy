@@ -2,13 +2,13 @@ package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.university.dto.AuthCryptableResult;
 import nl.quintor.studybits.university.dto.Claim;
 import nl.quintor.studybits.university.entities.AuthEncryptedMessage;
 import nl.quintor.studybits.university.entities.ClaimRecord;
 import nl.quintor.studybits.university.entities.User;
-import nl.quintor.studybits.university.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.university.repositories.ClaimRecordRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.apache.commons.lang3.Validate;
@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 
+@Slf4j
 @Service
 @AllArgsConstructor(onConstructor=@__(@Autowired))
 public abstract class ClaimProvider<T extends Claim> {
@@ -27,19 +28,9 @@ public abstract class ClaimProvider<T extends Claim> {
     protected final UserRepository userRepository;
     protected final Mapper mapper;
 
-    protected AuthEncryptedMessage toEntity(AuthcryptedMessage authcryptedMessage) {
-        return mapper.map(authcryptedMessage, AuthEncryptedMessage.class);
-    }
-
-    protected AuthcryptedMessage toDto(AuthEncryptedMessage authEncryptedMessage) {
+    private AuthcryptedMessage toDto(AuthEncryptedMessage authEncryptedMessage) {
         return mapper.map(authEncryptedMessage, AuthcryptedMessage.class);
     }
-
-    protected AuthEncryptedMessageModel toModel(AuthEncryptedMessage authEncryptedMessage) {
-        return mapper.map(authEncryptedMessage, AuthEncryptedMessageModel.class);
-    }
-
-
 
     public abstract String getSchemaName();
 
@@ -52,6 +43,7 @@ public abstract class ClaimProvider<T extends Claim> {
      * @param claim The claim to make available.
      */
     protected void addAvailableClaim(Long userId, T claim) {
+        log.debug("Adding available claim for userId: {}, claim: {}", userId, claim);
         User user = userRepository.getOne(userId);
         ClaimRecord claimRecord = new ClaimRecord(null, user, claim.getSchemaName(), claim.getSchemaVersion(), claim.getLabel(), null, null);
         claimRecordRepository.save(claimRecord);
@@ -106,12 +98,12 @@ public abstract class ClaimProvider<T extends Claim> {
         return result.getAuthcryptedMessage();
     }
 
-    protected ClaimRecord getClaimRecord(Long userId, Long claimRecordId) {
+    private ClaimRecord getClaimRecord(Long userId, Long claimRecordId) {
         ClaimRecord claimRecord = claimRecordRepository
                 .findById(claimRecordId)
                 .orElseThrow(() -> new IllegalArgumentException("Claim record not found."));
         Validate.validState(claimRecord.getUser().getId().equals(userId), "Claim record user mismatch.");
-        Validate.validState(claimRecord.getUser().getConnection() != null, "User onboarding incomplete!");
+        Validate.notNull(claimRecord.getUser().getConnection(), "User onboarding incomplete!");
         return claimRecord;
     }
 
