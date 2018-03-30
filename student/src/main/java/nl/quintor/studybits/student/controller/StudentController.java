@@ -7,6 +7,7 @@ import nl.quintor.studybits.student.services.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -33,7 +34,12 @@ public class StudentController {
     }
 
     @GetMapping()
-    List<Student> findAll() {
+    List<Student> findAll(@RequestParam("name") String name) {
+        if (name != null) {
+            return studentService.findByName(name)
+                    .map(Collections::singletonList)
+                    .orElse(Collections.emptyList());
+        }
         return studentService.findAll();
     }
 

@@ -13,11 +13,14 @@ public class MetaWalletService {
     private MetaWalletRepository metaWalletRepository;
     private IndyWalletService indyWalletService;
 
-    public MetaWallet createAndSave(String username) throws Exception {
-        try (IndyWallet indyWallet = indyWalletService.create(username)) {
-            MetaWallet metaWallet = new MetaWallet(null, username, indyWallet.getMainDid(), indyWallet.getMainKey());
+    public MetaWallet create(String username, String uniName) throws Exception {
+        try (IndyWallet indyWallet = indyWalletService.create(username + "_" + uniName)) {
+            MetaWallet metaWallet = new MetaWallet();
+            metaWallet.setName(username + "_" + uniName);
+            metaWallet.setMainDid(indyWallet.getMainDid());
+            metaWallet.setMainKey(indyWallet.getMainKey());
 
-            return metaWalletRepository.save(metaWallet);
+            return metaWallet;
         }
     }
 
