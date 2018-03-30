@@ -1,5 +1,6 @@
 package nl.quintor.studybits.university.controllers.test;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.university.Seeder;
 import nl.quintor.studybits.university.repositories.*;
@@ -12,26 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/test")
 @Slf4j
+@AllArgsConstructor(onConstructor=@__(@Autowired))
 public class TestController {
-    @Autowired
-    private AdminUserRepository adminUserRepository;
-    @Autowired
-    private ClaimRecordRepository claimRecordRepository;
-    @Autowired
-    private StudentUserRepository studentUserRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private Seeder seeder;
+
+    private final UserRepository userRepository;
+    private final Seeder seeder;
 
     @DeleteMapping("/nuke")
     public void nuke() {
-        log.debug("Deleting admin users");
-        adminUserRepository.deleteAll();
-        log.debug("Deleting claim records");
-        claimRecordRepository.deleteAll();
-        log.debug("Deleting student users");
-        studentUserRepository.deleteAll();
         log.debug("Deleting users");
         userRepository.deleteAll();
         log.debug("Seeding");
@@ -40,6 +29,6 @@ public class TestController {
 
     @GetMapping("/health")
     String health() {
-        return "University Backend says: Ich lebe! Heidewitzka!";
+        return "UniversityModel Backend says: Ich lebe! Heidewitzka!";
     }
 }

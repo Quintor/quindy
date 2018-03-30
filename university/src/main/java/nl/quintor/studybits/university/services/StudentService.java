@@ -18,65 +18,40 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@AllArgsConstructor(onConstructor=@__(@Autowired))
 public class StudentService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final UniversityRepository universityRepository;
+    private final Mapper mapper;
 
-    @Autowired
-    private UniversityRepository universityRepository;
-
-    @Autowired
-    private Mapper mapper;
-
-    private UserModel toModel(Object user) {
-        return mapper.map(user, UserModel.class);
-    }
-
-    private User toEntity(Object userModel) {
+    private User toEntity(UserModel userModel) {
         return mapper.map(userModel, User.class);
     }
 
-    public List<UserModel> findAllStudents() {
+    public List<User> findAllStudents() {
         return userRepository
-                .findAllByStudentUserIsNotNull()
-                .stream()
-                .map(this::toModel)
-                .collect(Collectors.toList());
+                .findAllByStudentUserIsNotNull();
     }
 
-    public List<UserModel> findAllForUniversity(String universityName) {
+    public List<User> findAllForUniversity(String universityName) {
         return userRepository
-                .findAllByStudentUserIsNotNullAndUniversityNameIgnoreCase(universityName)
-                .stream()
-                .map(this::toModel)
-                .collect(Collectors.toList());
+                .findAllByStudentUserIsNotNullAndUniversityNameIgnoreCase(universityName);
     }
 
-
-    public Optional<UserModel> findById(Long id) {
+    public Optional<User> findByUniversityAndUserName(String universityName, String userName) {
         return userRepository
-                .findById(id)
-                .map(this::toModel);
+                .findAllByStudentUserIsNotNullAndUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName);
     }
 
-    public Optional<UserModel> findByUniversityAndUserName(String universityName, String userName) {
-        return userRepository
-                .findAllByStudentUserIsNotNullAndUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName)
-                .map(this::toModel);
-    }
-
-
-    public UserModel createStudent(String universityName, UserModel userModel) {
+    public User createStudent(String universityName, UserModel userModel) {
         User user = toEntity(userModel);
         University university = universityRepository.findByNameIgnoreCase(universityName)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown university."));
         user.setUniversity(university);
-        user.setClaims(new ArrayList<>());
         StudentUser studentUser = new StudentUser(null, user, new HashSet<>(), new ArrayList<>());
         user.setStudentUser(studentUser);
-        return toModel(userRepository.save(user));
+        return userRepository.save(user);
     }
 
 }

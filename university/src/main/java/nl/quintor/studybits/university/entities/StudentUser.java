@@ -36,4 +36,10 @@ public class StudentUser {
     @Column(nullable = false)
     private List<TranscriptRecord> transcriptRecords = new ArrayList<>();
 
+    public TranscriptRecord addTranscriptRecord(TranscriptRecord transcriptRecord) {
+        transcriptRecord.setStudentUser(this);
+        transcriptRecords.add(transcriptRecord);
+        return transcriptRecord;
+    }
+
 }

@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-@SchemaInfo(name = "TranscriptRecord", version = "0.1")
+@SchemaInfo(name = "Transcript", version = "0.1")
 public class Transcript implements Claim {
     private String firstName;
     private String lastName;
