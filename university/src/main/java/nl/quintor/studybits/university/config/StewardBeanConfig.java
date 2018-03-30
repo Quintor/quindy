@@ -1,6 +1,7 @@
 package nl.quintor.studybits.university.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.AllArgsConstructor;
 import nl.quintor.studybits.indy.wrapper.IndyPool;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.indy.wrapper.TrustAnchor;
@@ -16,8 +17,7 @@ import java.util.concurrent.ExecutionException;
 @Configuration
 public class StewardBeanConfig {
 
-    @Autowired
-    IndyPool indyPool;
+    private final IndyPool indyPool;
 
     @Value("${steward.active}")
     private String stewardActive;
@@ -28,11 +28,15 @@ public class StewardBeanConfig {
     @Value("${steward.walletseed}")
     private String stewardWalletSeed;
 
+    @Autowired
+    public StewardBeanConfig(IndyPool indyPool) {
+        this.indyPool = indyPool;
+    }
+
     @Bean("stewardTrustAnchor")
     public TrustAnchor stewardTrustAnchor() throws Exception {
         IndyWallet stewardWallet = getIndyWallet(stewardWalletName, stewardWalletSeed);
-        TrustAnchor steward = new TrustAnchor("Steward", indyPool, stewardWallet);
-        return steward;
+        return new TrustAnchor("Steward", indyPool, stewardWallet);
     }
 
     private IndyWallet getIndyWallet(String name, String seed) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
