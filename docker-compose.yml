@@ -35,7 +35,7 @@ services:
       test: curl -f http://localhost:8090/test/health || exit 1
       interval: 5s
       timeout: 2s
-      retries: 25
+      retries: 35
   tests:
     build:
       context: integration-tests

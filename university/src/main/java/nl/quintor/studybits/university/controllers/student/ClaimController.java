@@ -75,4 +75,5 @@ public class ClaimController {
         ClaimProvider provider = getProvider(schemaName);
         return toModel(provider.getClaim(userContext.currentUserId(), claimRecordId, toDto(authEncryptedMessageModel)));
     }
+
 }

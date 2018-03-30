@@ -34,9 +34,9 @@ public class Main {
         Issuer thrift = new Issuer("Thrift", indyPool, IndyWallet.create(indyPool, "thrift_wallet", null));
         onboardIssuer(steward, thrift);
 
-        Prover alice = new Prover("Alice", indyPool, IndyWallet.create(indyPool, "alice_wallet", null));
+        Prover alice = new Prover("Alice", indyPool, IndyWallet.create(indyPool, "alice_wallet", null), "alice_master_secret");
         String aliceFaberDid = onboardWalletOwner(faber, alice);
-        alice.init("alice_master_secret");
+        alice.init();
 
         String aliceAcmeDid = onboardWalletOwner(acme, alice);
 
@@ -56,12 +56,12 @@ public class Main {
 
 
         AuthcryptedMessage transcriptClaimOffer = faber.createClaimOffer(transcriptSchemaKey, aliceFaberDid)
-                                                    .thenCompose(AsyncUtil.wrapException(faber::authcrypt)).get();
+                .thenCompose(AsyncUtil.wrapException(faber::authEncrypt)).get();
 
 
         AuthcryptedMessage transcriptClaimRequest = alice.authDecrypt(transcriptClaimOffer, ClaimOffer.class)
         .thenCompose(AsyncUtil.wrapException(alice::storeClaimOfferAndCreateClaimRequest))
-                .thenCompose(AsyncUtil.wrapException(alice::authcrypt)).get();
+                .thenCompose(AsyncUtil.wrapException(alice::authEncrypt)).get();
 
 
         Map<String, Object> claimValues  = new HashMap<>();
@@ -75,7 +75,7 @@ public class Main {
 
         AuthcryptedMessage claim = faber.authDecrypt(transcriptClaimRequest, ClaimRequest.class)
                 .thenCompose(AsyncUtil.wrapException(claimRequest -> faber.createClaim(claimRequest, claimValues)))
-                .thenCompose(AsyncUtil.wrapException(faber::authcrypt)).get();
+                .thenCompose(AsyncUtil.wrapException(faber::authEncrypt)).get();
 
 
         alice.authDecrypt(claim, Claim.class)
@@ -103,7 +103,7 @@ public class Main {
 
         jobApplicationProofRequest.setTheirDid(aliceAcmeDid);
 
-        AuthcryptedMessage authcryptedJobApplicationProofRequest = acme.authcrypt(jobApplicationProofRequest)
+        AuthcryptedMessage authcryptedJobApplicationProofRequest = acme.authEncrypt(jobApplicationProofRequest)
                                                                        .get();
 
 
@@ -114,7 +114,7 @@ public class Main {
 
         AuthcryptedMessage authcryptedProof = alice.authDecrypt(authcryptedJobApplicationProofRequest, ProofRequest.class)
                                                    .thenCompose(AsyncUtil.wrapException(proofRequest -> alice.fulfillProofRequest(proofRequest, selfAttestedAttributes)))
-                                                   .thenCompose(AsyncUtil.wrapException(alice::authcrypt))
+                .thenCompose(AsyncUtil.wrapException(alice::authEncrypt))
                                                    .get();
 
         List<ProofAttribute> attributes = acme
@@ -130,13 +130,13 @@ public class Main {
         String governmentConnectionRequest = steward.createConnectionRequest(newcomer.getName(), "TRUST_ANCHOR").get().toJSON();
 
         AnoncryptedMessage newcomerConnectionResponse = newcomer.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class))
-                .thenCompose(AsyncUtil.wrapException(newcomer::anoncrypt))
+                .thenCompose(AsyncUtil.wrapException(newcomer::anonEncrypt))
                 .get();
 
         steward.anonDecrypt(newcomerConnectionResponse, ConnectionResponse.class)
                 .thenCompose(AsyncUtil.wrapException(steward::acceptConnectionResponse)).get();
 
-        AuthcryptedMessage verinym = newcomer.authcrypt(newcomer.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class)
+        AuthcryptedMessage verinym = newcomer.authEncrypt(newcomer.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class)
                                                                                                      .getDid()))
                                              .get();
 
@@ -150,7 +150,7 @@ public class Main {
         String governmentConnectionRequest = trustAnchor.createConnectionRequest(newcomer.getName(), null).get().toJSON();
 
         AnoncryptedMessage newcomerConnectionResponse = newcomer.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class))
-                .thenCompose(AsyncUtil.wrapException(newcomer::anoncrypt)).get();
+                .thenCompose(AsyncUtil.wrapException(newcomer::anonEncrypt)).get();
 
         String newcomerDid = trustAnchor.anonDecrypt(newcomerConnectionResponse, ConnectionResponse.class)
                 .thenCompose(AsyncUtil.wrapException(trustAnchor::acceptConnectionResponse)).get();

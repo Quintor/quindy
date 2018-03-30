@@ -2,11 +2,12 @@
 
 Contact us on [Gitter](https://gitter.im/StudyBits/Lobby)
 
-The `wrapper` module contains a high-level wrapper around `indy-sdk`. [Documentation](indy-wrapper/README.md) 
+The `indy-wrapper` module contains a high-level wrapper around `indy-sdk`. 
+[Documentation](indy-wrapper/README.md) 
 
-The `studybits-university` module contains the university trust-anchor rest-api. [Documentation](studybits-university/README.md)
+The `university` module contains the university trust-anchor rest-api. [Documentation](university/README.md)
 
-The `studybits-student` module contains the student agent rest-api.
+The `student` module contains the student agent rest-api.
 
 Running tests: `docker build -t studybits:latest . && docker-compose up --build --force-recreate --exit-code-from tests`
 

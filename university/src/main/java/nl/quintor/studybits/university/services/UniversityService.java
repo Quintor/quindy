@@ -8,7 +8,10 @@ import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.university.dto.AuthCryptableResult;
 import nl.quintor.studybits.university.dto.Claim;
-import nl.quintor.studybits.university.entities.*;
+import nl.quintor.studybits.university.entities.ClaimSchema;
+import nl.quintor.studybits.university.entities.IndyConnection;
+import nl.quintor.studybits.university.entities.University;
+import nl.quintor.studybits.university.entities.User;
 import nl.quintor.studybits.university.repositories.ClaimSchemaRepository;
 import nl.quintor.studybits.university.repositories.UniversityRepository;
 import org.apache.commons.lang3.Validate;
@@ -115,7 +118,7 @@ public class UniversityService {
         ClaimSchema claimSchema = getClaimSchema(universityName, schemaDefinition);
         SchemaKey schemaKey = toSchemaKey(claimSchema);
         ClaimOffer claimOffer = issuer.createClaimOffer(schemaKey, indyConnection.getDid()).get();
-        AuthcryptedMessage authcryptedMessage = issuer.authcrypt(claimOffer).get();
+        AuthcryptedMessage authcryptedMessage = issuer.authEncrypt(claimOffer).get();
         return new AuthCryptableResult<>(claimOffer, authcryptedMessage);
     }
 
@@ -126,7 +129,7 @@ public class UniversityService {
             T claim) {
         Issuer issuer = getIssuer(universityName);
         nl.quintor.studybits.indy.wrapper.dto.Claim indyClaim = issuer.createClaim(claimRequest, claim.toMap()).get();
-        AuthcryptedMessage authcryptedMessage = issuer.authcrypt(indyClaim).get();
+        AuthcryptedMessage authcryptedMessage = issuer.authEncrypt(indyClaim).get();
         return new AuthCryptableResult<>(indyClaim, authcryptedMessage);
     }
 
@@ -144,7 +147,7 @@ public class UniversityService {
 
     @SneakyThrows
     private AuthcryptedMessage authEncrypt(Issuer issuer, AuthCryptable authCryptable) {
-        AuthcryptedMessage authcryptedMessage = issuer.authcrypt(authCryptable).get();
+        AuthcryptedMessage authcryptedMessage = issuer.authEncrypt(authCryptable).get();
         return authcryptedMessage;
     }
 

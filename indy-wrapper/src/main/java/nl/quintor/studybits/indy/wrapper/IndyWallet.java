@@ -15,19 +15,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 @Slf4j
+@Getter
 public class IndyWallet implements AutoCloseable {
-    @Getter
     private Wallet wallet;
-    @Getter
     private String name;
-    @Getter
     @Setter
     private String mainDid;
-    @Getter
     @Setter
     private String mainKey;
 
-    public IndyWallet( String name ) throws IndyException, ExecutionException, InterruptedException {
+    public IndyWallet(String name) throws IndyException, ExecutionException, InterruptedException {
         this.wallet = Wallet.openWallet(name, null, null).get();
 
         this.name = name;
@@ -56,7 +53,7 @@ public class IndyWallet implements AutoCloseable {
     }
 
     CompletableFuture<DidResults.CreateAndStoreMyDidResult> newDid(String seed) throws JsonProcessingException, IndyException {
-        String seedJSON = StringUtils.isNotBlank(seed)  ? (new MyDidInfo(seed)).toJSON() : "{}";
+        String seedJSON = StringUtils.isNotBlank(seed) ? (new MyDidInfo(seed)).toJSON() : "{}";
         log.debug("Creating new did with seedJSON: {}", seedJSON);
         return Did.createAndStoreMyDid(wallet, seedJSON);
     }
@@ -66,7 +63,7 @@ public class IndyWallet implements AutoCloseable {
         wallet.closeWallet();
     }
 
-    public static void delete( String name ) throws IndyException {
+    public static void delete(String name) throws IndyException {
         Wallet.deleteWallet(name, null);
     }
 
