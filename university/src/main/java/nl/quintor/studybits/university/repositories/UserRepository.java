@@ -17,9 +17,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findAllByUniversityNameIgnoreCase(String universityName);
 
-    Optional<User> findAllByStudentUserIsNotNullAndId(Long id);
+    Optional<User> findByStudentUserIsNotNullAndId(Long id);
 
-    Optional<User> findAllByAdminUserIsNotNullAndId(Long id);
+    Optional<User> findByAdminUserIsNotNullAndId(Long id);
 
     List<User> findAllByStudentUserIsNotNull();
 
@@ -32,7 +32,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllByAdminUserIsNotNullAndUniversityNameIgnoreCase(String universityName);
 
     @Query("select u.id from User u where upper(u.userName) = upper(:userName) and upper(u.university.name) = upper(:universityName)")
-    Optional<Long> findIdByUniversityNameAndUserName(@Param("universityName") String universityName, @Param("userName") String userName);
+    Long findIdByUniversityNameAndUserName(@Param("universityName") String universityName, @Param("userName") String userName);
 
 
     default User saveStudentUser(StudentUser studentUser) {

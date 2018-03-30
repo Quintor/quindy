@@ -117,11 +117,10 @@ public class Main {
                                                    .thenCompose(AsyncUtil.wrapException(alice::authcrypt))
                                                    .get();
 
-        Verifier acmeVerifier = new Verifier(acme.getName(), indyPool, acme.getWallet());
-
-        Map<String, Map.Entry<String, String>> attributes = acmeVerifier.authDecrypt(authcryptedProof, Proof.class)
-                                                                        .thenCompose(proof -> acmeVerifier.verifyProof(jobApplicationProofRequest, proof))
-                                                                        .get();
+        List<ProofAttribute> attributes = acme
+                .authDecrypt(authcryptedProof, Proof.class)
+                .thenCompose(proof -> acme.getVerifiedProofAttributes(jobApplicationProofRequest, proof))
+                .get();
 
         System.out.println(attributes);
     }

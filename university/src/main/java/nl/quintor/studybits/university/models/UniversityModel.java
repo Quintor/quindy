@@ -3,7 +3,7 @@ package nl.quintor.studybits.university.models;
 import lombok.Data;
 
 @Data
-public class University {
+public class UniversityModel {
     private Long id;
 
     private String name;

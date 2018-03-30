@@ -8,6 +8,7 @@ import nl.quintor.studybits.university.entities.StudentUser;
 import nl.quintor.studybits.university.entities.TranscriptRecord;
 import nl.quintor.studybits.university.entities.User;
 import nl.quintor.studybits.university.models.TranscriptModel;
+import nl.quintor.studybits.university.repositories.ClaimRecordRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
@@ -15,16 +16,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class TranscriptService extends ClaimProvider<Transcript> {
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private Mapper mapper;
+    public TranscriptService(UniversityService universityService, ClaimRecordRepository claimRecordRepository, UserRepository userRepository, Mapper mapper) {
+        super(universityService, claimRecordRepository, userRepository, mapper);
+    }
 
     private TranscriptRecord toEntity(TranscriptModel transcriptModel) {
         return mapper.map(transcriptModel, TranscriptRecord.class);
@@ -41,11 +42,7 @@ public class TranscriptService extends ClaimProvider<Transcript> {
         User user = claimRecord.getUser();
         StudentUser studentUser = user.getStudentUser();
         Validate.validState(studentUser != null, "TranscriptRecord claim is for student users only.");
-        TranscriptRecord transcriptRecord = studentUser
-                .getTranscriptRecords()
-                .stream()
-                .filter(x -> x.getDegree().equalsIgnoreCase(degree))
-                .findFirst()
+        TranscriptRecord transcriptRecord = findTranscriptRecord(studentUser, degree)
                 .orElseThrow(() -> new IllegalStateException("Invalid claim request. Student user degree not found."));
         return createTranscript(user, transcriptRecord);
     }
@@ -54,19 +51,24 @@ public class TranscriptService extends ClaimProvider<Transcript> {
     public void addTranscript(Long userId, TranscriptModel transcriptModel) {
         log.debug("Adding transcript '{}' to userId {}", transcriptModel, userId);
         StudentUser studentUser = userRepository
-                .findAllByStudentUserIsNotNullAndId(userId)
+                .findByStudentUserIsNotNullAndId(userId)
                 .map(User::getStudentUser)
                 .orElseThrow(() -> new IllegalArgumentException("Student user unknown."));
-        if (studentUser.getTranscriptRecords().stream().noneMatch(x ->
-                x.getDegree().equalsIgnoreCase(transcriptModel.getDegree()))) {
-            TranscriptRecord transcriptRecord = toEntity(transcriptModel);
-            transcriptRecord.setStudentUser(studentUser);
-            studentUser.getTranscriptRecords().add(transcriptRecord);
+        if (!findTranscriptRecord(studentUser, transcriptModel.getDegree()).isPresent()) {
+            TranscriptRecord transcriptRecord = studentUser.addTranscriptRecord(toEntity(transcriptModel));
             userRepository.saveStudentUser(studentUser);
             addAvailableClaim(userId, createTranscript(studentUser.getUser(), transcriptRecord));
         } else {
             log.debug("TranscriptRecord '{}' already assigned to {}", transcriptModel, studentUser.getUser().getUserName());
         }
+    }
+
+    private Optional<TranscriptRecord> findTranscriptRecord(StudentUser studentUser, String degree) {
+        return studentUser
+                .getTranscriptRecords()
+                .stream()
+                .filter(x -> x.getDegree().equalsIgnoreCase(degree))
+                .findFirst();
     }
 
     public Transcript createTranscript(User user, TranscriptRecord transcriptRecord) {
