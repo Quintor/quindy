@@ -28,10 +28,6 @@ public class TranscriptService extends ClaimProvider<Transcript> {
         super(universityService, claimRecordRepository, userRepository, mapper);
     }
 
-    private TranscriptRecord toEntity(TranscriptModel transcriptModel) {
-        return mapper.map(transcriptModel, TranscriptRecord.class);
-    }
-
     @Override
     public String getSchemaName() {
         return ClaimUtils.getSchemaName(Transcript.class);
