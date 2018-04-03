@@ -13,30 +13,30 @@ import java.util.List;
 
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 @RestController
-@RequestMapping("/student/{studentId}/claims")
+@RequestMapping("/student/{studentUserName}/claims")
 public class ClaimController {
     private final ClaimService claimService;
 
     @GetMapping
-    List<Claim> findAllClaims(@PathVariable Long studentId) {
-        return claimService.findAllClaims(studentId);
+    List<Claim> findAllByOwnerUserName(@PathVariable String studentUserName) {
+        return claimService.findAllByOwnerUserName(studentUserName);
     }
 
     @GetMapping("/schema/{schemaName}")
-    List<Claim> findClaimsByIdAndSchemaName(@PathVariable Long studentId, @PathVariable String schemaName) {
-        return claimService.findClaimsByIdAndSchemaName(studentId, schemaName);
+    List<Claim> findByOwnerUserNameAndSchemaKeyName(@PathVariable String studentUserName, @PathVariable String schemaName) {
+        return claimService.findByOwnerUserNameAndSchemaKeyName(studentUserName, schemaName);
     }
 
     @GetMapping("/{claimId}")
-    Claim findById(@PathVariable Long studentId, @PathVariable Long claimId) {
+    Claim findById(@PathVariable String studentUserName, @PathVariable Long claimId) {
         // TODO: Add ownership check.
 
-        return claimService.findById(claimId);
+        return claimService.findByIdOrElseThrow(claimId);
     }
 
     @GetMapping("/new")
-    void getNewClaims(@PathVariable Long studentId) throws Exception {
-        claimService.getAndSaveNewClaimsForStudentId(studentId);
+    void getAndSaveNewClaimsForOwnerUserName(@PathVariable String studentUserName) throws Exception {
+        claimService.getAndSaveNewClaimsForOwnerUserName(studentUserName);
     }
 }
 

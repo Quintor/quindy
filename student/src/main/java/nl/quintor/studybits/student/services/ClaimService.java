@@ -9,10 +9,8 @@ import nl.quintor.studybits.indy.wrapper.dto.ClaimOffer;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.student.model.*;
 import nl.quintor.studybits.student.repositories.ClaimRepository;
-import nl.quintor.studybits.student.repositories.SchemaKeyRepository;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.dozer.Mapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -30,45 +28,25 @@ import java.util.stream.Stream;
 @Service
 @Slf4j
 public class ClaimService {
-    @Autowired
     private ClaimRepository claimRepository;
-    @Autowired
     private ConnectionRecordService connectionRecordService;
-    @Autowired
-    private SchemaKeyRepository schemaKeyRepository;
-    @Autowired
+    private SchemaKeyService schemaKeyService;
     private StudentService studentService;
-    @Autowired
     private Mapper mapper;
 
     @Value("${database.claim.hash.function}")
     private String hashFunction;
 
-    private Claim toModel(Object claim) {
-        return mapper.map(claim, Claim.class);
+    public ClaimService(ClaimRepository claimRepository, ConnectionRecordService connectionRecordService, SchemaKeyService schemaKeyService, StudentService studentService, Mapper mapper) {
+        this.claimRepository = claimRepository;
+        this.connectionRecordService = connectionRecordService;
+        this.schemaKeyService = schemaKeyService;
+        this.studentService = studentService;
+        this.mapper = mapper;
     }
 
-    public Claim findById(Long claimId) {
-        return claimRepository
-                .findById(claimId)
-                .orElseThrow(() -> new IllegalArgumentException("Claim with id not found"));
-    }
-
-    public List<Claim> findAllClaims(Long studentId) {
-        Student owner = studentService
-                .findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
-
-        return claimRepository
-                .findAllByOwner(owner)
-                .stream()
-                .map(this::toModel)
-                .collect(Collectors.toList());
-    }
-
-    public void getAndSaveNewClaimsForStudentId(Long studentId) throws Exception {
-        Student student = studentService.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
+    public void getAndSaveNewClaimsForOwnerUserName(String studentUserName) throws Exception {
+        Student student = studentService.findByNameOrElseThrow(studentUserName);
 
         try (Prover prover = studentService.getProverForStudent(student)) {
             getAllStudentClaimInfo(student)
@@ -83,7 +61,7 @@ public class ClaimService {
     }
 
     private Stream<StudentClaimInfo> getAllStudentClaimInfo(Student student) {
-        return connectionRecordService.findAllConnections(student.getId())
+        return connectionRecordService.findAllByStudentUserName(student.getId())
                 .stream()
                 .map(ConnectionRecord::getUniversity)
                 .flatMap(university -> getAllStudentClaimInfo(university, student));
@@ -114,7 +92,7 @@ public class ClaimService {
                 .fromHttpUrl(university.getEndpoint())
                 .path(university.getName())
                 .path("/student/")
-                .path(student.getUsername())
+                .path(student.getUserName())
                 .path("/claims")
                 .build().toUri();
 
@@ -154,16 +132,34 @@ public class ClaimService {
         return prover.authDecrypt(authMessage, type);
     }
 
+    private Claim toModel(Object claim) {
+        return mapper.map(claim, Claim.class);
+    }
+
+    public Claim findByIdOrElseThrow(Long claimId) {
+        return claimRepository
+                .findById(claimId)
+                .orElseThrow(() -> new IllegalArgumentException("Claim with id not found"));
+    }
+
+    public List<Claim> findAllByOwnerUserName(String studentUserName) {
+        Student owner = studentService.findByNameOrElseThrow(studentUserName);
+
+        return claimRepository
+                .findAllByOwner(owner)
+                .stream()
+                .map(this::toModel)
+                .collect(Collectors.toList());
+    }
+
     public void deleteAll() {
         claimRepository.deleteAll();
     }
 
-    public List<Claim> findClaimsByIdAndSchemaName(Long studentId, String schemaName) {
-        Student student = studentService.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Student with Id not found"));
-        SchemaKey schemaKey = schemaKeyRepository
-                .findByName(schemaName)
-                .orElseThrow(() -> new IllegalArgumentException("Schema with name not found"));
+    public List<Claim> findByOwnerUserNameAndSchemaKeyName(String studentUserName, String schemaName) {
+        Student student = studentService.findByNameOrElseThrow(studentUserName);
+        SchemaKey schemaKey = schemaKeyService.findByNameOrElseThrow(schemaName);
+
         return claimRepository
                 .findAllBySchemaKey(schemaKey)
                 .stream()

@@ -14,7 +14,7 @@ public class Student {
     @Id
     @GeneratedValue
     private Long id;
-    private String username;
+    private String userName;
     @ManyToOne
     private University originUniversity;
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)

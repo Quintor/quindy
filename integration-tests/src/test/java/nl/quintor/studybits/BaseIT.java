@@ -8,8 +8,8 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 
 public class BaseIT {
-    static final String STUDENT = "http://localhost:8095";
-    static final String UNIVERSITY = "http://localhost:8090";
+    static final String STUDENT_URL = "http://localhost:8095";
+    static final String UNIVERSITY_URL = "http://localhost:8090";
 
     static RequestSpecification givenCorrectHeaders(String endpoint) {
         return given()
@@ -20,20 +20,20 @@ public class BaseIT {
     @Before
     public void setUp() {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-        givenCorrectHeaders(STUDENT)
+        givenCorrectHeaders(STUDENT_URL)
                 .delete("/test/nuke")
                 .then()
                 .assertThat().statusCode(200);
-        givenCorrectHeaders(UNIVERSITY)
+        givenCorrectHeaders(UNIVERSITY_URL)
                 .delete("/test/nuke")
                 .then()
                 .assertThat().statusCode(200);
     }
 
     Integer registerUniversity(String name) {
-        return givenCorrectHeaders(STUDENT)
+        return givenCorrectHeaders(STUDENT_URL)
                 .queryParam("name", name)
-                .queryParam("endpoint", UNIVERSITY)
+                .queryParam("endpoint", UNIVERSITY_URL)
                 .post("/university/register")
                 .then()
                 .assertThat().statusCode(200)
@@ -42,9 +42,9 @@ public class BaseIT {
     }
 
     Integer registerStudent(String username, String uniName) {
-        return givenCorrectHeaders(STUDENT)
+        return givenCorrectHeaders(STUDENT_URL)
                 .queryParam("username", username)
-                .queryParam("university", uniName)
+                .queryParam("universityName", uniName)
                 .post("/student/register")
                 .then()
                 .assertThat().statusCode(200)
@@ -52,31 +52,33 @@ public class BaseIT {
                 .path("id");
     }
 
-    void onboardStudent(Integer studentId, Integer universityId) {
-        givenCorrectHeaders(STUDENT)
-                .queryParam("student", studentId)
-                .queryParam("university", universityId)
+    void onboardStudent(String studentUserName, String universityName) {
+        givenCorrectHeaders(STUDENT_URL)
+                .queryParam("student", studentUserName)
+                .queryParam("university", universityName)
                 .post("/student/onboard")
                 .then()
                 .assertThat().statusCode(200);
     }
 
-    void getNewClaims(Integer studentId) {
-        givenCorrectHeaders(STUDENT)
-                .get("/student/{studentId}/claims/new", studentId)
+    void getNewClaims(String studentUserName) {
+        givenCorrectHeaders(STUDENT_URL)
+                .pathParam("studentUserName", studentUserName)
+                .get("/student/{studentUserName}/claims/new")
                 .then()
                 .assertThat().statusCode(200);
     }
 
-    void assertNumberOfClaimsEquals(Integer expectedNumber, Integer studentId) {
-        givenCorrectHeaders(STUDENT)
-                .get("/student/{studentId}/claims", studentId)
+    void assertNumberOfClaimsEquals(Integer expectedNumber, String studentUserName) {
+        givenCorrectHeaders(STUDENT_URL)
+                .pathParam("studentUserName", studentUserName)
+                .get("/student/{studentUserName}/claims")
                 .then()
                 .assertThat().statusCode(200)
                 .body("size()", is(expectedNumber));
     }
 
-    void assertNoClaims(Integer studentId) {
-        assertNumberOfClaimsEquals(0, studentId);
+    void assertNoClaims(String studentUserName) {
+        assertNumberOfClaimsEquals(0, studentUserName);
     }
 }

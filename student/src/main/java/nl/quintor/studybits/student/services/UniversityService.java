@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.student.model.Student;
 import nl.quintor.studybits.student.model.University;
 import nl.quintor.studybits.student.repositories.UniversityRepository;
+import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,34 +17,39 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor( onConstructor = @__( @Autowired ) )
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
 public class UniversityService {
     private UniversityRepository universityRepository;
     private Mapper mapper;
 
-    private University toModel( Object university ) {
+    private University toModel(Object university) {
         return mapper.map(university, University.class);
     }
 
     public University createAndSave(String name, String endpoint) {
-        if ( universityRepository.existsByName(name) )
+        if (universityRepository.existsByName(name))
             throw new IllegalArgumentException("University with name exists already.");
 
         University university = new University(null, name, endpoint);
         return universityRepository.save(university);
     }
 
-    public Optional<University> findById( Long uniId ) {
+    public Optional<University> findById(Long uniId) {
         return universityRepository
                 .findById(uniId)
                 .map(this::toModel);
     }
 
-    public Optional<University> findByName( String name ) {
+    public Optional<University> findByName(String name) {
         return universityRepository
                 .findByName(name)
                 .map(this::toModel);
+    }
+
+    public University findByNameOrElseThrow(String name) {
+        return findByName(name)
+                .orElseThrow(() -> new IllegalArgumentException("University with name not found."));
     }
 
     public List<University> findAll() {
@@ -54,37 +60,34 @@ public class UniversityService {
                 .collect(Collectors.toList());
     }
 
-    public void updateById( University university ) {
-        if ( !universityRepository.existsById(university.getId()) )
-            throw new IllegalArgumentException("University with id not found.");
+    public void updateByObject(University university) {
+        Validate.isTrue(!universityRepository.existsById(university.getId()));
 
         universityRepository.save(university);
     }
 
-    public void deleteById( Long uniId ) {
-        if ( !universityRepository.existsById(uniId) )
-            throw new IllegalArgumentException("University with id not found.");
-
-        universityRepository.deleteById(uniId);
+    public void deleteByName(String universityName) {
+        University university = findByNameOrElseThrow(universityName);
+        universityRepository.deleteById(university.getId());
     }
 
     public void deleteAll() {
         universityRepository.deleteAll();
     }
 
-    private URI buildOnboardingUri( University university, String endpoint, Student student ) {
+    private URI buildOnboardingUri(University university, String endpoint, Student student) {
         log.debug("Building onboarding uri on: university endpoint: {}, endpoint: {}, student: {}", university.getEndpoint(), endpoint, student);
         return UriComponentsBuilder
                 .fromHttpUrl(university.getEndpoint())
                 .path("/{universityName}/student/{userName}/onboarding/{endpoint}")
-                .build(university.getName(), student.getUsername(), endpoint);
+                .build(university.getName(), student.getUserName(), endpoint);
     }
 
-    public URI buildOnboardingBeginUri( University university, Student student ) {
+    public URI buildOnboardingBeginUri(University university, Student student) {
         return buildOnboardingUri(university, "begin", student);
     }
 
-    public URI buildOnboardingFinalizeUri( University university, Student student ) {
+    public URI buildOnboardingFinalizeUri(University university, Student student) {
         return buildOnboardingUri(university, "finalize", student);
     }
 }
