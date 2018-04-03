@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -63,18 +64,28 @@ public class TranscriptService extends ClaimProvider<Transcript> {
     }
 
     @Transactional
-    public void addTranscript(Long userId, TranscriptModel transcriptModel) {
-        log.debug("Adding transcript '{}' to userId {}", transcriptModel, userId);
-        StudentUser studentUser = userRepository
-                .findByStudentUserIsNotNullAndId(userId)
-                .map(User::getStudentUser)
-                .orElseThrow(() -> new IllegalArgumentException("Student user unknown."));
+    public void addTranscript(String universityName, String studentUserName, TranscriptModel transcriptModel) {
+        log.debug("Adding transcript '{}' to userId {}", transcriptModel, studentUserName);
+        User user = userRepository
+                .findByUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, studentUserName)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found."));
+        addTranscript(user, transcriptModel);
+    }
+
+    @Transactional
+    public void addTranscript(Long studentId, TranscriptModel transcriptModel) {
+        addTranscript(userRepository.getOne(studentId), transcriptModel);
+    }
+
+    private void addTranscript(User user, TranscriptModel transcriptModel) {
+        StudentUser studentUser = Objects.requireNonNull(user.getStudentUser());
         if (!findTranscriptRecord(studentUser, transcriptModel.getDegree()).isPresent()) {
             TranscriptRecord transcriptRecord = studentUser.addTranscriptRecord(toEntity(transcriptModel));
             userRepository.saveStudentUser(studentUser);
-            addAvailableClaim(userId, createTranscript(studentUser.getUser(), transcriptRecord));
+            addAvailableClaim(studentUser.getId(), createTranscript(studentUser.getUser(), transcriptRecord));
         } else {
-            log.debug("TranscriptRecord '{}' already assigned to {}", transcriptModel, studentUser.getUser().getUserName());
+            log.debug("TranscriptRecord '{}' already assigned to {}", transcriptModel, studentUser.getUser()
+                    .getUserName());
         }
     }
 

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/{universityName}/admin/transcripts")
+@RequestMapping("/{universityName}/admin/{userName}/transcripts")
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class TranscriptController {
 
@@ -25,9 +25,9 @@ public class TranscriptController {
         return mapper.map(transcript, TranscriptModel.class);
     }
 
-    @PostMapping("/{studentId}")
-    public void addTranscript(@PathVariable Long userId, @RequestBody TranscriptModel transcriptModel) {
-        transcriptService.addTranscript(userId, transcriptModel);
+    @PostMapping("/{studentUserName}")
+    public void addTranscript(@PathVariable String studentUserName, @RequestBody TranscriptModel transcriptModel) {
+        transcriptService.addTranscript(userContext.currentUniversityName(), studentUserName, transcriptModel);
     }
 
     @GetMapping

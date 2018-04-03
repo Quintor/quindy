@@ -22,6 +22,11 @@ public class ClaimController {
         return claimService.findAllClaims(studentId);
     }
 
+    @GetMapping("/schema/{schemaName}")
+    List<Claim> findClaimsByIdAndSchemaName(@PathVariable Long studentId, @PathVariable String schemaName) {
+        return claimService.findClaimsByIdAndSchemaName(studentId, schemaName);
+    }
+
     @GetMapping("/{claimId}")
     Claim findById(@PathVariable Long studentId, @PathVariable Long claimId) {
         // TODO: Add ownership check.

@@ -9,6 +9,7 @@ import nl.quintor.studybits.indy.wrapper.dto.ClaimOffer;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.student.model.*;
 import nl.quintor.studybits.student.repositories.ClaimRepository;
+import nl.quintor.studybits.student.repositories.SchemaKeyRepository;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,8 @@ public class ClaimService {
     private ClaimRepository claimRepository;
     @Autowired
     private ConnectionRecordService connectionRecordService;
+    @Autowired
+    private SchemaKeyRepository schemaKeyRepository;
     @Autowired
     private StudentService studentService;
     @Autowired
@@ -153,5 +156,18 @@ public class ClaimService {
 
     public void deleteAll() {
         claimRepository.deleteAll();
+    }
+
+    public List<Claim> findClaimsByIdAndSchemaName(Long studentId, String schemaName) {
+        Student student = studentService.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student with Id not found"));
+        SchemaKey schemaKey = schemaKeyRepository
+                .findByName(schemaName)
+                .orElseThrow(() -> new IllegalArgumentException("Schema with name not found"));
+        return claimRepository
+                .findAllBySchemaKey(schemaKey)
+                .stream()
+                .filter(claim -> claim.getOwner().equals(student))
+                .collect(Collectors.toList());
     }
 }
