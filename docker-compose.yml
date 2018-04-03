@@ -11,11 +11,12 @@ services:
 
   backend-student:
     depends_on:
-      - pool
+      backend-university:
+        condition: service_healthy
     build:
       context: student
     ports:
-    - "8090:8090"
+    - "8095:8095"
     network_mode: "host"
     healthcheck:
       test: curl -f http://localhost:8095/test/health || exit 1
@@ -28,7 +29,7 @@ services:
     build:
       context: university
     ports:
-      - "8095:8095"
+      - "8090:8090"
     network_mode: "host"
     healthcheck:
       test: curl -f http://localhost:8090/test/health || exit 1

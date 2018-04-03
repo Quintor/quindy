@@ -49,12 +49,11 @@ public class StudentService {
         University university = universityService.findByName(uniName)
                 .orElseThrow(() -> new IllegalArgumentException("University with id not found"));
 
-        MetaWallet metaWallet = metaWalletService.createAndSave(username);
+        MetaWallet metaWallet = metaWalletService.create(username, uniName);
         try (IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(metaWallet)) {
             Prover prover = new Prover(username, indyPool, indyWallet, username);
             prover.init();
         }
-
         Student student = new Student(null, username, university, metaWallet);
 
         return studentRepository.save(student);
@@ -70,6 +69,10 @@ public class StudentService {
                 .stream()
                 .map(this::toModel)
                 .collect(Collectors.toList());
+    }
+
+    public Optional<Student> findByName(String name) {
+        return studentRepository.findByUsername(name);
     }
 
     public void updateById(Student student) {
