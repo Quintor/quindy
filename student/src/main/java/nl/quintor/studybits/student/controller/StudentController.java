@@ -2,12 +2,10 @@ package nl.quintor.studybits.student.controller;
 
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.student.model.Student;
-import nl.quintor.studybits.student.model.University;
 import nl.quintor.studybits.student.services.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -17,41 +15,32 @@ public class StudentController {
     private final StudentService studentService;
 
     @PostMapping("/onboard")
-    void onboard(@RequestParam Student student, @RequestParam University university) throws Exception {
-        studentService.onboard(student, university);
+    void onboard(@RequestParam String studentUserName, @RequestParam String universityName) throws Exception {
+        studentService.onboard(studentUserName, universityName);
     }
 
     @PostMapping("/register")
-    Student register(@RequestParam String username, @RequestParam(value = "university") String uniName) {
-        return studentService.createAndSave(username, uniName);
+    Student register(@RequestParam String username, @RequestParam String universityName) {
+        return studentService.createAndSave(username, universityName);
     }
 
-    @GetMapping("/{studentId}")
-    Student findById(@PathVariable Long studentId) {
-        return studentService
-                .findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Student with id not found."));
+    @GetMapping("/{studentUserName}")
+    Student findById(@PathVariable String studentUserName) {
+        return studentService.findByNameOrElseThrow(studentUserName);
     }
 
-    @GetMapping()
-    List<Student> findAll(@RequestParam("name") String name) {
-        if (name != null) {
-            return studentService.findByName(name)
-                    .map(Collections::singletonList)
-                    .orElse(Collections.emptyList());
-        }
+    @GetMapping
+    List<Student> findAll() {
         return studentService.findAll();
     }
 
-    @PutMapping()
-    void updateById(@RequestBody Student student) {
-        studentService.updateById(student);
+    @PutMapping
+    void updateByObject(@RequestBody Student student) {
+        studentService.updateByObject(student);
     }
 
-    @DeleteMapping("/{studentId}")
-    void deleteById(@PathVariable Long studentId) {
-        studentService.deleteById(studentId);
+    @DeleteMapping("/{studentUserName}")
+    void deleteById(@PathVariable String studentUserName) {
+        studentService.deleteByUserName(studentUserName);
     }
-
-
 }

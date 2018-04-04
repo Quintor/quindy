@@ -8,25 +8,49 @@ import static org.hamcrest.Matchers.is;
 public class ClaimIT extends BaseIT {
     @Test
     public void testGetNewClaims() {
-        Integer universityId = registerUniversity("Rug");
-        Integer studentId = registerStudent("student3", "Rug");
-        onboardStudent(studentId, universityId);
+        String UNIVERSITY_NAME = "rug";
+        String STUDENT_NAME = "student3";
 
-        givenCorrectHeaders(STUDENT)
-                .get("/student/{studentId}/claims", studentId)
-                .then()
-                .assertThat().statusCode(200)
-                .body("size()", is(0));
+        registerUniversity(UNIVERSITY_NAME);
+        registerStudent(STUDENT_NAME, UNIVERSITY_NAME);
+        onboardStudent(STUDENT_NAME, UNIVERSITY_NAME);
 
-        givenCorrectHeaders(STUDENT)
-                .get("/student/{studentId}/claims/new", studentId)
-                .then()
-                .assertThat().statusCode(200);
+        assertNoClaims(STUDENT_NAME);
+        getNewClaims(STUDENT_NAME);
 
-        givenCorrectHeaders(STUDENT)
-                .get("/student/{studentId}/claims", studentId)
+        givenCorrectHeaders(STUDENT_URL)
+                .get("/student/{studentUserName}/claims", "student3")
                 .then()
                 .assertThat().statusCode(200)
                 .body("size()", greaterThan(0));
+    }
+
+    @Test
+    public void createNewClaim() {
+        String UNIVERSITY_NAME = "rug";
+        String STUDENT_NAME = "student1";
+
+        registerUniversity(UNIVERSITY_NAME);
+        registerStudent(STUDENT_NAME, UNIVERSITY_NAME);
+        onboardStudent(STUDENT_NAME, UNIVERSITY_NAME);
+
+        TranscriptModel transcriptModel = new TranscriptModel("Master of Disaster", "Awesome", "2017/18", "9.5");
+
+        givenCorrectHeaders(UNIVERSITY_URL)
+                .pathParam("universityName", UNIVERSITY_NAME)
+                .pathParam("userName", "admin1")
+                .pathParam("studentUserName", STUDENT_NAME)
+                .body(transcriptModel)
+                .post("/{universityName}/admin/{userName}/transcripts/{studentUserName}")
+                .then()
+                .assertThat().statusCode(200);
+
+        getNewClaims(STUDENT_NAME);
+        givenCorrectHeaders(STUDENT_URL)
+                .pathParam("studentUserName", STUDENT_NAME)
+                .pathParam("schemaName", "Transcript")
+                .get("/student/{studentUserName}/claims/schema/{schemaName}")
+                .then()
+                .body("size()", is(1));
     }
 }

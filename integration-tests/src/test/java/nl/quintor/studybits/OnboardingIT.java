@@ -5,9 +5,12 @@ import org.junit.Test;
 public class OnboardingIT extends BaseIT {
     @Test
     public void testOnboardStudent() {
-        Integer universityId = registerUniversity("Rug");
-        Integer studentId = registerStudent("student1", "Rug");
+        String UNIVERSITY_NAME = "Rug";
+        String STUDENT_NAME = "student1";
 
-        onboardStudent(studentId, universityId);
+        registerUniversity(UNIVERSITY_NAME);
+        registerStudent(STUDENT_NAME, UNIVERSITY_NAME);
+
+        onboardStudent(STUDENT_NAME, UNIVERSITY_NAME);
     }
 }

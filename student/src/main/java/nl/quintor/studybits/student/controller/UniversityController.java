@@ -8,38 +8,35 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@AllArgsConstructor( onConstructor = @__( @Autowired ) )
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 @RestController
 @RequestMapping("/university")
 public class UniversityController {
 
     private UniversityService universityService;
 
-    @PostMapping( "/register" )
-    University register( @RequestParam String name, @RequestParam String endpoint ) {
+    @PostMapping("/register")
+    University register(@RequestParam String name, @RequestParam String endpoint) {
         return universityService.createAndSave(name, endpoint);
     }
 
-    @GetMapping( "/{uniId}" )
-    University findById( @PathVariable Long uniId ) {
-        return universityService.findById(uniId)
-                                .orElseThrow(() -> new IllegalArgumentException("University with id not found"));
+    @GetMapping("/{universityName}")
+    University findById(@PathVariable String universityName) {
+        return universityService.findByNameOrElseThrow(universityName);
     }
 
-    @GetMapping()
+    @GetMapping
     List<University> findAll() {
         return universityService.findAll();
     }
 
-    @PutMapping()
-    void updateById( @RequestBody University university ) {
-        universityService.updateById(university);
+    @PutMapping
+    void updateByObject(@RequestBody University university) {
+        universityService.updateByObject(university);
     }
 
-    @DeleteMapping( "/{uniId}" )
-    void deleteById( @PathVariable Long uniId ) {
-        universityService.deleteById(uniId);
+    @DeleteMapping("/{universityName}")
+    void deleteByName(@PathVariable String universityName) {
+        universityService.deleteByName(universityName);
     }
-
-
 }

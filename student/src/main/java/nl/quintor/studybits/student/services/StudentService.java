@@ -43,7 +43,7 @@ public class StudentService {
 
     @SneakyThrows
     public Student createAndSave(String username, String uniName) {
-        if (studentRepository.existsByUsername(username))
+        if (studentRepository.existsByUserName(username))
             throw new IllegalArgumentException("Student with username exists already.");
 
         University university = universityService.findByName(uniName)
@@ -71,22 +71,24 @@ public class StudentService {
                 .collect(Collectors.toList());
     }
 
-    public Optional<Student> findByName(String name) {
-        return studentRepository.findByUsername(name);
+    public Optional<Student> findByUserName(String name) {
+        return studentRepository.findByUserName(name);
     }
 
-    public void updateById(Student student) {
-        if (!studentRepository.existsById(student.getId()))
-            throw new IllegalArgumentException("Student with id not found.");
+    public Student findByNameOrElseThrow(String name) {
+        return findByUserName(name)
+                .orElseThrow(() -> new IllegalArgumentException("Student with name not found."));
+    }
 
+    public void updateByObject(Student student) {
+        Validate.isTrue(!studentRepository.existsById(student.getId()));
         studentRepository.save(student);
     }
 
-    public void deleteById(Long studentId) {
-        if (!studentRepository.existsById(studentId))
-            throw new IllegalArgumentException("University with id not found.");
+    public void deleteByUserName(String studentUserName) {
+        Student student = findByNameOrElseThrow(studentUserName);
 
-        studentRepository.deleteById(studentId);
+        studentRepository.deleteById(student.getId());
     }
 
     public void deleteAll() throws Exception {
@@ -95,20 +97,23 @@ public class StudentService {
 
         for (Student student : students) {
             metaWalletService.delete(student.getMetaWallet());
-            deleteById(student.getId());
+            studentRepository.deleteById(student.getId());
 
             log.debug("Deleted student {} with wallet {}", student.getId(), student.getMetaWallet().getId());
         }
     }
 
-    public void onboard(Student student, University university) throws Exception {
+    public void onboard(String studentUserName, String universityName) throws Exception {
+        Student student = findByNameOrElseThrow(studentUserName);
+        University university = universityService.findByNameOrElseThrow(universityName);
+
         URI uriBegin = universityService.buildOnboardingBeginUri(university, student);
         URI uriFinalize = universityService.buildOnboardingFinalizeUri(university, student);
         log.debug("Onboarding with uriBegin {}, uriEnd {}", uriBegin, uriFinalize);
 
         RestTemplate restTemplate = new RestTemplate();
         ConnectionRequest beginRequest = restTemplate.getForObject(uriBegin, ConnectionRequest.class);
-        connectionRecordService.saveConnectionRequest(beginRequest, university, student);
+        connectionRecordService.save(beginRequest, university, student);
 
         AnoncryptedMessage beginResponse = acceptConnectionRequest(student, beginRequest);
         ResponseEntity<Void> finalizeResponse = restTemplate.postForEntity(uriFinalize, beginResponse, Void.class);
@@ -125,7 +130,7 @@ public class StudentService {
 
     public Prover getProverForStudent(Student student) throws Exception {
         IndyWallet wallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
-        return new Prover(student.getUsername(), indyPool, wallet, student.getUsername());
+        return new Prover(student.getUserName(), indyPool, wallet, student.getUserName());
     }
 }
 
