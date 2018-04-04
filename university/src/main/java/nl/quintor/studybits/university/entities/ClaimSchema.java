@@ -48,5 +48,6 @@ public class ClaimSchema {
         this.schemaName = schemaName;
         this.schemaVersion = schemaVersion;
         this.schemaIssuerDid = schemaIssuerDid;
+        this.claimDefined = false;
     }
 }
