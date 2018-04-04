@@ -36,9 +36,9 @@ public class StudentUser {
     @Column(nullable = false)
     private List<TranscriptRecord> transcriptRecords = new ArrayList<>();
 
-    public TranscriptRecord addTranscriptRecord(TranscriptRecord transcriptRecord) {
-        transcriptRecord.setStudentUser(this);
-        transcriptRecords.add(transcriptRecord);
+    public TranscriptRecord addTranscriptRecord(String degree, String status, String year, String average) {
+        TranscriptRecord transcriptRecord = new TranscriptRecord(null, this, degree, status, year, average);
+        getTranscriptRecords().add(transcriptRecord);
         return transcriptRecord;
     }
 

@@ -2,15 +2,13 @@ package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
-import nl.quintor.studybits.indy.wrapper.dto.ClaimOffer;
-import nl.quintor.studybits.indy.wrapper.dto.ClaimRequest;
+import lombok.extern.slf4j.Slf4j;
+import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.university.dto.AuthCryptableResult;
 import nl.quintor.studybits.university.dto.Claim;
 import nl.quintor.studybits.university.entities.AuthEncryptedMessage;
 import nl.quintor.studybits.university.entities.ClaimRecord;
 import nl.quintor.studybits.university.entities.User;
-import nl.quintor.studybits.university.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.university.repositories.ClaimRecordRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.apache.commons.lang3.Validate;
@@ -20,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 
+@Slf4j
 @Service
 @AllArgsConstructor(onConstructor=@__(@Autowired))
 public abstract class ClaimProvider<T extends Claim> {
@@ -29,43 +28,34 @@ public abstract class ClaimProvider<T extends Claim> {
     protected final UserRepository userRepository;
     protected final Mapper mapper;
 
-    protected AuthEncryptedMessage toEntity(AuthcryptedMessage authcryptedMessage) {
-        return mapper.map(authcryptedMessage, AuthEncryptedMessage.class);
-    }
-
-    protected AuthcryptedMessage toDto(AuthEncryptedMessage authEncryptedMessage) {
+    private AuthcryptedMessage toDto(AuthEncryptedMessage authEncryptedMessage) {
         return mapper.map(authEncryptedMessage, AuthcryptedMessage.class);
     }
-
-    protected AuthEncryptedMessageModel toModel(AuthEncryptedMessage authEncryptedMessage) {
-        return mapper.map(authEncryptedMessage, AuthEncryptedMessageModel.class);
-    }
-
-
 
     public abstract String getSchemaName();
 
     protected abstract T getClaimForClaimRecord(ClaimRecord claimRecord);
 
     /**
-     * Adds an available claimModel to the user.
-     * Note: It only makes the claimModel available to the user without being added/written to the ledger.
-     * @param userId The id of the user that will receive the claimModel.
-     * @param claim The claimModel to make available.
+     * Adds an available claim to the user.
+     * Note: It only makes the claim available to the user without being added/written to the ledger.
+     * @param userId The id of the user that will receive the claim.
+     * @param claim The claim to make available.
      */
     protected void addAvailableClaim(Long userId, T claim) {
+        log.debug("Adding available claim for userId: {}, claim: {}", userId, claim);
         User user = userRepository.getOne(userId);
         ClaimRecord claimRecord = new ClaimRecord(null, user, claim.getSchemaName(), claim.getSchemaVersion(), claim.getLabel(), null, null);
         claimRecordRepository.save(claimRecord);
     }
 
     /**
-     * Retrieves the authcrypted claimModel offer after adding it to the ledger.
-     * Note: The cached message will be returned if the claimModel offer was requested earlier and therefore already written
+     * Retrieves the authcrypted claim offer after adding it to the ledger.
+     * Note: The cached message will be returned if the claim offer was requested earlier and therefore already written
      *       to the ledger.
      * @param userId The user id.
      * @param claimRecordId The id of the ClaimRecord.
-     * @return Authcrypted claimModel offer.
+     * @return Authcrypted claim offer.
      */
     @SneakyThrows
     @Transactional
@@ -84,12 +74,12 @@ public abstract class ClaimProvider<T extends Claim> {
     }
 
     /**
-     * Retrieves the authcrypted claimModel.
-     * Note: The cached message will be returned if the claimModel was requested earlier and therefore already written
+     * Retrieves the authcrypted claim.
+     * Note: The cached message will be returned if the claim was requested earlier and therefore already written
      *       to the ledger.
      * @param userId The user id.
      * @param authcryptedMessage The authcrypted ClaimRequest message that was provided to the client by Indy.
-     * @return Authcrypted claimModel.
+     * @return Authcrypted claim.
      */
     @SneakyThrows
     @Transactional
@@ -108,12 +98,12 @@ public abstract class ClaimProvider<T extends Claim> {
         return result.getAuthcryptedMessage();
     }
 
-    protected ClaimRecord getClaimRecord(Long userId, Long claimRecordId) {
+    private ClaimRecord getClaimRecord(Long userId, Long claimRecordId) {
         ClaimRecord claimRecord = claimRecordRepository
                 .findById(claimRecordId)
                 .orElseThrow(() -> new IllegalArgumentException("Claim record not found."));
         Validate.validState(claimRecord.getUser().getId().equals(userId), "Claim record user mismatch.");
-        Validate.validState(claimRecord.getUser().getConnection() != null, "User onboarding incomplete!");
+        Validate.notNull(claimRecord.getUser().getConnection(), "User onboarding incomplete!");
         return claimRecord;
     }
 

@@ -5,6 +5,7 @@ import nl.quintor.studybits.university.UserContext;
 import nl.quintor.studybits.university.entities.User;
 import nl.quintor.studybits.university.models.UserModel;
 import nl.quintor.studybits.university.services.StudentService;
+import nl.quintor.studybits.university.services.UserService;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ public class StudentController {
 
     private final UserContext userContext;
     private final StudentService studentService;
+    private final UserService userService;
     private final Mapper mapper;
 
     private UserModel toModel(User user) {
@@ -43,7 +45,14 @@ public class StudentController {
 
     @PostMapping
     UserModel createStudent(@RequestBody UserModel userModel) {
-        return toModel(studentService.createStudent(userContext.currentUniversityName(), userModel));
+        User user = userService
+                .createStudent(
+                        userContext.currentUniversityName(),
+                        userModel.getUserName(),
+                        userModel.getFirstName(),
+                        userModel.getLastName(),
+                        userModel.getSsn());
+        return toModel(user);
     }
 
 }
