@@ -61,7 +61,7 @@ public class ClaimService {
     }
 
     private Stream<StudentClaimInfo> getAllStudentClaimInfo(Student student) {
-        return connectionRecordService.findAllByStudentUserName(student.getId())
+        return connectionRecordService.findAllByStudentUserName(student.getUserName())
                 .stream()
                 .map(ConnectionRecord::getUniversity)
                 .flatMap(university -> getAllStudentClaimInfo(university, student));

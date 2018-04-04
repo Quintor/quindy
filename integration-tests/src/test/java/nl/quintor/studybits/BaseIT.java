@@ -54,8 +54,8 @@ public class BaseIT {
 
     void onboardStudent(String studentUserName, String universityName) {
         givenCorrectHeaders(STUDENT_URL)
-                .queryParam("student", studentUserName)
-                .queryParam("university", universityName)
+                .queryParam("studentUserName", studentUserName)
+                .queryParam("universityName", universityName)
                 .post("/student/onboard")
                 .then()
                 .assertThat().statusCode(200);
