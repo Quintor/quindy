@@ -18,14 +18,14 @@ public class TestController {
     private final MetaWalletService metaWalletService;
     private final UniversityService universityService;
     private final ConnectionRecordService connectionRecordService;
-    private final ClaimRecordService claimRecordService;
+    private final ClaimService claimService;
 
     @DeleteMapping("/nuke")
-    void nuke() throws Exception {
+    public void nuke() throws Exception {
         log.info("Deleting connection records");
         connectionRecordService.deleteAll();
-        log.info("Deleting claim records");
-        claimRecordService.deleteAll();
+        log.info("Deleting claims");
+        claimService.deleteAll();
         log.info("Deleting students");
         studentService.deleteAll();
         log.info("Deleting meta wallets");

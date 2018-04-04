@@ -51,7 +51,8 @@ public class WalletOwner implements AutoCloseable {
 
         return wallet.newDid()
                 .thenApply(
-                        (myDid) -> new ConnectionResponse(myDid.getDid(), myDid.getVerkey(), connectionRequest.getNonce(), connectionRequest.getDid()))
+                        (myDid) -> new ConnectionResponse(myDid.getDid(), myDid.getVerkey(), connectionRequest.getNonce(), connectionRequest
+                                .getDid()))
                 .thenCompose(wrapException((ConnectionResponse connectionResponse) ->
                         getKeyForDid(connectionRequest.getDid())
                                 .thenCompose(wrapException(key -> storeDidAndPairwise(connectionResponse.getDid(), connectionRequest.getDid(), key)))
@@ -75,6 +76,7 @@ public class WalletOwner implements AutoCloseable {
                 .thenApply(wrapException(json -> JSONUtil.mapper.readValue(json, GetPairwiseResult.class)));
     }
 
+
     private CompletableFuture<String> getKeyForDid(String did) throws IndyException {
         log.debug("{} Called getKeyForDid: {}", name, did);
         return Did.keyForDid(pool.getPool(), wallet.getWallet(), did)
@@ -85,7 +87,8 @@ public class WalletOwner implements AutoCloseable {
     }
 
     CompletableFuture<Schema> getSchema(String did, SchemaKey schemaKey) throws JsonProcessingException, IndyException {
-        log.debug("{}: Calling buildGetSchemaRequest with submitter: {} destination {} GetSchema {}", name, did, schemaKey.getDid(), GetSchema.fromSchemaKey(schemaKey).toJSON());
+        log.debug("{}: Calling buildGetSchemaRequest with submitter: {} destination {} GetSchema {}", name, did, schemaKey
+                .getDid(), GetSchema.fromSchemaKey(schemaKey).toJSON());
         return Ledger.buildGetSchemaRequest(did, schemaKey.getDid(), GetSchema.fromSchemaKey(schemaKey).toJSON())
                 .thenCompose(wrapException(this::submitRequest))
                 .thenApply(wrapException(getSchemaResponse -> {
@@ -105,13 +108,14 @@ public class WalletOwner implements AutoCloseable {
     }
 
     CompletableFuture<EntitiesFromLedger> getEntitiesFromLedger(Map<String, ClaimIdentifier> identifiers) {
-        List<CompletableFuture<EntitiesForClaimReferent>> entityFutures = identifiers
-                .entrySet()
+        List<CompletableFuture<EntitiesForClaimReferent>> entityFutures = identifiers.entrySet()
                 .stream()
-                .map(wrapException((Map.Entry<String, ClaimIdentifier> stringClaimIdentifierEntry) ->
-                        getSchema(wallet.getMainDid(), stringClaimIdentifierEntry.getValue()
-                                .getSchemaKey()).thenCompose(wrapException((Schema schema) -> getClaimDef(wallet.getMainDid(), schema, stringClaimIdentifierEntry.getValue()
-                                .getIssuerDid()).thenApply(claimDef -> new EntitiesForClaimReferent(schema, claimDef, stringClaimIdentifierEntry.getKey()))))))
+                .map(wrapException((Map.Entry<String, ClaimIdentifier> stringClaimIdentifierEntry) -> getSchema(wallet.getMainDid(), stringClaimIdentifierEntry
+                        .getValue()
+                        .getSchemaKey()).thenCompose(wrapException((Schema schema) -> getClaimDef(wallet.getMainDid(), schema, stringClaimIdentifierEntry
+                        .getValue()
+                        .getIssuerDid()).thenApply(claimDef -> new EntitiesForClaimReferent(schema, claimDef, stringClaimIdentifierEntry
+                        .getKey()))))))
                 .collect(Collectors.toList());
 
         return CompletableFuture.allOf(entityFutures.toArray(new CompletableFuture[0]))
@@ -120,7 +124,7 @@ public class WalletOwner implements AutoCloseable {
                         .collect(EntitiesFromLedger.collector()));
     }
 
-    public CompletableFuture<AnoncryptedMessage> anoncrypt(AnonCryptable message) throws JsonProcessingException, IndyException {
+    public CompletableFuture<AnoncryptedMessage> anonEncrypt(AnonCryptable message) throws JsonProcessingException, IndyException {
         log.debug("{} Anoncrypting message: {}, with did: {}", name, message.toJSON(), message.getTheirDid());
         return getKeyForDid(message.getTheirDid())
                 .thenCompose(wrapException((String key) -> {
@@ -133,13 +137,15 @@ public class WalletOwner implements AutoCloseable {
     public <T extends AnonCryptable> CompletableFuture<T> anonDecrypt(AnoncryptedMessage message, Class<T> valueType) throws IndyException {
         return getKeyForDid(message.getTargetDid())
                 .thenCompose(wrapException(key -> Crypto.anonDecrypt(wallet.getWallet(), key, message.getMessage())))
-                .thenApply(wrapException((decryptedMessage) -> JSONUtil.mapper.readValue(new String(decryptedMessage, Charset.forName("utf8")), valueType)));
+                .thenApply(wrapException((decryptedMessage) -> JSONUtil.mapper.readValue(new String(decryptedMessage, Charset
+                        .forName("utf8")), valueType)));
     }
 
-    public CompletableFuture<AuthcryptedMessage> authcrypt(AuthCryptable message) throws JsonProcessingException, IndyException {
+    public CompletableFuture<AuthcryptedMessage> authEncrypt(AuthCryptable message) throws JsonProcessingException, IndyException {
         log.debug("{} Authcrypting message: {}, theirDid: {}", name, message.toJSON(), message.getTheirDid());
         return getKeyForDid(message.getTheirDid()).thenCompose(wrapException((String theirKey) -> {
-            return getPairwiseByTheirDid(message.getTheirDid()).thenCompose(wrapException((GetPairwiseResult getPairwiseResult) -> getKeyForDid(getPairwiseResult.getMyDid()).thenCompose(wrapException((String myKey) -> {
+            return getPairwiseByTheirDid(message.getTheirDid()).thenCompose(wrapException((GetPairwiseResult getPairwiseResult) -> getKeyForDid(getPairwiseResult
+                            .getMyDid()).thenCompose(wrapException((String myKey) -> {
                         log.debug("{} Authcrypting with keys myKey {}, theirKey {}", name, myKey, theirKey);
                         return Crypto.authCrypt(wallet.getWallet(), myKey, theirKey, message.toJSON()
                                 .getBytes(Charset.forName("utf8")))
@@ -155,7 +161,9 @@ public class WalletOwner implements AutoCloseable {
                         .thenCompose(wrapException(key -> Crypto.authDecrypt(wallet.getWallet(), key, message.getMessage())
                                 .thenApply(wrapException((decryptedMessage) -> {
                                     assert decryptedMessage.getVerkey().equals(key);
-                                    T decryptedObject = JSONUtil.mapper.readValue(new String(decryptedMessage.getDecryptedMessage(), Charset.forName("utf8")), valueType);
+                                    T decryptedObject = JSONUtil.mapper.readValue(new String(decryptedMessage.getDecryptedMessage(), Charset
+                                            .forName("utf8")), valueType);
+
                                     decryptedObject.setTheirDid(message.getDid());
                                     return decryptedObject;
                                 }))))))
