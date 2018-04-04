@@ -2,7 +2,7 @@ package nl.quintor.studybits.student.controller;
 
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.student.entities.University;
-import nl.quintor.studybits.student.model.UniversityModel;
+import nl.quintor.studybits.student.models.UniversityModel;
 import nl.quintor.studybits.student.services.UniversityService;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor(onConstructor = @__(@Autowired))
 @RestController
 @RequestMapping("/university")
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class UniversityController {
     private UniversityService universityService;
     private Mapper mapper;
 
-    private UniversityModel toModel(Object university) {
+    private UniversityModel toModel(University university) {
         return mapper.map(university, UniversityModel.class);
     }
 

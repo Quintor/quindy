@@ -2,7 +2,7 @@ package nl.quintor.studybits.student.controller;
 
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.student.entities.Student;
-import nl.quintor.studybits.student.model.StudentModel;
+import nl.quintor.studybits.student.models.StudentModel;
 import nl.quintor.studybits.student.services.StudentService;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ public class StudentController {
     private StudentService studentService;
     private Mapper mapper;
 
-    private StudentModel toModel(Object student) {
+    private StudentModel toModel(Student student) {
         return mapper.map(student, StudentModel.class);
     }
 

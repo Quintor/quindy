@@ -6,5 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MetaWalletRepository extends JpaRepository<MetaWallet, Long> {
-
 }

@@ -2,7 +2,7 @@ package nl.quintor.studybits.student.controller;
 
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.student.entities.ConnectionRecord;
-import nl.quintor.studybits.student.model.ConnectionRecordModel;
+import nl.quintor.studybits.student.models.ConnectionRecordModel;
 import nl.quintor.studybits.student.services.ConnectionRecordService;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,18 +11,18 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor(onConstructor = @__(@Autowired))
 @RestController
 @RequestMapping("/student/{studentUserName}/connections")
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class ConnectionRecordController {
     private ConnectionRecordService connectionRecordService;
     private Mapper mapper;
 
-    private ConnectionRecordModel toModel(Object connectionRecord) {
+    private ConnectionRecordModel toModel(ConnectionRecord connectionRecord) {
         return mapper.map(connectionRecord, ConnectionRecordModel.class);
     }
 
-    @GetMapping()
+    @GetMapping
     List<ConnectionRecordModel> findAllByStudentUserName(@PathVariable String studentUserName) {
         return connectionRecordService
                 .findAllByStudentUserName(studentUserName)

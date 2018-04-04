@@ -1,4 +1,4 @@
-package nl.quintor.studybits.student.model;
+package nl.quintor.studybits.student.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,7 +10,9 @@ import org.springframework.hateoas.ResourceSupport;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class AuthEncryptedMessageModel extends ResourceSupport {
-    private byte[] message;
-    private String did;
+public class StudentClaimInfoModel extends ResourceSupport {
+    private Long claimId;
+    private String name;
+    private String version;
+    private String label;
 }

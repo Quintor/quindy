@@ -1,7 +1,8 @@
 package nl.quintor.studybits.student.controller;
 
 import lombok.AllArgsConstructor;
-import nl.quintor.studybits.student.model.ClaimModel;
+import nl.quintor.studybits.student.entities.Claim;
+import nl.quintor.studybits.student.models.ClaimModel;
 import nl.quintor.studybits.student.services.ClaimService;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,14 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor(onConstructor = @__(@Autowired))
 @RestController
 @RequestMapping("/student/{studentUserName}/claims")
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class ClaimController {
     private ClaimService claimService;
     private Mapper mapper;
 
-    private ClaimModel toModel(Object claim) {
+    private ClaimModel toModel(Claim claim) {
         return mapper.map(claim, ClaimModel.class);
     }
 
