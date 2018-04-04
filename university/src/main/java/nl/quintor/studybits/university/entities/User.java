@@ -47,7 +47,27 @@ public class User {
     @PrimaryKeyJoinColumn
     private StudentUser studentUser;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @PrimaryKeyJoinColumn
     private AdminUser adminUser;
+
+    public User(String userName, String firstName, String lastName, String ssn, University university, StudentUser studentUser) {
+        this.userName = userName;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.ssn = ssn;
+        this.university = university;
+        this.studentUser = studentUser;
+        this.studentUser.setUser(this);
+    }
+
+    public User(String userName, String firstName, String lastName, String ssn, University university, AdminUser adminUser) {
+        this.userName = userName;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.ssn = ssn;
+        this.university = university;
+        this.adminUser = adminUser;
+        this.adminUser.setUser(this);
+    }
 }

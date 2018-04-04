@@ -28,11 +28,11 @@ public class ClaimController {
     private final Map<String, ClaimProvider> studentClaimProviderMap;
     private final Mapper mapper;
 
-    protected AuthEncryptedMessageModel toModel(AuthcryptedMessage authcryptedMessage) {
+    private AuthEncryptedMessageModel toModel(AuthcryptedMessage authcryptedMessage) {
         return mapper.map(authcryptedMessage, AuthEncryptedMessageModel.class);
     }
 
-    protected AuthcryptedMessage toDto(AuthEncryptedMessageModel authEncryptedMessageModel) {
+    private AuthcryptedMessage toDto(AuthEncryptedMessageModel authEncryptedMessageModel) {
         return mapper.map(authEncryptedMessageModel, AuthcryptedMessage.class);
     }
 

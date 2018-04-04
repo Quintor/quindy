@@ -3,15 +3,17 @@ package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j;
+import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.Issuer;
 import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.university.dto.AuthCryptableResult;
 import nl.quintor.studybits.university.dto.Claim;
-import nl.quintor.studybits.university.entities.ClaimSchema;
-import nl.quintor.studybits.university.entities.IndyConnection;
-import nl.quintor.studybits.university.entities.University;
-import nl.quintor.studybits.university.entities.User;
+import nl.quintor.studybits.university.dto.ClaimIssuerSchema;
+import nl.quintor.studybits.university.dto.UniversityIssuer;
+import nl.quintor.studybits.university.entities.*;
+import nl.quintor.studybits.university.repositories.ClaimIssuerRepository;
 import nl.quintor.studybits.university.repositories.ClaimSchemaRepository;
 import nl.quintor.studybits.university.repositories.UniversityRepository;
 import org.apache.commons.lang3.Validate;
@@ -22,8 +24,11 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor(onConstructor=@__(@Autowired))
 public class UniversityService {
@@ -33,6 +38,7 @@ public class UniversityService {
     private final UniversityRepository universityRepository;
     private final ClaimSchemaRepository claimSchemaRepository;
     private final IssuerService issuerService;
+    private final ClaimIssuerRepository claimIssuerRepository;
     private final Mapper mapper;
 
 
@@ -58,6 +64,19 @@ public class UniversityService {
                 .orElseThrow(() -> new IllegalArgumentException("Unknown university."));
     }
 
+    @Transactional
+    public UniversityIssuer getUniversityIssuer(String universityName) {
+        University university = getUniversity(universityName);
+        List<SchemaKey> definedSchemaKeys = university
+                .getClaimSchemas()
+                .stream()
+                .filter(ClaimSchema::getClaimDefined)
+                .map(this::toSchemaKey)
+                .collect(Collectors.toList());
+        Issuer issuer = getIssuer(university.getName());
+        return new UniversityIssuer(universityName, issuer.getIssuerDid(), definedSchemaKeys);
+    }
+
     @SneakyThrows
     @Transactional
     public SchemaKey defineSchema(String universityName, SchemaDefinition schemaDefinition) {
@@ -71,7 +90,7 @@ public class UniversityService {
     @Transactional
     public void addSchema(String universityName, SchemaKey schemaKey) {
         University university = getUniversity(universityName);
-        ClaimSchema claimSchema = new ClaimSchema(null, university, schemaKey.getName(), schemaKey.getVersion(), schemaKey.getDid(), false);
+        ClaimSchema claimSchema = new ClaimSchema(university, schemaKey.getName(), schemaKey.getVersion(), schemaKey.getDid());
         university.getClaimSchemas().add(claimSchema);
         universityRepository.save(university);
     }
@@ -112,8 +131,7 @@ public class UniversityService {
 
     @SneakyThrows
     public AuthCryptableResult<ClaimOffer> createClaimOffer(String universityName, User user, SchemaDefinition schemaDefinition) {
-        IndyConnection indyConnection = user.getConnection();
-        Validate.validState(indyConnection != null, "User onboarding incomplete!");
+        IndyConnection indyConnection = Objects.requireNonNull(user.getConnection(), "User onboarding incomplete!");
         Issuer issuer = getIssuer(universityName);
         ClaimSchema claimSchema = getClaimSchema(universityName, schemaDefinition);
         SchemaKey schemaKey = toSchemaKey(claimSchema);
@@ -133,6 +151,18 @@ public class UniversityService {
         return new AuthCryptableResult<>(indyClaim, authcryptedMessage);
     }
 
+    @Transactional
+    public void addClaimIssuerForSchema(String universityName, ClaimIssuerSchema claimIssuerSchema) {
+        log.debug("University '{}': Adding claim issuer schema information: {}", universityName, claimIssuerSchema);
+        SchemaKey schemaKey = claimIssuerSchema.getSchemaKey();
+        ClaimSchema claimSchema = getClaimSchema(universityName, schemaKey.getName(), schemaKey.getVersion());
+        ClaimIssuer claimIssuer = claimIssuerRepository
+                .findByDid(claimIssuerSchema.getClaimIssuerDid())
+                .orElseGet(() -> new ClaimIssuer(claimIssuerSchema.getClaimIssuerName(), claimIssuerSchema.getClaimIssuerDid()));
+        claimSchema.getClaimIssuers().add(claimIssuer);
+        claimSchemaRepository.save(claimSchema);
+    }
+
     public AuthcryptedMessage authEncrypt(String universityName, AuthCryptable authCryptable) {
         return authEncrypt(getIssuer(universityName), authCryptable);
     }
@@ -147,27 +177,26 @@ public class UniversityService {
 
     @SneakyThrows
     private AuthcryptedMessage authEncrypt(Issuer issuer, AuthCryptable authCryptable) {
-        AuthcryptedMessage authcryptedMessage = issuer.authEncrypt(authCryptable).get();
-        return authcryptedMessage;
+        return issuer.authEncrypt(authCryptable).get();
     }
-
 
     @SneakyThrows
     private <R extends AuthCryptable> R authDecrypt(Issuer issuer, AuthcryptedMessage authcryptedMessage, Class<R> valueType) {
         return issuer.authDecrypt(authcryptedMessage, valueType).get();
     }
 
+
     private ClaimSchema getClaimSchema(String universityName, SchemaDefinition schemaDefinition) {
+        return getClaimSchema(universityName, schemaDefinition.getName(), schemaDefinition.getVersion());
+    }
+
+    private ClaimSchema getClaimSchema(String universityName, String schemaName, String schemaVersion) {
         return claimSchemaRepository
-                .findByUniversityNameIgnoreCaseAndSchemaNameAndSchemaVersion(
-                        universityName,
-                        schemaDefinition.getName(),
-                        schemaDefinition.getVersion()
-                ).orElseThrow(() -> new IllegalArgumentException("Schema key not found."));
+                .findByUniversityNameIgnoreCaseAndSchemaNameAndSchemaVersion(universityName, schemaName, schemaVersion)
+                .orElseThrow(() -> new IllegalArgumentException("Schema key not found."));
     }
 
     private SchemaKey toSchemaKey(ClaimSchema claimSchema) {
         return new SchemaKey(claimSchema.getSchemaName(), claimSchema.getSchemaVersion(), claimSchema.getSchemaIssuerDid());
     }
-
 }

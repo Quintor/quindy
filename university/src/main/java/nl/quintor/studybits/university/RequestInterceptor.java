@@ -20,16 +20,15 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
     private final UserContext userContext;
 
     @Override
-    public boolean preHandle(HttpServletRequest request,
-                             HttpServletResponse response, Object object) {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object object) {
         try {
             Map pathVariables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
             String universityName = (String) pathVariables.get("universityName");
             String userName = (String) pathVariables.get("userName");
             userContext.setCurrentUser(universityName, userName);
-            log.debug("request to university {} from user {}.", universityName, userName);
+            log.debug("Request to university {} from user {}.", universityName, userName);
         } catch (Exception e) {
-            log.error("Request did not have university and user context", e);
+            log.error("Request does not have university and user.", e);
         }
         return true;
     }

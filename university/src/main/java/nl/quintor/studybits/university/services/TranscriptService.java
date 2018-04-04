@@ -17,8 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.List;
 import java.util.Objects;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -33,10 +33,7 @@ public class TranscriptService extends ClaimProvider<Transcript> {
     public TranscriptService(UniversityService universityService, ClaimRecordRepository claimRecordRepository, UserRepository userRepository, Mapper mapper, TranscriptRecordRepository transcriptRecordRepository, StudentService studentService) {
         super(universityService, claimRecordRepository, userRepository, mapper);
         this.transcriptRecordRepository = transcriptRecordRepository;
-    }
-
-    private TranscriptRecord toEntity(TranscriptModel transcriptModel) {
-        return mapper.map(transcriptModel, TranscriptRecord.class);
+        this.studentService = studentService;
     }
 
     @Override
@@ -56,8 +53,7 @@ public class TranscriptService extends ClaimProvider<Transcript> {
     protected Transcript getClaimForClaimRecord(ClaimRecord claimRecord) {
         String degree = claimRecord.getClaimLabel();
         User user = claimRecord.getUser();
-        StudentUser studentUser = user.getStudentUser();
-        Validate.validState(studentUser != null, "TranscriptRecord claim is for student users only.");
+        StudentUser studentUser = Objects.requireNonNull(user.getStudentUser(), "TranscriptRecord claim is for student users only.");
         TranscriptRecord transcriptRecord = findTranscriptRecord(studentUser, degree)
                 .orElseThrow(() -> new IllegalStateException("Invalid claim request. Student user degree not found."));
         return createTranscript(user, transcriptRecord);
@@ -80,7 +76,8 @@ public class TranscriptService extends ClaimProvider<Transcript> {
     private void addTranscript(User user, TranscriptModel transcriptModel) {
         StudentUser studentUser = Objects.requireNonNull(user.getStudentUser());
         if (!findTranscriptRecord(studentUser, transcriptModel.getDegree()).isPresent()) {
-            TranscriptRecord transcriptRecord = studentUser.addTranscriptRecord(toEntity(transcriptModel));
+            TranscriptRecord transcriptRecord = studentUser
+                    .addTranscriptRecord(transcriptModel.getDegree(), transcriptModel.getStatus(), transcriptModel.getYear(), transcriptModel.getAverage());
             userRepository.saveStudentUser(studentUser);
             addAvailableClaim(studentUser.getId(), createTranscript(studentUser.getUser(), transcriptRecord));
         } else {

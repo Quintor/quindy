@@ -34,7 +34,7 @@ public class EnrolmentService extends ClaimProvider<Enrolment> {
         StudentUser studentUser = user.getStudentUser();
         Validate.validState(studentUser != null, "Enrolment claim is for student users only.");
         Validate.validState(studentUser.getAcademicYears().contains(academicYear), "Invalid claim request.");
-        return new Enrolment(academicYear);
+        return createEnrolment(user, academicYear);
     }
 
     public void addEnrolment(Long userId, String academicYear) {
@@ -45,10 +45,13 @@ public class EnrolmentService extends ClaimProvider<Enrolment> {
                 .orElseThrow(() -> new IllegalArgumentException("Student user unknown."));
         if (studentUser.getAcademicYears().add(academicYear)) {
             userRepository.saveStudentUser(studentUser);
-            addAvailableClaim(userId, new Enrolment(academicYear));
+            addAvailableClaim(userId, createEnrolment(studentUser.getUser(), academicYear));
         } else {
             log.debug("Academic year '{}' already assigned to {}", academicYear, studentUser.getUser().getUserName());
         }
     }
 
+    private Enrolment createEnrolment(User user, String academicYear) {
+        return new Enrolment(user.getFirstName(), user.getLastName(), user.getSsn(), academicYear);
+    }
 }

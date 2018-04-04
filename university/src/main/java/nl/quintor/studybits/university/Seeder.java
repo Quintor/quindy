@@ -1,35 +1,18 @@
 package nl.quintor.studybits.university;
 
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import nl.quintor.studybits.indy.wrapper.Issuer;
 import nl.quintor.studybits.indy.wrapper.dto.SchemaDefinition;
 import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
-import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
-import nl.quintor.studybits.university.dto.Claim;
-import nl.quintor.studybits.university.dto.ClaimUtils;
-import nl.quintor.studybits.university.dto.Enrolment;
-import nl.quintor.studybits.university.dto.Transcript;
-import nl.quintor.studybits.university.entities.AdminUser;
-import nl.quintor.studybits.university.entities.StudentUser;
-import nl.quintor.studybits.university.entities.University;
+import nl.quintor.studybits.university.dto.*;
 import nl.quintor.studybits.university.entities.User;
 import nl.quintor.studybits.university.models.TranscriptModel;
-import nl.quintor.studybits.university.repositories.UniversityRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
-import nl.quintor.studybits.university.services.EnrolmentService;
-import nl.quintor.studybits.university.services.TranscriptService;
-import nl.quintor.studybits.university.services.UniversityService;
+import nl.quintor.studybits.university.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -37,6 +20,7 @@ import java.util.stream.Collectors;
 public class Seeder {
 
     private final UserRepository userRepository;
+    private final UserService userService;
     private final UniversityService universityService;
     private final EnrolmentService enrolmentService;
     private final TranscriptService transcriptService;
@@ -57,8 +41,8 @@ public class Seeder {
         log.info("Seeding completed.");
     }
 
-    public Boolean isEmpty() {
-        return userRepository.findAll().isEmpty();
+    private Boolean isEmpty() {
+        return userService.findAll().isEmpty();
     }
 
     private void seedUniversities() {
@@ -74,64 +58,39 @@ public class Seeder {
         SchemaKey transcriptSchemaKey = universityService.defineSchema("rug", transcriptSchemaDefinition);
         universityService.defineClaim("rug", transcriptSchemaDefinition);
         universityService.addSchema("gent", transcriptSchemaKey);
+
+        exchangeUniversityClaimIssuerSchemaInfo("gent", "rug");
+        exchangeUniversityClaimIssuerSchemaInfo("rug", "gent");
+    }
+
+    private void exchangeUniversityClaimIssuerSchemaInfo(String universityName, String universityIssuerName) {
+        UniversityIssuer universityIssuer = universityService.getUniversityIssuer(universityIssuerName);
+        universityIssuer.getDefinedSchemaKeys()
+                .forEach(schemaKey -> universityService
+                        .addClaimIssuerForSchema(universityName, new ClaimIssuerSchema(universityIssuerName, universityIssuer.getUniversityDid(), schemaKey)));
     }
 
 
     private void seedUsers() {
-        University rug = universityService.getUniversity("rug");
+        userService.createAdmin("rug","admin1", "Etienne", "Nijboer", "222-11-0001");
 
-        User admin1 = createAdmin("admin1", "Etienne", "Nijboer", "222-11-0001", rug);
+        User rugStudent1 = userService.createStudent("rug","student1", "Peter", "Ullrich", "1111-11-0001");
+        enrolmentService.addEnrolment(rugStudent1.getId(), "2016/17");
 
-        User rugStudent1 = createStudent("student1", "Peter", "Ullrich", "1111-11-0001", rug);
-        addAcademicYears(rugStudent1, "2016/17");
+        User rugStudent2 = userService.createStudent("rug","student2", "Margot", "Veren", "1111-11-0002");
+        enrolmentService.addEnrolment(rugStudent2.getId(), "2016/17");
+        enrolmentService.addEnrolment(rugStudent2.getId(), "2017/18");
 
-        User rugStudent2 = createStudent("student2", "Margot", "Veren", "1111-11-0002", rug);
-        addAcademicYears(rugStudent2, "2016/17", "2017/18");
+        User rugStudent3 = userService.createStudent("rug","student3", "Ko", "de Kraker", "1111-11-0003");
+        enrolmentService.addEnrolment(rugStudent3.getId(), "2015/16");
+        enrolmentService.addEnrolment(rugStudent3.getId(), "2016/17");
+        enrolmentService.addEnrolment(rugStudent3.getId(), "2017/18");
+        transcriptService.addTranscript(rugStudent3.getId(), new TranscriptModel("Bachelor of Science, Marketing", "graduated", "2018", "5"));
 
-        User rugStudent3 = createStudent("student3", "Ko", "de Kraker", "1111-11-0003", rug);
-        addAcademicYears(rugStudent3, "2015/16", "2016/17", "2017/18");
-        addTranscript(rugStudent3, new TranscriptModel("Bachelor of Science, Marketing", "graduated", "2018", "5"));
-
-        University gent = universityService.getUniversity("gent");
-        User admin2 = createAdmin("admin2", "Pim", "Otte", "222-22-0002", gent);
-        User gentStudent1 = createStudent("student1", "Axelle", "Wanders", "1111-22-0001", gent);
-        User gentStudent2 = createStudent("student2", "Laure", "de Vadder", "1111-22-0002", gent);
-        User gentStudent3 = createStudent("student3", "Senne", "de Waal", "1111-22-0003", gent);
-        List<User> users = Arrays.asList(admin1, rugStudent1, rugStudent2, rugStudent3, admin2, gentStudent1, gentStudent2, gentStudent3);
-        userRepository.saveAll(users);
-    }
-
-
-    private User createStudent(String userName, String firstName, String lastName, String ssn, University university) {
-        log.info("Creating admin user {} for university {}...", userName, university.getName());
-        StudentUser studentUser = new StudentUser(null, null, new HashSet<>(), new ArrayList<>());
-        return createUser(userName, firstName, lastName, ssn, university, studentUser, null);
-    }
-
-    private User createAdmin(String userName, String firstName, String lastName, String ssn, University university) {
-        log.info("Creating admin user {} for university {}...", userName, university.getName());
-        return createUser(userName, firstName, lastName, ssn, university, null, new AdminUser());
-    }
-
-    private User createUser(String userName, String firstName, String lastName, String ssn, University university, StudentUser studentUser, AdminUser adminUser) {
-        log.info("Creating admin user {} for university {}...", userName, university.getName());
-        User user = new User(null, userName, firstName, lastName, ssn, university, null, new ArrayList<>(), studentUser, adminUser);
-        if (studentUser != null) {
-            studentUser.setUser(user);
-        }
-        if (adminUser != null) {
-            adminUser.setUser(user);
-        }
-        return userRepository.save(user);
-    }
-
-    private void addAcademicYears(User user, String... academicYears) {
-        Arrays.stream(academicYears)
-                .forEach(academicYear -> enrolmentService.addEnrolment(user.getId(), academicYear));
-    }
-
-    private void addTranscript(User user, TranscriptModel transcriptModel) {
-        transcriptService.addTranscript(user.getId(), transcriptModel);
+        userService.createStudent("gent","admin2", "Pim", "Otte", "222-22-0002");
+        userService.createStudent("gent","student1", "Axelle", "Wanders", "1111-22-0001");
+        userService.createStudent("gent","student2", "Laure", "de Vadder", "1111-22-0002");
+        userService.createStudent("gent","student3", "Senne", "de Waal", "1111-22-0003");
     }
 
 }
