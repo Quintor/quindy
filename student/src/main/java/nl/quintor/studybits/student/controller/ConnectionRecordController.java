@@ -8,26 +8,27 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@AllArgsConstructor( onConstructor = @__( @Autowired ) )
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 @RestController
-@RequestMapping( "/student/{studentId}/connections" )
+@RequestMapping("/student/{studentUserName}/connections")
 public class ConnectionRecordController {
     private final ConnectionRecordService connectionRecordService;
 
     @GetMapping()
-    List<ConnectionRecord> findAllConnections( @PathVariable Long studentId ) {
-        return connectionRecordService.findAllConnections(studentId);
+    List<ConnectionRecord> findAllByStudentUserName(@PathVariable String studentUserName) {
+        return connectionRecordService.findAllByStudentUserName(studentUserName);
     }
 
-    @GetMapping( "/{connectionId}" )
-    ConnectionRecord findById( @PathVariable Long studentId, @PathVariable Long connectionId ) {
-        return connectionRecordService.findById(connectionId)
-                                      .orElseThrow(() -> new IllegalArgumentException("Connection with id not found."));
+    @GetMapping("/{connectionId}")
+    ConnectionRecord findById(@PathVariable String studentUserName, @PathVariable Long connectionId) {
+        // TODO: Check ownership
+
+        return connectionRecordService.findByIdOrElseThrow(connectionId);
     }
 
-    @PutMapping( "/{connectionId}" )
-    void updateConnectionById( @PathVariable Long studentId, @PathVariable Long connectionId, @RequestBody ConnectionRecord connectionRecord ) {
-        connectionRecordService.updateConnectionById(studentId, connectionId, connectionRecord);
+    @PutMapping("/{connectionId}")
+    void updateById(@PathVariable String studentUserName, @PathVariable Long connectionId, @RequestBody ConnectionRecord connectionRecord) {
+        connectionRecordService.updateById(studentUserName, connectionId, connectionRecord);
     }
 }
 

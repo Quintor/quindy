@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/{universityName}/admin/claims")
+@RequestMapping("/{universityName}/admin/{userName}/claims")
 @AllArgsConstructor(onConstructor=@__(@Autowired))
 public class UniversityController {
 
