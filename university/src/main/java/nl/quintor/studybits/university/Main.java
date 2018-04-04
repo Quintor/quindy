@@ -12,14 +12,8 @@ import java.nio.file.Paths;
 @SpringBootApplication
 public class Main {
     public static void main(String[] args) throws Exception {
-        test();
         removeIndyClientDirectory();
         SpringApplication.run(Main.class, args);
-    }
-
-    private static void test() {
-        EnrolmentProof proof = new EnrolmentProof();
-        System.out.println(proof.getProofAttributes());
     }
 
     private static void removeIndyClientDirectory() throws Exception {
