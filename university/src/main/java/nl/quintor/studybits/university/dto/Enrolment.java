@@ -8,6 +8,9 @@ import lombok.Data;
 @AllArgsConstructor
 @SchemaInfo(name = "Enrolment", version = "0.1")
 public class Enrolment implements Claim {
+    private String firstName;
+    private String lastName;
+    private String ssn;
     private String academicYear;
 
     @Override

@@ -14,7 +14,6 @@ import nl.quintor.studybits.university.repositories.ClaimIssuerRepository;
 import nl.quintor.studybits.university.repositories.ClaimSchemaRepository;
 import nl.quintor.studybits.university.repositories.UniversityRepository;
 import org.apache.commons.lang3.Validate;
-import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -144,13 +143,13 @@ public class UniversityService {
     }
 
     @Transactional
-    public void addClaimIssuerForSchema(String universityName, ClaimIssuerSchemaInfo claimIssuerSchemaInfo) {
-        log.debug("University '{}': Adding claim issuer schema information: {}", universityName, claimIssuerSchemaInfo);
-        SchemaKey schemaKey = claimIssuerSchemaInfo.getSchemaKey();
+    public void addClaimIssuerForSchema(String universityName, ClaimIssuerSchema claimIssuerSchema) {
+        log.debug("University '{}': Adding claim issuer schema information: {}", universityName, claimIssuerSchema);
+        SchemaKey schemaKey = claimIssuerSchema.getSchemaKey();
         ClaimSchema claimSchema = getClaimSchema(universityName, schemaKey.getName(), schemaKey.getVersion());
         ClaimIssuer claimIssuer = claimIssuerRepository
-                .findByDid(claimIssuerSchemaInfo.getClaimIssuerDid())
-                .orElseGet(() -> new ClaimIssuer(claimIssuerSchemaInfo.getClaimIssuerName(), claimIssuerSchemaInfo.getClaimIssuerDid()));
+                .findByDid(claimIssuerSchema.getClaimIssuerDid())
+                .orElseGet(() -> new ClaimIssuer(claimIssuerSchema.getClaimIssuerName(), claimIssuerSchema.getClaimIssuerDid()));
         claimSchema.getClaimIssuers().add(claimIssuer);
         claimSchemaRepository.save(claimSchema);
     }

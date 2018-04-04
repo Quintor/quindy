@@ -5,19 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.SchemaDefinition;
 import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
 import nl.quintor.studybits.university.dto.*;
-import nl.quintor.studybits.university.entities.AdminUser;
-import nl.quintor.studybits.university.entities.StudentUser;
-import nl.quintor.studybits.university.entities.University;
 import nl.quintor.studybits.university.entities.User;
-import nl.quintor.studybits.university.models.TranscriptModel;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import nl.quintor.studybits.university.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-
-import java.util.*;
 
 @Component
 @Slf4j
@@ -72,7 +66,7 @@ public class Seeder {
         UniversityIssuer universityIssuer = universityService.getUniversityIssuer(universityIssuerName);
         universityIssuer.getDefinedSchemaKeys()
                 .forEach(schemaKey -> universityService
-                        .addClaimIssuerForSchema(universityName, new ClaimIssuerSchemaInfo(universityIssuerName, universityIssuer.getUniversityDid(), schemaKey)));
+                        .addClaimIssuerForSchema(universityName, new ClaimIssuerSchema(universityIssuerName, universityIssuer.getUniversityDid(), schemaKey)));
     }
 
 

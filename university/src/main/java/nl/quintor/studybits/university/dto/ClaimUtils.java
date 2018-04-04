@@ -2,12 +2,11 @@ package nl.quintor.studybits.university.dto;
 
 import lombok.SneakyThrows;
 import nl.quintor.studybits.indy.wrapper.dto.SchemaDefinition;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ClaimUtils {
@@ -61,4 +60,27 @@ public class ClaimUtils {
     private static boolean isValidClaimProperty(Object o) {
         return o instanceof Integer || o instanceof String;
     }
+
+
+    public static List<ProofAttribute> getProofAttributes(Class<?> proofClass) {
+        return Arrays
+                .stream(proofClass.getDeclaredFields())
+                .map(ClaimUtils::getProofAttribute)
+                .collect(Collectors.toList());
+    }
+
+
+    public static ProofAttribute getProofAttribute(Field field) {
+        ProofAttributeInfo proofAttributeInfo = field.getAnnotation(ProofAttributeInfo.class);
+        if(proofAttributeInfo != null) {
+            String attributeName = StringUtils.isNotEmpty(proofAttributeInfo.attributeName()) ? proofAttributeInfo.attributeName() : field.getName();
+            List<SchemaVersion> schemaVersions = Arrays
+                    .stream(proofAttributeInfo.schemas())
+                    .map(claimSchema -> new SchemaVersion(claimSchema.name(), claimSchema.version()))
+                    .collect(Collectors.toList());
+            return new ProofAttribute(field, attributeName, schemaVersions);
+        }
+        return new ProofAttribute(field);
+    }
+
 }

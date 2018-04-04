@@ -8,7 +8,7 @@ import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ClaimIssuerSchemaInfo {
+public class ClaimIssuerSchema {
 
     private String claimIssuerName;
 
