@@ -6,6 +6,7 @@ import nl.quintor.studybits.indy.wrapper.dto.SchemaDefinition;
 import nl.quintor.studybits.indy.wrapper.dto.SchemaKey;
 import nl.quintor.studybits.university.dto.*;
 import nl.quintor.studybits.university.entities.User;
+import nl.quintor.studybits.university.models.TranscriptModel;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import nl.quintor.studybits.university.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,7 +85,7 @@ public class Seeder {
         enrolmentService.addEnrolment(rugStudent3.getId(), "2015/16");
         enrolmentService.addEnrolment(rugStudent3.getId(), "2016/17");
         enrolmentService.addEnrolment(rugStudent3.getId(), "2017/18");
-        transcriptService.addTranscript(rugStudent3.getId(), "Bachelor of Science, Marketing", "graduated", "2018", "5");
+        transcriptService.addTranscript(rugStudent3.getId(), new TranscriptModel("Bachelor of Science, Marketing", "graduated", "2018", "5"));
 
         userService.createStudent("gent","admin2", "Pim", "Otte", "222-22-0002");
         userService.createStudent("gent","student1", "Axelle", "Wanders", "1111-22-0001");

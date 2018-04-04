@@ -33,6 +33,7 @@ public class TranscriptService extends ClaimProvider<Transcript> {
     public TranscriptService(UniversityService universityService, ClaimRecordRepository claimRecordRepository, UserRepository userRepository, Mapper mapper, TranscriptRecordRepository transcriptRecordRepository, StudentService studentService) {
         super(universityService, claimRecordRepository, userRepository, mapper);
         this.transcriptRecordRepository = transcriptRecordRepository;
+        this.studentService = studentService;
     }
 
     @Override
@@ -75,7 +76,8 @@ public class TranscriptService extends ClaimProvider<Transcript> {
     private void addTranscript(User user, TranscriptModel transcriptModel) {
         StudentUser studentUser = Objects.requireNonNull(user.getStudentUser());
         if (!findTranscriptRecord(studentUser, transcriptModel.getDegree()).isPresent()) {
-            TranscriptRecord transcriptRecord = studentUser.addTranscriptRecord(toEntity(transcriptModel));
+            TranscriptRecord transcriptRecord = studentUser
+                    .addTranscriptRecord(transcriptModel.getDegree(), transcriptModel.getStatus(), transcriptModel.getYear(), transcriptModel.getAverage());
             userRepository.saveStudentUser(studentUser);
             addAvailableClaim(studentUser.getId(), createTranscript(studentUser.getUser(), transcriptRecord));
         } else {
