@@ -1,7 +1,7 @@
 package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
-import nl.quintor.studybits.student.model.SchemaKey;
+import nl.quintor.studybits.student.entities.SchemaKey;
 import nl.quintor.studybits.student.repositories.SchemaKeyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

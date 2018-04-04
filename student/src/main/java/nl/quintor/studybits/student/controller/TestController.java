@@ -36,6 +36,6 @@ public class TestController {
 
     @GetMapping("/health")
     String health() {
-        return "Student Backend says: Ich lebe! Heidewitzka!";
+        return "StudentModel Backend says: Ich lebe! Heidewitzka!";
     }
 }

@@ -16,8 +16,8 @@ import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapBiConsumerExc
 @AllArgsConstructor
 @NoArgsConstructor
 /**
- * EntitiesFromLedger holds schemas, claimDefs, and in the future revocation registries for a series of claim referents.
- * The Strings in the respective maps are the claim referents.
+ * EntitiesFromLedger holds schemas, claimDefs, and in the future revocation registries for a series of claimModel referents.
+ * The Strings in the respective maps are the claimModel referents.
  */ public class EntitiesFromLedger {
     private Map<String, Schema> schemas;
     private Map<String, JsonNode> claimDefs;

@@ -2,7 +2,9 @@ package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import nl.quintor.studybits.indy.wrapper.dto.*;
+import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
+import nl.quintor.studybits.indy.wrapper.dto.ClaimOffer;
+import nl.quintor.studybits.indy.wrapper.dto.ClaimRequest;
 import nl.quintor.studybits.university.dto.AuthCryptableResult;
 import nl.quintor.studybits.university.dto.Claim;
 import nl.quintor.studybits.university.entities.AuthEncryptedMessage;
@@ -46,10 +48,10 @@ public abstract class ClaimProvider<T extends Claim> {
     protected abstract T getClaimForClaimRecord(ClaimRecord claimRecord);
 
     /**
-     * Adds an available claim to the user.
-     * Note: It only makes the claim available to the user without being added/written to the ledger.
-     * @param userId The id of the user that will receive the claim.
-     * @param claim The claim to make available.
+     * Adds an available claimModel to the user.
+     * Note: It only makes the claimModel available to the user without being added/written to the ledger.
+     * @param userId The id of the user that will receive the claimModel.
+     * @param claim The claimModel to make available.
      */
     protected void addAvailableClaim(Long userId, T claim) {
         User user = userRepository.getOne(userId);
@@ -58,12 +60,12 @@ public abstract class ClaimProvider<T extends Claim> {
     }
 
     /**
-     * Retrieves the authcrypted claim offer after adding it to the ledger.
-     * Note: The cached message will be returned if the claim offer was requested earlier and therefore already written
+     * Retrieves the authcrypted claimModel offer after adding it to the ledger.
+     * Note: The cached message will be returned if the claimModel offer was requested earlier and therefore already written
      *       to the ledger.
      * @param userId The user id.
      * @param claimRecordId The id of the ClaimRecord.
-     * @return Authcrypted claim offer.
+     * @return Authcrypted claimModel offer.
      */
     @SneakyThrows
     @Transactional
@@ -82,12 +84,12 @@ public abstract class ClaimProvider<T extends Claim> {
     }
 
     /**
-     * Retrieves the authcrypted claim.
-     * Note: The cached message will be returned if the claim was requested earlier and therefore already written
+     * Retrieves the authcrypted claimModel.
+     * Note: The cached message will be returned if the claimModel was requested earlier and therefore already written
      *       to the ledger.
      * @param userId The user id.
      * @param authcryptedMessage The authcrypted ClaimRequest message that was provided to the client by Indy.
-     * @return Authcrypted claim.
+     * @return Authcrypted claimModel.
      */
     @SneakyThrows
     @Transactional

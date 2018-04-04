@@ -98,7 +98,7 @@ public class WalletOwner implements AutoCloseable {
     }
 
     CompletableFuture<String> getClaimDef(String did, Schema schema, String issuerDid) throws IndyException {
-        log.debug("{} Getting claim def with did {} schema with seqNo {} and issuerDid {}", name, did, schema.getSeqNo(), issuerDid);
+        log.debug("{} Getting claimModel def with did {} schema with seqNo {} and issuerDid {}", name, did, schema.getSeqNo(), issuerDid);
         return Ledger.buildGetClaimDefTxn(did, schema.getSeqNo(), "CL", issuerDid)
                 .thenCompose(wrapException(request -> {
                     log.debug("{} Submitting GetClaimDefTxn {}", name, request);

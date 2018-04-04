@@ -2,8 +2,8 @@ package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nl.quintor.studybits.student.model.Student;
-import nl.quintor.studybits.student.model.University;
+import nl.quintor.studybits.student.entities.Student;
+import nl.quintor.studybits.student.entities.University;
 import nl.quintor.studybits.student.repositories.UniversityRepository;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
@@ -29,7 +29,7 @@ public class UniversityService {
 
     public University createAndSave(String name, String endpoint) {
         if (universityRepository.existsByName(name))
-            throw new IllegalArgumentException("University with name exists already.");
+            throw new IllegalArgumentException("UniversityModel with name exists already.");
 
         University university = new University(null, name, endpoint);
         return universityRepository.save(university);
@@ -49,7 +49,7 @@ public class UniversityService {
 
     public University findByNameOrElseThrow(String name) {
         return findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("University with name not found."));
+                .orElseThrow(() -> new IllegalArgumentException("UniversityModel with name not found."));
     }
 
     public List<University> findAll() {

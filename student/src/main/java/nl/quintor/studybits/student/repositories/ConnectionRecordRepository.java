@@ -1,6 +1,6 @@
 package nl.quintor.studybits.student.repositories;
 
-import nl.quintor.studybits.student.model.ConnectionRecord;
+import nl.quintor.studybits.student.entities.ConnectionRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

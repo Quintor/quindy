@@ -1,18 +1,27 @@
 package nl.quintor.studybits.student.controller;
 
 import lombok.AllArgsConstructor;
-import nl.quintor.studybits.student.model.Student;
+import nl.quintor.studybits.student.entities.Student;
+import nl.quintor.studybits.student.model.StudentModel;
 import nl.quintor.studybits.student.services.StudentService;
+import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+
 @RestController
 @RequestMapping("/student")
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class StudentController {
-    private final StudentService studentService;
+    private StudentService studentService;
+    private Mapper mapper;
+
+    private StudentModel toModel(Object student) {
+        return mapper.map(student, StudentModel.class);
+    }
 
     @PostMapping("/onboard")
     void onboard(@RequestParam String studentUserName, @RequestParam String universityName) throws Exception {
@@ -20,22 +29,27 @@ public class StudentController {
     }
 
     @PostMapping("/register")
-    Student register(@RequestParam String username, @RequestParam String universityName) {
-        return studentService.createAndSave(username, universityName);
+    StudentModel register(@RequestParam String username, @RequestParam String universityName) {
+        return toModel(studentService.createAndSave(username, universityName));
     }
 
     @GetMapping("/{studentUserName}")
-    Student findById(@PathVariable String studentUserName) {
-        return studentService.findByNameOrElseThrow(studentUserName);
+    StudentModel findById(@PathVariable String studentUserName) {
+        return toModel(studentService.findByNameOrElseThrow(studentUserName));
     }
 
     @GetMapping
-    List<Student> findAll() {
-        return studentService.findAll();
+    List<StudentModel> findAll() {
+        return studentService
+                .findAll()
+                .stream()
+                .map(this::toModel)
+                .collect(Collectors.toList());
     }
 
     @PutMapping
-    void updateByObject(@RequestBody Student student) {
+    void updateByObject(@RequestBody StudentModel studentModel) {
+        Student student = mapper.map(studentModel, Student.class);
         studentService.updateByObject(student);
     }
 

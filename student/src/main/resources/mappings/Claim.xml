@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://dozer.sourceforge.net"
+          xsi:schemaLocation="http://dozer.sourceforge.net
+          http://dozer.sourceforge.net/schema/beanmapping.xsd">
+
+    <mapping>
+        <class-a>nl.quintor.studybits.student.entities.Claim</class-a>
+        <class-b>nl.quintor.studybits.student.model.ClaimModel</class-b>
+        <field>
+            <a>owner.userName</a>
+            <b>ownerUserName</b>
+        </field>
+        <field>
+            <a>schemaKey.name</a>
+            <b>schemaKeyName</b>
+        </field>
+    </mapping>
+</mappings>

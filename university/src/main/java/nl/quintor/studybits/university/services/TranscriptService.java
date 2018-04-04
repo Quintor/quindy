@@ -57,9 +57,9 @@ public class TranscriptService extends ClaimProvider<Transcript> {
         String degree = claimRecord.getClaimLabel();
         User user = claimRecord.getUser();
         StudentUser studentUser = user.getStudentUser();
-        Validate.validState(studentUser != null, "TranscriptRecord claim is for student users only.");
+        Validate.validState(studentUser != null, "TranscriptRecord claimModel is for student users only.");
         TranscriptRecord transcriptRecord = findTranscriptRecord(studentUser, degree)
-                .orElseThrow(() -> new IllegalStateException("Invalid claim request. Student user degree not found."));
+                .orElseThrow(() -> new IllegalStateException("Invalid claimModel request. Student user degree not found."));
         return createTranscript(user, transcriptRecord);
     }
 

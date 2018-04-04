@@ -32,8 +32,8 @@ public class EnrolmentService extends ClaimProvider<Enrolment> {
         String academicYear = claimRecord.getClaimLabel();
         User user = claimRecord.getUser();
         StudentUser studentUser = user.getStudentUser();
-        Validate.validState(studentUser != null, "Enrolment claim is for student users only.");
-        Validate.validState(studentUser.getAcademicYears().contains(academicYear), "Invalid claim request.");
+        Validate.validState(studentUser != null, "Enrolment claimModel is for student users only.");
+        Validate.validState(studentUser.getAcademicYears().contains(academicYear), "Invalid claimModel request.");
         return new Enrolment(academicYear);
     }
 

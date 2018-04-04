@@ -7,7 +7,9 @@ import nl.quintor.studybits.indy.wrapper.dto.AuthCryptable;
 import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.ClaimOffer;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
-import nl.quintor.studybits.student.model.*;
+import nl.quintor.studybits.student.entities.*;
+import nl.quintor.studybits.student.model.AuthEncryptedMessageModel;
+import nl.quintor.studybits.student.model.StudentClaimInfoModel;
 import nl.quintor.studybits.student.repositories.ClaimRepository;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.dozer.Mapper;
@@ -54,20 +56,20 @@ public class ClaimService {
                     .map(AsyncUtil.wrapException(claimOffer -> getClaimForClaimOffer(claimOffer, prover, student)))
                     .filter(claim -> !claimRepository.existsBySignature(claim.getSignature()))
                     .forEach(claim -> {
-                        log.debug("Saving new claim {} to database...", claim);
+                        log.debug("Saving new claimModel {} to database...", claim);
                         claimRepository.save(claim);
                     });
         }
     }
 
-    private Stream<StudentClaimInfo> getAllStudentClaimInfo(Student student) {
+    private Stream<StudentClaimInfoModel> getAllStudentClaimInfo(Student student) {
         return connectionRecordService.findAllByStudentUserName(student.getUserName())
                 .stream()
                 .map(ConnectionRecord::getUniversity)
                 .flatMap(university -> getAllStudentClaimInfo(university, student));
     }
 
-    private AuthEncryptedMessageModel getClaimOfferForStudentClaimInfo(StudentClaimInfo claimInfo) {
+    private AuthEncryptedMessageModel getClaimOfferForStudentClaimInfo(StudentClaimInfoModel claimInfo) {
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate.exchange(claimInfo.getLink("self")
                 .getHref(), HttpMethod.GET, null, new ParameterizedTypeReference<AuthEncryptedMessageModel>() {
@@ -76,8 +78,9 @@ public class ClaimService {
 
     private Claim getClaimForClaimOffer(AuthEncryptedMessageModel claimOffer, Prover prover, Student owner) throws Exception {
         AuthcryptedMessage authcryptedMessage = getEncryptedClaimForOffer(claimOffer, prover);
-        Claim claim = toModel(decryptAuthcryptedMessage(authcryptedMessage, prover, nl.quintor.studybits.indy.wrapper.dto.Claim.class)
-                .get());
+        Claim claim = decryptAuthcryptedMessage(authcryptedMessage, prover, nl.quintor.studybits.indy.wrapper.dto.Claim.class)
+                .thenApply(wrapperClaim -> mapper.map(wrapperClaim, Claim.class))
+                .get();
         claim.setOwner(owner);
         claim.setHashId(hashClaim(claim));
         return claim;
@@ -87,7 +90,7 @@ public class ClaimService {
         return DigestUtils.sha256Hex(claim.getValues());
     }
 
-    private Stream<StudentClaimInfo> getAllStudentClaimInfo(University university, Student student) {
+    private Stream<StudentClaimInfoModel> getAllStudentClaimInfo(University university, Student student) {
         URI path = UriComponentsBuilder
                 .fromHttpUrl(university.getEndpoint())
                 .path(university.getName())
@@ -97,7 +100,7 @@ public class ClaimService {
                 .build().toUri();
 
         RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.exchange(path, HttpMethod.GET, null, new ParameterizedTypeReference<List<StudentClaimInfo>>() {
+        return restTemplate.exchange(path, HttpMethod.GET, null, new ParameterizedTypeReference<List<StudentClaimInfoModel>>() {
         }).getBody().stream();
     }
 
@@ -105,7 +108,7 @@ public class ClaimService {
         AuthcryptedMessage claimOffer = mapper.map(encryptedClaimOffer, AuthcryptedMessage.class);
         AuthEncryptedMessageModel encryptedClaimRequest = getEncryptedClaimRequestForClaimOffer(claimOffer, prover);
 
-        log.debug("Retrieving Claim from University with claimOffer {} ", claimOffer);
+        log.debug("Retrieving ClaimModel from UniversityModel with claimOffer {} ", claimOffer);
         RestTemplate restTemplate = new RestTemplate();
         AuthEncryptedMessageModel response = restTemplate.postForObject(encryptedClaimOffer.getLink("self")
                 .getHref(), encryptedClaimRequest, AuthEncryptedMessageModel.class);
@@ -132,24 +135,15 @@ public class ClaimService {
         return prover.authDecrypt(authMessage, type);
     }
 
-    private Claim toModel(Object claim) {
-        return mapper.map(claim, Claim.class);
-    }
-
     public Claim findByIdOrElseThrow(Long claimId) {
         return claimRepository
                 .findById(claimId)
-                .orElseThrow(() -> new IllegalArgumentException("Claim with id not found"));
+                .orElseThrow(() -> new IllegalArgumentException("ClaimModel with id not found"));
     }
 
     public List<Claim> findAllByOwnerUserName(String studentUserName) {
         Student owner = studentService.findByNameOrElseThrow(studentUserName);
-
-        return claimRepository
-                .findAllByOwner(owner)
-                .stream()
-                .map(this::toModel)
-                .collect(Collectors.toList());
+        return claimRepository.findAllByOwner(owner);
     }
 
     public void deleteAll() {

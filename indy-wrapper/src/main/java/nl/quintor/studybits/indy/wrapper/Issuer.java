@@ -65,14 +65,14 @@ public class Issuer extends TrustAnchor {
     }
 
     public CompletableFuture<String> defineClaim(SchemaKey schemaKey) throws JsonProcessingException, IndyException {
-        log.debug("{}: Defining claim for schemaKey {}", name, schemaKey);
+        log.debug("{}: Defining claimModel for schemaKey {}", name, schemaKey);
         return getSchema(issuerDid, schemaKey)
                 .thenCompose(wrapException(schema ->
                         Anoncreds.issuerCreateAndStoreClaimDef(wallet.getWallet(), issuerDid, schema.toJSON(), "CL", false)))
                 .thenCompose(wrapException(claimDefJson -> {
-                    log.debug("{}: got claim def json {}", name, claimDefJson);
+                    log.debug("{}: got claimModel def json {}", name, claimDefJson);
                     ClaimDefinition claimDefinition = JSONUtil.mapper.readValue(claimDefJson, ClaimDefinition.class);
-                    log.debug("{}: building claim def txn with submitterDid {} xref {} signatureType {} data {}", name, issuerDid, claimDefinition.getRef(), claimDefinition.getSignatureType(), claimDefinition.getData().toString());
+                    log.debug("{}: building claimModel def txn with submitterDid {} xref {} signatureType {} data {}", name, issuerDid, claimDefinition.getRef(), claimDefinition.getSignatureType(), claimDefinition.getData().toString());
                     return Ledger.buildClaimDefTxn(issuerDid, claimDefinition.getRef(), claimDefinition.getSignatureType(), claimDefinition.getData().toString());
                 })).thenCompose(wrapException(claimDefTxn -> {
                     log.debug("{} Signing and sending claimDefTx: {}", name, claimDefTxn);
@@ -104,7 +104,7 @@ public class Issuer extends TrustAnchor {
 
         return Anoncreds.issuerCreateClaim(wallet.getWallet(), claimRequest.toJSON(), claimValueJson.toString(), -1)
                 .thenApply(wrapException((issuerCreateClaimResult) -> {
-                    log.debug("{} Created claim json: {}", name, issuerCreateClaimResult.getClaimJson());
+                    log.debug("{} Created claimModel json: {}", name, issuerCreateClaimResult.getClaimJson());
                     Claim claim = JSONUtil.mapper.readValue(issuerCreateClaimResult.getClaimJson(), Claim.class);
                     claim.setTheirDid(claimRequest.getTheirDid());
                     return claim;
