@@ -43,7 +43,7 @@ public class Prover extends WalletOwner {
                 .thenCompose(wrapException(pairwiseResult -> getSchema(pairwiseResult.getMyDid(), claimOffer.getSchemaKey())
                         .thenCompose(wrapException(schema -> getClaimDef(pairwiseResult.getMyDid(), schema, claimOffer.getIssuerDid())))
                         .thenCompose(wrapException(claimDefJson -> {
-                            log.debug("{} creating claimModel request with claimDefJson {}", name, claimDefJson);
+                            log.debug("{} creating claim request with claimDefJson {}", name, claimDefJson);
                             return Anoncreds.proverCreateAndStoreClaimReq(wallet.getWallet(), pairwiseResult.getMyDid(),
                                     claimOffer.toJSON(), claimDefJson, this.masterSecretName);
                         })).thenApply(wrapException(claimRequestJson -> {
@@ -66,7 +66,7 @@ public class Prover extends WalletOwner {
      * Proves the proofRequest using the stored claims
      *
      * @param proofRequest
-     * @param attributes   This map is used to get the correct claimModel, if multiple referents are present, or to provide self-attested attributes
+     * @param attributes   This map is used to get the correct claim, if multiple referents are present, or to provide self-attested attributes
      * @return
      */
     public CompletableFuture<Proof> fulfillProofRequest(ProofRequest proofRequest, Map<String, String> attributes) throws JsonProcessingException, IndyException {
@@ -105,10 +105,10 @@ public class Prover extends WalletOwner {
                     return value;
                 }));
 
-        // Collect all claimModel referents needed for the proof
+        // Collect all claim referents needed for the proof
         Map<String, ClaimReferent> claimsByReferentKey = findNeededClaimReferents(proofRequest, claimsForRequest, attributes);
 
-        // Store the claimModel referents in a way that enables us to fetch the needed entities from the ledger.
+        // Store the claim referents in a way that enables us to fetch the needed entities from the ledger.
         Map<String, ClaimIdentifier> claimsForProof = claimsByReferentKey.values()
                 .stream()
                 .distinct()
@@ -117,7 +117,7 @@ public class Prover extends WalletOwner {
         // Create the json needed for creating the proof
         JsonNode requestedClaimsJson = createRequestedClaimsJson(proofRequest, selfAttestedAttributes, claimsByReferentKey);
 
-        // Fetch the required schema's and claimModel definitions, then create, the proof, deserialize and return it.
+        // Fetch the required schema's and claim definitions, then create, the proof, deserialize and return it.
         return getEntitiesFromLedger(claimsForProof).thenCompose(wrapException(entities -> {
             log.debug("{} Creating proof", name);
             return Anoncreds.proverCreateProof(wallet.getWallet(), proofRequest.toJSON(), JSONUtil.mapper.writeValueAsString(requestedClaimsJson), JSONUtil.mapper

@@ -48,7 +48,7 @@ public class Main {
                 "first_name", "last_name", "degree", "status", "year", "average", "ssn").get();
 
 
-        // Create claimModel definitions
+        // Create claim definitions
         faber.defineClaim(transcriptSchemaKey).get();
 
         acme.defineClaim(jobCertificateSchemaKey).get();
