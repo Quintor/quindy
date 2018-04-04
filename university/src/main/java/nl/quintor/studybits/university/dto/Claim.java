@@ -4,15 +4,8 @@ import nl.quintor.studybits.indy.wrapper.dto.SchemaDefinition;
 
 import java.util.Map;
 
-public interface Claim {
+public interface Claim extends Versioned {
 
-    default String getSchemaName() {
-        return ClaimUtils.getSchemaName(getClass());
-    }
-
-    default String getSchemaVersion() {
-        return ClaimUtils.getSchemaVersion(getClass());
-    }
 
     default SchemaDefinition getSchemaDefinition() {
         return ClaimUtils.getSchemaDefinition(getClass());

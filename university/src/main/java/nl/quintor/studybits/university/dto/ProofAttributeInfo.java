@@ -9,5 +9,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface ProofAttributeInfo {
     String attributeName() default "";
-    SchemaInfo[] schemas() default {};
+    VersionInfo[] schemas() default {};
 }

@@ -13,6 +13,9 @@ import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+import java.util.Set;
+
 @Slf4j
 @Service
 public class EnrolmentService extends ClaimProvider<Enrolment> {
@@ -24,16 +27,16 @@ public class EnrolmentService extends ClaimProvider<Enrolment> {
 
     @Override
     public String getSchemaName() {
-        return ClaimUtils.getSchemaName(Enrolment.class);
+        return ClaimUtils.getVersion(Enrolment.class).getName();
     }
 
     @Override
     protected Enrolment getClaimForClaimRecord(ClaimRecord claimRecord) {
         String academicYear = claimRecord.getClaimLabel();
         User user = claimRecord.getUser();
-        StudentUser studentUser = user.getStudentUser();
-        Validate.validState(studentUser != null, "Enrolment claim is for student users only.");
-        Validate.validState(studentUser.getAcademicYears().contains(academicYear), "Invalid claim request.");
+        StudentUser studentUser = Objects.requireNonNull(user.getStudentUser(), "Enrolment claim is for student users only.");
+        Set<String> academicYears = Objects.requireNonNull(studentUser.getAcademicYears());
+        Validate.validState(academicYears.contains(academicYear), "Invalid claim request.");
         return createEnrolment(user, academicYear);
     }
 

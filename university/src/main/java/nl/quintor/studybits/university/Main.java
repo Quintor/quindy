@@ -1,11 +1,9 @@
 package nl.quintor.studybits.university;
 
-import nl.quintor.studybits.university.dto.EnrolmentProof;
 import org.apache.commons.io.FileUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.io.Console;
 import java.io.File;
 import java.nio.file.Paths;
 

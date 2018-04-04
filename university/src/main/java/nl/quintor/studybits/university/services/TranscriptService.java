@@ -11,14 +11,13 @@ import nl.quintor.studybits.university.models.TranscriptModel;
 import nl.quintor.studybits.university.repositories.ClaimRecordRepository;
 import nl.quintor.studybits.university.repositories.TranscriptRecordRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
-import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.Objects;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -38,7 +37,7 @@ public class TranscriptService extends ClaimProvider<Transcript> {
 
     @Override
     public String getSchemaName() {
-        return ClaimUtils.getSchemaName(Transcript.class);
+        return ClaimUtils.getVersion(Transcript.class).getName();
     }
 
     public List<TranscriptRecord> findAllByUniversity(String universityName) {

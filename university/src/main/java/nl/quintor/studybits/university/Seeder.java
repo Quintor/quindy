@@ -8,7 +8,10 @@ import nl.quintor.studybits.university.dto.*;
 import nl.quintor.studybits.university.entities.User;
 import nl.quintor.studybits.university.models.TranscriptModel;
 import nl.quintor.studybits.university.repositories.UserRepository;
-import nl.quintor.studybits.university.services.*;
+import nl.quintor.studybits.university.services.EnrolmentService;
+import nl.quintor.studybits.university.services.TranscriptService;
+import nl.quintor.studybits.university.services.UniversityService;
+import nl.quintor.studybits.university.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -72,25 +75,25 @@ public class Seeder {
 
 
     private void seedUsers() {
-        userService.createAdmin("rug","admin1", "Etienne", "Nijboer", "222-11-0001");
+        userService.createAdmin("rug","admin1", "Etienne", "Nijboer", "222-11-0001", true);
 
-        User rugStudent1 = userService.createStudent("rug","student1", "Peter", "Ullrich", "1111-11-0001");
+        User rugStudent1 = userService.createStudent("rug","student1", "Peter", "Ullrich", "1111-11-0001", true);
         enrolmentService.addEnrolment(rugStudent1.getId(), "2016/17");
 
-        User rugStudent2 = userService.createStudent("rug","student2", "Margot", "Veren", "1111-11-0002");
+        User rugStudent2 = userService.createStudent("rug","student2", "Margot", "Veren", "1111-11-0002", true);
         enrolmentService.addEnrolment(rugStudent2.getId(), "2016/17");
         enrolmentService.addEnrolment(rugStudent2.getId(), "2017/18");
 
-        User rugStudent3 = userService.createStudent("rug","student3", "Ko", "de Kraker", "1111-11-0003");
+        User rugStudent3 = userService.createStudent("rug","student3", "Ko", "de Kraker", "1111-11-0003", true);
         enrolmentService.addEnrolment(rugStudent3.getId(), "2015/16");
         enrolmentService.addEnrolment(rugStudent3.getId(), "2016/17");
         enrolmentService.addEnrolment(rugStudent3.getId(), "2017/18");
         transcriptService.addTranscript(rugStudent3.getId(), new TranscriptModel("Bachelor of Science, Marketing", "graduated", "2018", "5"));
 
-        userService.createStudent("gent","admin2", "Pim", "Otte", "222-22-0002");
-        userService.createStudent("gent","student1", "Axelle", "Wanders", "1111-22-0001");
-        userService.createStudent("gent","student2", "Laure", "de Vadder", "1111-22-0002");
-        userService.createStudent("gent","student3", "Senne", "de Waal", "1111-22-0003");
+        userService.createStudent("gent","admin2", "Pim", "Otte", "222-22-0002", true);
+        userService.createStudent("gent","student1", "Axelle", "Wanders", "1111-22-0001", true);
+        userService.createStudent("gent","student2", "Laure", "de Vadder", "1111-22-0002", true);
+        userService.createStudent("gent","student3", "Senne", "de Waal", "1111-22-0003", true);
     }
 
 }
