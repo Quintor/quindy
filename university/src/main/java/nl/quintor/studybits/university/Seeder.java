@@ -94,6 +94,9 @@ public class Seeder {
         userService.createStudent("gent","student1", "Axelle", "Wanders", "1111-22-0001", true);
         userService.createStudent("gent","student2", "Laure", "de Vadder", "1111-22-0002", true);
         userService.createStudent("gent","student3", "Senne", "de Waal", "1111-22-0003", true);
+
+        userService.createStudent("gent","student4", "Jan", "Jansen", "7777-88-0001", false);
+
     }
 
 }
