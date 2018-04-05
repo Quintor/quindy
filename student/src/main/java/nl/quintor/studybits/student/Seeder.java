@@ -2,8 +2,8 @@ package nl.quintor.studybits.student;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.student.controller.TestController;
-import nl.quintor.studybits.student.model.Student;
-import nl.quintor.studybits.student.model.University;
+import nl.quintor.studybits.student.entities.Student;
+import nl.quintor.studybits.student.entities.University;
 import nl.quintor.studybits.student.repositories.MetaWalletRepository;
 import nl.quintor.studybits.student.services.StudentService;
 import nl.quintor.studybits.student.services.UniversityService;
@@ -30,8 +30,9 @@ public class Seeder {
 
     @Autowired
     private MetaWalletRepository metaWalletRepository;
+
     @EventListener
-    public void seed(ContextRefreshedEvent event) throws Exception{
+    public void seed(ContextRefreshedEvent event) throws Exception {
         if (isEmpty()) {
             log.info("Seeding");
             seed();

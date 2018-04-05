@@ -1,4 +1,4 @@
-package nl.quintor.studybits.student.model;
+package nl.quintor.studybits.student.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,13 +7,10 @@ import lombok.NoArgsConstructor;
 import org.springframework.hateoas.ResourceSupport;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class AuthEncryptedMessageModel extends ResourceSupport {
     private byte[] message;
     private String did;
-
-//    @JsonProperty("_links")
-//    private Map<String, Map<String, String>> links;
 }

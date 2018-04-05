@@ -1,17 +1,24 @@
-package nl.quintor.studybits.student.model;
+package nl.quintor.studybits.student.entities;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import nl.quintor.studybits.indy.wrapper.dto.AuthCryptable;
 
 import javax.persistence.*;
 
-@Data
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"hashId", "theirDid"}))
 public class Claim implements AuthCryptable {
     @Id
     @GeneratedValue
     private Long id;
+
     @ManyToOne
     private Student owner;
 

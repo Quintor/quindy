@@ -2,9 +2,9 @@ package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
-import nl.quintor.studybits.student.model.ConnectionRecord;
-import nl.quintor.studybits.student.model.Student;
-import nl.quintor.studybits.student.model.University;
+import nl.quintor.studybits.student.entities.ConnectionRecord;
+import nl.quintor.studybits.student.entities.Student;
+import nl.quintor.studybits.student.entities.University;
 import nl.quintor.studybits.student.repositories.ConnectionRecordRepository;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;

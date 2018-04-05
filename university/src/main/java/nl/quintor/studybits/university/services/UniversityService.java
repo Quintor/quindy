@@ -3,7 +3,6 @@ package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.log4j.Log4j;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.Issuer;
 import nl.quintor.studybits.indy.wrapper.dto.*;
