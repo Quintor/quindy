@@ -11,7 +11,7 @@ import java.util.List;
 public interface ClaimRepository extends JpaRepository<Claim, Long> {
     List<Claim> findAllByOwnerId(Long ownerId);
 
-    boolean existsByHashId(String hashId);
-
     List<Claim> findAllBySchemaKey(SchemaKey schemaKey);
+
+    boolean existsBySchemaKeyAndLabel(SchemaKey schemaKey, String label);
 }

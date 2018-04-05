@@ -17,6 +17,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Example;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -49,9 +50,15 @@ public class ClaimService {
         Student student = studentService.findByNameOrElseThrow(studentUserName);
         try (Prover prover = studentService.getProverForStudent(student)) {
             getAllStudentClaimInfo(student)
-                    .map(AsyncUtil.wrapException(claimInfo -> getClaimOfferForClaimInfo(claimInfo, prover)))
-                    .map(AsyncUtil.wrapException(claimOffer -> getClaimForClaimOffer(claimOffer, prover, student)))
-                    .forEach(this::saveClaimIfNew);
+                    .forEach((StudentClaimInfoModel claimInfo) -> {
+                        try {
+                            ClaimOfferModel claimOffer = getClaimOfferForClaimInfo(claimInfo, prover);
+                            Claim claim = getClaimForClaimOffer(claimOffer, claimInfo, prover, student);
+                            saveClaimIfNew(claim);
+                        } catch (Exception e) {
+                            log.error(e.getMessage());
+                        }
+                    });
         }
     }
 
@@ -91,15 +98,16 @@ public class ClaimService {
     /**
      * Retrieves a Claim from the link connected to a ClaimOffer from the University, which holds the Claim.
      *
-     * @param claimOfferModel: The claimOffer for a claim which holds a HATEOAS link to the claim object.
-     * @param owner:           The student object which owns the claim. Needed to create a prover to decrypt the response.
+     * @param claimOfferModel : The claimOffer for a claim which holds a HATEOAS link to the claim object.
+     * @param claimInfo
+     * @param owner           :           The student object which owns the claim. Needed to create a prover to decrypt the response.in
      * @return a Claim object.
      * @throws Exception
      */
-    private Claim getClaimForClaimOffer(ClaimOfferModel claimOfferModel, Prover prover, Student owner) throws Exception {
+    private Claim getClaimForClaimOffer(ClaimOfferModel claimOfferModel, StudentClaimInfoModel claimInfo, Prover prover, Student owner) throws Exception {
         Claim claim = getClaimFromUniversity(claimOfferModel, prover);
         claim.setOwner(owner);
-        claim.setHashId(hashClaim(claim));
+        claim.setLabel(claimInfo.getLabel());
 
         return claim;
     }
@@ -111,7 +119,11 @@ public class ClaimService {
      * @param claim: The claim to be stored.
      */
     private void saveClaimIfNew(Claim claim) {
-        if (!claimRepository.existsByHashId(claim.getHashId()))
+        Claim queryClaim = new Claim();
+        queryClaim.setSchemaKey(claim.getSchemaKey());
+        queryClaim.setLabel(claim.getLabel());
+
+        if (!claimRepository.exists(Example.of(queryClaim)))
             claimRepository.save(claim);
     }
 
