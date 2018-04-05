@@ -2,7 +2,6 @@ package nl.quintor.studybits.university.controllers.student;
 
 import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
 import nl.quintor.studybits.university.UserContext;
-import nl.quintor.studybits.university.entities.ClaimRecord;
 import nl.quintor.studybits.university.helpers.LinkHelper;
 import nl.quintor.studybits.university.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.university.models.StudentClaimInfo;

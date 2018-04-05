@@ -5,7 +5,6 @@ import nl.quintor.studybits.university.entities.AdminUser;
 import nl.quintor.studybits.university.entities.StudentUser;
 import nl.quintor.studybits.university.entities.University;
 import nl.quintor.studybits.university.entities.User;
-import nl.quintor.studybits.university.models.UserModel;
 import nl.quintor.studybits.university.repositories.UniversityRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.dozer.Mapper;
