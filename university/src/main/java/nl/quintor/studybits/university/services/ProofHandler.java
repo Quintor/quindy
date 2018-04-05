@@ -58,8 +58,8 @@ public abstract class ProofHandler<T extends Proof> {
     }
 
 
-    public AuthcryptedMessage getProofRequest(Long proofRecordId) {
-        ProofRecord proofRecord = proofRecordRepository.getOne(proofRecordId);
+    public AuthcryptedMessage getProofRequest(Long userId, Long proofRecordId) {
+        ProofRecord proofRecord = getProofRecord(userId, proofRecordId);
         Version version = ClaimUtils.getVersion(getProofType());
         Validate.isTrue(version.getName().equals(proofRecord.getProofName()), "Proof name mismatch.");
         Validate.isTrue(version.getVersion().equals(proofRecord.getProofVersion()), "Proof version mismatch.");
@@ -77,9 +77,9 @@ public abstract class ProofHandler<T extends Proof> {
         return universityService.authEncrypt(university.getName(), proofRequest);
     }
 
-    public Boolean HandleProof(Long proofRecordId, AuthcryptedMessage authcryptedMessage) {
+    public Boolean HandleProof(Long userId, Long proofRecordId, AuthcryptedMessage authcryptedMessage) {
         // TODO handle proof
-        log.warn("TODO: Handle proof {}", proofRecordId);
+        log.warn("TODO: HandleProof: UserId {} sent proof for proofRecordId {}", userId, proofRecordId);
         return true;
     }
 
@@ -137,6 +137,16 @@ public abstract class ProofHandler<T extends Proof> {
 
     private SchemaKey toSchemaKey(ClaimSchema claimSchema) {
         return new SchemaKey(claimSchema.getSchemaName(), claimSchema.getSchemaVersion(), claimSchema.getSchemaIssuerDid());
+    }
+
+
+    private ProofRecord getProofRecord(Long userId, Long proofRecordId) {
+        ProofRecord proofRecord = proofRecordRepository
+                .findById(proofRecordId)
+                .orElseThrow(() -> new IllegalArgumentException("Proof record not found."));
+        Validate.validState(proofRecord.getUser().getId().equals(userId), "Proof record user mismatch.");
+        Validate.notNull(proofRecord.getUser().getConnection(), "User onboarding incomplete!");
+        return proofRecord;
     }
 
 }
