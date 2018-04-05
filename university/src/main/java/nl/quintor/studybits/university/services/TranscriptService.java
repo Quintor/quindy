@@ -37,7 +37,7 @@ public class TranscriptService extends ClaimProvider<Transcript> {
 
     @Override
     public String getSchemaName() {
-        return ClaimUtils.getSchemaName(Transcript.class);
+        return ClaimUtils.getVersion(Transcript.class).getName();
     }
 
     public List<TranscriptRecord> findAllByUniversity(String universityName) {

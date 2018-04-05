@@ -31,20 +31,24 @@ public class UserService {
                 .findAllByUniversityNameIgnoreCase(universityName);
     }
 
+    public User getById(Long userId) {
+        return userRepository.getOne(userId);
+    }
+
     public Optional<User> findByUniversityAndUserName(String universityName, String userName) {
         return userRepository
                 .findByUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName);
     }
 
-    public User createStudent(String universityName, String userName, String firstName, String lastName, String ssn) {
+    public User createStudent(String universityName, String userName, String firstName, String lastName, String ssn, boolean confirmed) {
         University university = getUniversity(universityName);
-        User user = new User(userName, firstName, lastName, ssn, university, new StudentUser());
+        User user = new User(userName, firstName, lastName, ssn, confirmed, university, new StudentUser());
         return userRepository.save(user);
     }
 
-    public User createAdmin(String universityName, String userName, String firstName, String lastName, String ssn) {
+    public User createAdmin(String universityName, String userName, String firstName, String lastName, String ssn, boolean confirmed) {
         University university = getUniversity(universityName);
-        User user = new User(userName, firstName, lastName, ssn, university, new AdminUser());
+        User user = new User(userName, firstName, lastName, ssn, confirmed, university, new AdminUser());
         return userRepository.save(user);
     }
 
