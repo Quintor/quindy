@@ -16,9 +16,9 @@ public interface Claim extends Versioned {
     }
 
     /**
-     * Must provide a label that makes this specific claim unique.
+     * Must provide a label that makes this specific claimModel unique.
      *
-     * @return The unique claim label.
+     * @return The unique claimModel label.
      */
     String getLabel();
 }

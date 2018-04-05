@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@AllArgsConstructor(onConstructor = @__(@Autowired))
+@Slf4j
 @RestController
 @RequestMapping("/test")
-@Slf4j
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class TestController {
     private final StudentService studentService;
     private final MetaWalletService metaWalletService;
@@ -36,6 +36,7 @@ public class TestController {
 
     @GetMapping("/health")
     String health() {
-        return "Student Backend says: Ich lebe! Heidewitzka!";
+        return "StudentModel Backend says: Ich lebe! Heidewitzka!";
     }
 }
+

@@ -9,9 +9,9 @@ import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
-import nl.quintor.studybits.student.model.MetaWallet;
-import nl.quintor.studybits.student.model.Student;
-import nl.quintor.studybits.student.model.University;
+import nl.quintor.studybits.student.entities.MetaWallet;
+import nl.quintor.studybits.student.entities.Student;
+import nl.quintor.studybits.student.entities.University;
 import nl.quintor.studybits.student.repositories.StudentRepository;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
@@ -44,10 +44,10 @@ public class StudentService {
     @SneakyThrows
     public Student createAndSave(String username, String uniName) {
         if (studentRepository.existsByUserName(username))
-            throw new IllegalArgumentException("Student with username exists already.");
+            throw new IllegalArgumentException("StudentModel with username exists already.");
 
         University university = universityService.findByName(uniName)
-                .orElseThrow(() -> new IllegalArgumentException("University with id not found"));
+                .orElseThrow(() -> new IllegalArgumentException("UniversityModel with id not found"));
 
         MetaWallet metaWallet = metaWalletService.create(username, uniName);
         try (IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(metaWallet)) {
@@ -77,7 +77,7 @@ public class StudentService {
 
     public Student findByNameOrElseThrow(String name) {
         return findByUserName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Student with name not found."));
+                .orElseThrow(() -> new IllegalArgumentException("StudentModel with name not found."));
     }
 
     public void updateByObject(Student student) {

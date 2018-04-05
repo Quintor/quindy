@@ -1,9 +1,6 @@
 package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
-import nl.quintor.studybits.university.entities.AdminUser;
-import nl.quintor.studybits.university.entities.StudentUser;
-import nl.quintor.studybits.university.entities.University;
 import nl.quintor.studybits.university.entities.User;
 import nl.quintor.studybits.university.models.UserModel;
 import nl.quintor.studybits.university.repositories.UniversityRepository;
@@ -12,8 +9,6 @@ import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
