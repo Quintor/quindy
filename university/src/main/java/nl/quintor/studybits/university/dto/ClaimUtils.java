@@ -14,26 +14,20 @@ import java.util.stream.Collectors;
 public class ClaimUtils {
 
     public static SchemaDefinition getSchemaDefinition(Class<?> claimType) {
-        validateClaimType(claimType);
-        SchemaInfo schemaInfo = claimType.getAnnotation(SchemaInfo.class);
+        validateNamedVersionType(claimType);
+        VersionInfo versionInfo = claimType.getAnnotation(VersionInfo.class);
         List<String> fieldNames = getFieldNames(claimType);
-        return new SchemaDefinition(schemaInfo.name(), schemaInfo.version(), fieldNames);
+        return new SchemaDefinition(versionInfo.name(), versionInfo.version(), fieldNames);
     }
 
-    public static String getSchemaName(Class<?> claimType) {
-        validateClaimType(claimType);
-        return claimType.getAnnotation(SchemaInfo.class)
-                .name();
-    }
-
-    public static String getSchemaVersion(Class<?> claimType) {
-        validateClaimType(claimType);
-        return claimType.getAnnotation(SchemaInfo.class)
-                .version();
+    public static Version getVersion(Class<?> versionedType) {
+        validateNamedVersionType(versionedType);
+        VersionInfo versionInfo = versionedType.getAnnotation(VersionInfo.class);
+        return new Version(versionInfo.name(), versionInfo.version());
     }
 
     public static Map<String, Object> getMapOfClaim(Object claim) {
-        validateClaimType(claim.getClass());
+        validateNamedVersionType(claim.getClass());
         return Arrays.stream(claim.getClass()
                 .getDeclaredFields())
                 .collect(Collectors.toMap(Field::getName, f -> getClaimProperty(claim, f)));
@@ -45,8 +39,8 @@ public class ClaimUtils {
                 .collect(Collectors.toList());
     }
 
-    private static void validateClaimType(Class<?> clazz) {
-        Validate.isTrue(clazz.isAnnotationPresent(SchemaInfo.class), "Given type must be annotated with @SchemaInfo.");
+    private static void validateNamedVersionType(Class<?> clazz) {
+        Validate.isTrue(clazz.isAnnotationPresent(VersionInfo.class), "Given type must be annotated with @VersionInfo.");
     }
 
     @SneakyThrows
@@ -76,11 +70,11 @@ public class ClaimUtils {
         ProofAttributeInfo proofAttributeInfo = field.getAnnotation(ProofAttributeInfo.class);
         if(proofAttributeInfo != null) {
             String attributeName = StringUtils.isNotEmpty(proofAttributeInfo.attributeName()) ? proofAttributeInfo.attributeName() : field.getName();
-            List<SchemaVersion> schemaVersions = Arrays
+            List<Version> versions = Arrays
                     .stream(proofAttributeInfo.schemas())
-                    .map(claimSchema -> new SchemaVersion(claimSchema.name(), claimSchema.version()))
+                    .map(claimSchema -> new Version(claimSchema.name(), claimSchema.version()))
                     .collect(Collectors.toList());
-            return new ProofAttribute(field, attributeName, schemaVersions);
+            return new ProofAttribute(field, attributeName, versions);
         }
         return new ProofAttribute(field);
     }

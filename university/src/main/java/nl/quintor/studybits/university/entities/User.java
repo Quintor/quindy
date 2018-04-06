@@ -26,12 +26,17 @@ public class User {
     @Column(nullable = false)
     private String userName;
 
+    @Column(nullable = false)
     private String firstName;
 
+    @Column(nullable = false)
     private String lastName;
 
     @Column(nullable = false, unique = true)
     private String ssn;
+
+    @Column(nullable = false)
+    private Boolean confirmed;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     private University university;
@@ -43,6 +48,10 @@ public class User {
     @Column(nullable = false)
     private List<ClaimRecord> claims = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.MERGE, orphanRemoval = true)
+    @Column(nullable = false)
+    private List<ProofRecord> proofs = new ArrayList<>();
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @PrimaryKeyJoinColumn
     private StudentUser studentUser;
@@ -51,23 +60,24 @@ public class User {
     @PrimaryKeyJoinColumn
     private AdminUser adminUser;
 
-    public User(String userName, String firstName, String lastName, String ssn, University university, StudentUser studentUser) {
-        this.userName = userName;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.ssn = ssn;
-        this.university = university;
+    public User(String userName, String firstName, String lastName, String ssn, boolean confirmed, University university, StudentUser studentUser) {
+        this(userName, firstName, lastName, ssn, confirmed, university);
         this.studentUser = studentUser;
         this.studentUser.setUser(this);
     }
 
-    public User(String userName, String firstName, String lastName, String ssn, University university, AdminUser adminUser) {
+    public User(String userName, String firstName, String lastName, String ssn, boolean confirmed, University university, AdminUser adminUser) {
+        this(userName, firstName, lastName, ssn, confirmed, university);
+        this.adminUser = adminUser;
+        this.adminUser.setUser(this);
+    }
+
+    private User(String userName, String firstName, String lastName, String ssn, boolean confirmed, University university) {
         this.userName = userName;
         this.firstName = firstName;
         this.lastName = lastName;
         this.ssn = ssn;
+        this.confirmed = confirmed;
         this.university = university;
-        this.adminUser = adminUser;
-        this.adminUser.setUser(this);
     }
 }

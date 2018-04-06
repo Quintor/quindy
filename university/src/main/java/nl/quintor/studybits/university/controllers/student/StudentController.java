@@ -1,50 +1,42 @@
-package nl.quintor.studybits.university.controllers.admin;
+package nl.quintor.studybits.university.controllers.student;
 
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.university.UserContext;
 import nl.quintor.studybits.university.entities.User;
 import nl.quintor.studybits.university.models.UserModel;
-import nl.quintor.studybits.university.services.StudentService;
+import nl.quintor.studybits.university.services.UserProofService;
 import nl.quintor.studybits.university.services.UserService;
+import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
-@RestController("AdminStudentController")
-@RequestMapping("/{universityName}/admin/{userName}/students")
+@RestController
+@RequestMapping("/{universityName}/student/{userName}/students")
 @AllArgsConstructor(onConstructor=@__(@Autowired))
 public class StudentController {
 
     private final UserContext userContext;
-    private final StudentService studentService;
     private final UserService userService;
+    private final UserProofService userProofService;
     private final Mapper mapper;
 
     private UserModel toModel(User user) {
         return mapper.map(user, UserModel.class);
     }
 
-    @GetMapping
-    List<UserModel> findAll() {
-        return studentService
-                .findAllForUniversity(userContext.currentUniversityName())
-                .stream()
-                .map(this::toModel)
-                .collect(Collectors.toList());
-    }
 
-    @GetMapping("/{studentUserName}")
-    UserModel findByUserName(@PathVariable String studentUserName) {
-        return studentService.findByUniversityAndUserName(userContext.currentUniversityName(), studentUserName)
-                .map(this::toModel)
-                .orElseThrow(() -> new IllegalArgumentException("user name not found for university."));
+    @GetMapping
+    UserModel getStudent() {
+        User user = userService.getById(userContext.currentUserId());
+        return toModel(user);
     }
 
     @PostMapping
     UserModel createStudent(@RequestBody UserModel userModel) {
+        Validate.isTrue(!userContext.getCurrentUser().isPresent(), "User already exists.");
+        Validate.isTrue(userContext.currentUserName().equalsIgnoreCase(userModel.getUserName()), "UserName mismatch.");
         User user = userService
                 .createStudent(
                         userContext.currentUniversityName(),
@@ -52,8 +44,8 @@ public class StudentController {
                         userModel.getFirstName(),
                         userModel.getLastName(),
                         userModel.getSsn(),
-                        true);
+                        false);
+        userProofService.addProofRequest(user.getId());
         return toModel(user);
     }
-
 }

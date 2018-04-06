@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-@SchemaInfo(name = "Enrolment", version = "0.1")
+@VersionInfo(name = "Enrolment", version = "0.1")
 public class Enrolment implements Claim {
     private String firstName;
     private String lastName;

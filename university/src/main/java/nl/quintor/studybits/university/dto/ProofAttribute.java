@@ -13,7 +13,7 @@ public class ProofAttribute {
     private final Field field;
     private final String attributeName;
 
-    private final List<SchemaVersion> schemaVersions;
+    private final List<Version> schemaVersions;
 
     public String getFieldName() {
         return field.getName();
