@@ -1,6 +1,7 @@
 package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.university.dto.ClaimUtils;
@@ -12,11 +13,14 @@ import nl.quintor.studybits.university.repositories.ClaimSchemaRepository;
 import nl.quintor.studybits.university.repositories.ProofRecordRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -41,6 +45,14 @@ public abstract class ProofHandler<T extends Proof> {
 
     protected abstract Class<T> getProofType();
 
+    @Transactional
+    protected abstract boolean handleProof(User user, ProofRecord proofRecord, T proof);
+
+    @SneakyThrows
+    private T newProof() {
+        return getProofType().newInstance();
+    }
+
     public Version getProofVersion() {
         return ClaimUtils.getVersion(getProofType());
     }
@@ -58,29 +70,66 @@ public abstract class ProofHandler<T extends Proof> {
     }
 
 
-    public AuthcryptedMessage getProofRequest(Long userId, Long proofRecordId) {
+    public AuthcryptedMessage getProofRequestMessage(Long userId, Long proofRecordId) {
         ProofRecord proofRecord = getProofRecord(userId, proofRecordId);
-        Version version = ClaimUtils.getVersion(getProofType());
-        Validate.isTrue(version.getName().equals(proofRecord.getProofName()), "Proof name mismatch.");
-        Validate.isTrue(version.getVersion().equals(proofRecord.getProofVersion()), "Proof version mismatch.");
         User user = Objects.requireNonNull(proofRecord.getUser());
         University university = Objects.requireNonNull(user.getUniversity());
+        ProofRequest proofRequest = getProofRequest(university, user, proofRecord);
+        return universityService.authEncrypt(university.getName(), proofRequest);
+    }
+
+    @Transactional
+    public boolean handleProof(Long userId, Long proofRecordId, AuthcryptedMessage authcryptedMessage) {
+        ProofRecord proofRecord = getProofRecord(userId, proofRecordId);
+        Validate.validState(StringUtils.isEmpty(proofRecord.getProofJson()), String.format("UserId %s already provided proof for proofRecordId %s.", userId, proofRecord));
+        User user = Objects.requireNonNull(proofRecord.getUser());
+        University university = Objects.requireNonNull(user.getUniversity());
+        ProofRequest proofRequest = getProofRequest(university, user, proofRecord);
+        T verifiedProof = getVerifiedProof(university.getName(), proofRequest, authcryptedMessage);
+        proofRecord.setProofJson(ServiceUtils.objectToJson(verifiedProof));
+        boolean handled = handleProof(user, proofRecord, verifiedProof);
+        if(handled) {
+            proofRecordRepository.save(proofRecord);
+        }
+        return handled;
+    }
+
+    public T getProof(Long userId, Long proofRecordId) {
+        ProofRecord proofRecord = getProofRecord(userId, proofRecordId);
+        Validate.validState(StringUtils.isEmpty(proofRecord.getProofJson()), String.format("UserId %s did not provide proof for proofRecordId %s.", userId, proofRecord));
+        User user = Objects.requireNonNull(proofRecord.getUser());
+        return ServiceUtils.jsonToObject(proofRecord.getProofJson(), getProofType());
+    }
+
+    private T getVerifiedProof(String universityName, ProofRequest proofRequest, AuthcryptedMessage authcryptedMessage) {
+        nl.quintor.studybits.indy.wrapper.dto.Proof proof = universityService
+                .authDecrypt(universityName, authcryptedMessage, nl.quintor.studybits.indy.wrapper.dto.Proof.class);
+        List<nl.quintor.studybits.indy.wrapper.dto.ProofAttribute> attributes = universityService
+                .getVerifiedProofAttributes(universityName, proofRequest, proof);
+        T result = newProof();
+        attributes.forEach(attribute -> writeAttributeField(result, attribute));
+        return result;
+    }
+
+    private void writeAttributeField(T result, nl.quintor.studybits.indy.wrapper.dto.ProofAttribute proofAttribute) {
+        try {
+            FieldUtils.writeField(result, proofAttribute.getKey(), proofAttribute.getValue(), true);
+        } catch (IllegalAccessException e) {
+            String message = String.format("Unable to write proof attribute to field '%s' of type '%s'.",proofAttribute.getKey(), result.getClass().getName());
+            throw new IllegalStateException(message, e);
+        }
+    }
+
+    private ProofRequest getProofRequest(University university, User user, ProofRecord proofRecord) {
         String theirDid = Objects.requireNonNull(user.getConnection()).getDid();
-        ProofRequest proofRequest = ProofRequest
+        return ProofRequest
                 .builder()
-                .name(version.getName())
-                .version(version.getVersion())
+                .name(proofRecord.getProofName())
+                .version(proofRecord.getProofVersion())
                 .nonce(proofRecord.getNonce())
                 .theirDid(theirDid)
                 .requestedAttrs(getRequestedAttributes(university.getId()))
                 .build();
-        return universityService.authEncrypt(university.getName(), proofRequest);
-    }
-
-    public Boolean HandleProof(Long userId, Long proofRecordId, AuthcryptedMessage authcryptedMessage) {
-        // TODO handle proof
-        log.warn("TODO: HandleProof: UserId {} sent proof for proofRecordId {}", userId, proofRecordId);
-        return true;
     }
 
     private Map<String, AttributeInfo> getRequestedAttributes(Long universityId) {
@@ -120,7 +169,7 @@ public abstract class ProofHandler<T extends Proof> {
     }
 
     private Stream<Filter> createFilter(ClaimSchema claimSchema) {
-        SchemaKey schemaKey = toSchemaKey(claimSchema);
+        SchemaKey schemaKey = ServiceUtils.convertToSchemaKey(claimSchema);
         return claimSchema
                 .getClaimIssuers()
                 .stream()
@@ -135,17 +184,17 @@ public abstract class ProofHandler<T extends Proof> {
                 schemaVersion.getVersion());
     }
 
-    private SchemaKey toSchemaKey(ClaimSchema claimSchema) {
-        return new SchemaKey(claimSchema.getSchemaName(), claimSchema.getSchemaVersion(), claimSchema.getSchemaIssuerDid());
-    }
-
 
     private ProofRecord getProofRecord(Long userId, Long proofRecordId) {
         ProofRecord proofRecord = proofRecordRepository
                 .findById(proofRecordId)
                 .orElseThrow(() -> new IllegalArgumentException("Proof record not found."));
-        Validate.validState(proofRecord.getUser().getId().equals(userId), "Proof record user mismatch.");
-        Validate.notNull(proofRecord.getUser().getConnection(), "User onboarding incomplete!");
+        User user = Objects.requireNonNull(proofRecord.getUser(), "Proof record without user.");
+        Validate.validState(user.getId().equals(userId), "Proof record user mismatch.");
+        Validate.notNull(user.getConnection(), "User onboarding incomplete!");
+        Version version = getProofVersion();
+        Validate.isTrue(version.getName().equals(proofRecord.getProofName()), "Proof name mismatch.");
+        Validate.isTrue(version.getVersion().equals(proofRecord.getProofVersion()), "Proof version mismatch.");
         return proofRecord;
     }
 
