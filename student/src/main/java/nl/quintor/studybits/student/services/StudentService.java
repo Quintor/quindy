@@ -103,10 +103,31 @@ public class StudentService {
         }
     }
 
+    public void connectWithUniversity(String studentUserName, String universityName) throws Exception {
+        Student student = findByNameOrElseThrow(studentUserName);
+        University university = universityService.findByNameOrElseThrow(universityName);
+
+        this.registerWithUniversity(student, university);
+        this.onboard(student, university);
+        this.proofIdentity(student, university);
+    }
+
+    private void proofIdentity(Student student, University university) {
+
+    }
+
+    private void registerWithUniversity(Student student, University university) {
+
+    }
+
     public void onboard(String studentUserName, String universityName) throws Exception {
         Student student = findByNameOrElseThrow(studentUserName);
         University university = universityService.findByNameOrElseThrow(universityName);
 
+        this.onboard(student, university);
+    }
+
+    public void onboard(Student student, University university) throws Exception {
         URI uriBegin = universityService.buildOnboardingBeginUri(university, student);
         URI uriFinalize = universityService.buildOnboardingFinalizeUri(university, student);
         log.debug("Onboarding with uriBegin {}, uriEnd {}", uriBegin, uriFinalize);
