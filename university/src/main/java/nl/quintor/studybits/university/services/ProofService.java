@@ -16,7 +16,7 @@ public class ProofService {
     private final ProofRecordRepository proofRecordRepository;
 
     public List<ProofRecord> findAllProofRequestRecords(Long userId ) {
-        return proofRecordRepository.findAllByUserIdAndProofMessageIsNull(userId);
+        return proofRecordRepository.findAllByUserIdAndProofJsonIsNull(userId);
     }
 
 }

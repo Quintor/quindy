@@ -31,10 +31,6 @@ public class ProofRecord {
     @Column(nullable = false)
     private String nonce;
 
-    /**
-     * Used to cache the encrypted proof message.
-     */
-    @Embedded
-    private AuthEncryptedMessage proofMessage;
-
+    @Lob
+    private String proofJson;
 }
