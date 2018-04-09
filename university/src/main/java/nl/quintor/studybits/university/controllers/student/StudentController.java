@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import nl.quintor.studybits.university.UserContext;
 import nl.quintor.studybits.university.entities.User;
 import nl.quintor.studybits.university.models.UserModel;
+import nl.quintor.studybits.university.services.UserProofService;
 import nl.quintor.studybits.university.services.UserService;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
@@ -18,6 +19,7 @@ public class StudentController {
 
     private final UserContext userContext;
     private final UserService userService;
+    private final UserProofService userProofService;
     private final Mapper mapper;
 
     private UserModel toModel(User user) {
@@ -43,6 +45,7 @@ public class StudentController {
                         userModel.getLastName(),
                         userModel.getSsn(),
                         false);
+        userProofService.addProofRequest(user.getId());
         return toModel(user);
     }
 }

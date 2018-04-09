@@ -20,6 +20,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
+    private final UserProofService userProofService;
     private final Mapper mapper;
 
     public List<User> findAll() {
@@ -43,13 +44,19 @@ public class UserService {
     public User createStudent(String universityName, String userName, String firstName, String lastName, String ssn, boolean confirmed) {
         University university = getUniversity(universityName);
         User user = new User(userName, firstName, lastName, ssn, confirmed, university, new StudentUser());
-        return userRepository.save(user);
+        return save(user);
     }
 
     public User createAdmin(String universityName, String userName, String firstName, String lastName, String ssn, boolean confirmed) {
         University university = getUniversity(universityName);
         User user = new User(userName, firstName, lastName, ssn, confirmed, university, new AdminUser());
-        return userRepository.save(user);
+        return save(user);
+    }
+
+    private User save(User user) {
+        User result = userRepository.save(user);
+        userProofService.addProofRequest(result.getId());
+        return result;
     }
 
     private University getUniversity(String universityName) {

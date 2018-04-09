@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@RestController("StudentAdminController")
+@RestController("AdminStudentController")
 @RequestMapping("/{universityName}/admin/{userName}/students")
 @AllArgsConstructor(onConstructor=@__(@Autowired))
 public class StudentController {

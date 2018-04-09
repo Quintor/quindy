@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface ProofRecordRepository extends JpaRepository<ProofRecord, Long> {
     List<ProofRecord> findAllByUserId(Long userId);
+
+    List<ProofRecord> findAllByUserIdAndProofJsonIsNull(Long userId);
 }
