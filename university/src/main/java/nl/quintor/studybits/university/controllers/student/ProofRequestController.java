@@ -66,7 +66,7 @@ public class ProofRequestController {
     @GetMapping("/{proofName}/{proofId}")
     AuthEncryptedMessageModel getProofRequest(@PathVariable String proofName, @PathVariable Long proofId) {
         ProofHandler handler = getHandler(proofName);
-        AuthcryptedMessage result = handler.getProofRequest(proofId);
+        AuthcryptedMessage result = handler.getProofRequestMessage(userContext.currentUserId(), proofId);
         return linkHelper.withLink(toModel(result), ProofRequestController.class, x -> x.handleProof(proofName, proofId,null));
 
     }
@@ -74,7 +74,7 @@ public class ProofRequestController {
     @PostMapping("/{proofName}/{proofId}")
     Boolean handleProof(@PathVariable String proofName, @PathVariable Long proofId, @RequestBody AuthEncryptedMessageModel authEncryptedMessageModel) {
         ProofHandler handler = getHandler(proofName);
-        return handler.HandleProof(proofId, toDto(authEncryptedMessageModel));
+        return handler.handleProof(userContext.currentUserId(),proofId, toDto(authEncryptedMessageModel));
     }
 
 }

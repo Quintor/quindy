@@ -70,7 +70,7 @@ public class UniversityService {
                 .getClaimSchemas()
                 .stream()
                 .filter(ClaimSchema::getClaimDefined)
-                .map(this::toSchemaKey)
+                .map(ServiceUtils::convertToSchemaKey)
                 .collect(Collectors.toList());
         Issuer issuer = getIssuer(university.getName());
         return new UniversityIssuer(universityName, issuer.getIssuerDid(), definedSchemaKeys);
@@ -99,7 +99,7 @@ public class UniversityService {
     public void defineClaim(String universityName, SchemaDefinition schemaDefinition) {
         ClaimSchema claimSchema = getClaimSchema(universityName, schemaDefinition);
         Validate.isTrue(!claimSchema.getClaimDefined(), "Claim already defined.");
-        SchemaKey schemaKey = toSchemaKey(claimSchema);
+        SchemaKey schemaKey = ServiceUtils.convertToSchemaKey(claimSchema);
         Issuer issuer = getIssuer(universityName);
         issuer.defineClaim(schemaKey).get();
         claimSchema.setClaimDefined(true);
@@ -133,7 +133,7 @@ public class UniversityService {
         IndyConnection indyConnection = Objects.requireNonNull(user.getConnection(), "User onboarding incomplete!");
         Issuer issuer = getIssuer(universityName);
         ClaimSchema claimSchema = getClaimSchema(universityName, schemaDefinition);
-        SchemaKey schemaKey = toSchemaKey(claimSchema);
+        SchemaKey schemaKey = ServiceUtils.convertToSchemaKey(claimSchema);
         ClaimOffer claimOffer = issuer.createClaimOffer(schemaKey, indyConnection.getDid()).get();
         AuthcryptedMessage authcryptedMessage = issuer.authEncrypt(claimOffer).get();
         return new AuthCryptableResult<>(claimOffer, authcryptedMessage);
@@ -161,6 +161,13 @@ public class UniversityService {
         claimSchema.getClaimIssuers().add(claimIssuer);
         claimSchemaRepository.save(claimSchema);
     }
+
+    @SneakyThrows
+    public List<ProofAttribute> getVerifiedProofAttributes(String universityName, ProofRequest proofRequest, Proof proof) {
+        Issuer issuer = getIssuer(universityName);
+        return issuer.getVerifiedProofAttributes(proofRequest, proof).get();
+    }
+
 
     public AuthcryptedMessage authEncrypt(String universityName, AuthCryptable authCryptable) {
         return authEncrypt(getIssuer(universityName), authCryptable);
@@ -195,7 +202,4 @@ public class UniversityService {
                 .orElseThrow(() -> new IllegalArgumentException("Schema key not found."));
     }
 
-    private SchemaKey toSchemaKey(ClaimSchema claimSchema) {
-        return new SchemaKey(claimSchema.getSchemaName(), claimSchema.getSchemaVersion(), claimSchema.getSchemaIssuerDid());
-    }
 }
