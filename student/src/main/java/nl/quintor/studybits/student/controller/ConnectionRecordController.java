@@ -2,6 +2,8 @@ package nl.quintor.studybits.student.controller;
 
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.student.entities.ConnectionRecord;
+import nl.quintor.studybits.student.entities.Student;
+import nl.quintor.studybits.student.entities.University;
 import nl.quintor.studybits.student.models.ConnectionRecordModel;
 import nl.quintor.studybits.student.services.ConnectionRecordService;
 import org.dozer.Mapper;
@@ -19,7 +21,16 @@ public class ConnectionRecordController {
     private Mapper mapper;
 
     private ConnectionRecordModel toModel(ConnectionRecord connectionRecord) {
-        return mapper.map(connectionRecord, ConnectionRecordModel.class);
+        ConnectionRecordModel model = mapper.map(connectionRecord, ConnectionRecordModel.class);
+        University university = connectionRecord.getUniversity();
+        if(university != null) {
+            model.setUniversityName(university.getName());
+        }
+        Student student = connectionRecord.getStudent();
+        if(student != null) {
+            model.setUserName(student.getUserName());
+        }
+        return model;
     }
 
     @GetMapping

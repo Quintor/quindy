@@ -14,4 +14,6 @@ public interface ClaimRepository extends JpaRepository<Claim, Long> {
     boolean existsByHashId(String hashId);
 
     List<Claim> findAllBySchemaKey(SchemaKey schemaKey);
+
+    boolean existsBySchemaKeyNameAndSchemaKeyVersionAndLabel(String schemaKeyName, String schemaKeyVersion, String label);
 }
