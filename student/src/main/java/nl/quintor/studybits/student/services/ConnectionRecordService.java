@@ -32,7 +32,7 @@ public class ConnectionRecordService {
         connectionRecordRepository.save(connectionRecord);
     }
 
-    public ConnectionRecord findByIdOrElseThrow(Long connectionId) {
+    public ConnectionRecord getById(Long connectionId) {
         return connectionRecordRepository
                 .findById(connectionId)
                 .map(this::toModel)

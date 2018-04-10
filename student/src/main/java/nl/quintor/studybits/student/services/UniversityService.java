@@ -35,12 +35,6 @@ public class UniversityService {
         return universityRepository.save(university);
     }
 
-    public Optional<University> findById(Long uniId) {
-        return universityRepository
-                .findById(uniId)
-                .map(this::toModel);
-    }
-
     public Optional<University> findByName(String name) {
         return universityRepository
                 .findByName(name)

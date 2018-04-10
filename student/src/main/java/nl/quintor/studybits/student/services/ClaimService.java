@@ -37,6 +37,7 @@ public class ClaimService {
     private ConnectionRecordService connectionRecordService;
     private SchemaKeyService schemaKeyService;
     private StudentService studentService;
+    private StudentProverService studentProverService;
     private Mapper mapper;
 
     /**
@@ -48,7 +49,7 @@ public class ClaimService {
      */
     public void getAndSaveNewClaimsForOwnerUserName(String studentUserName) throws Exception {
         Student student = studentService.getByUserName(studentUserName);
-        try (Prover prover = studentService.getProverForStudent(student)) {
+        studentProverService.withProverForStudent(student, prover -> {
             getAllStudentClaimInfo(student)
                     .forEach((StudentClaimInfoModel claimInfo) -> {
                         try {
@@ -59,7 +60,7 @@ public class ClaimService {
                             log.error(e.getMessage());
                         }
                     });
-        }
+        });
     }
 
     /**
@@ -143,7 +144,7 @@ public class ClaimService {
                 .path("/claims")
                 .build().toUri();
 
-        return  new RestTemplate().exchange(path, HttpMethod.GET, null, new ParameterizedTypeReference<List<StudentClaimInfoModel>>() {})
+        return new RestTemplate().exchange(path, HttpMethod.GET, null, new ParameterizedTypeReference<List<StudentClaimInfoModel>>() {})
                 .getBody()
                 .stream();
     }

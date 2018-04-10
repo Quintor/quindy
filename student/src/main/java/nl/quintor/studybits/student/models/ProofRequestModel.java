@@ -2,20 +2,23 @@ package nl.quintor.studybits.student.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.hateoas.ResourceSupport;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProofRequestInfo extends ResourceSupport {
+public class ProofRequestModel {
+    private Long id;
 
     private Long proofId;
+
+    private String studentUserName;
+
+    private String universityName;
+
+    private String link;
 
     private String name;
 
     private String version;
-
 }

@@ -25,7 +25,7 @@ public class ClaimIT extends BaseIT {
     }
 
     @Test
-    public void createNewClaim() {
+    public void testCreateNewClaim() {
         String UNIVERSITY_NAME = "rug";
         String STUDENT_NAME = "student1";
 
