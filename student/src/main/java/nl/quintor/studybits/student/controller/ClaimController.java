@@ -2,6 +2,7 @@ package nl.quintor.studybits.student.controller;
 
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.student.entities.Claim;
+import nl.quintor.studybits.student.entities.University;
 import nl.quintor.studybits.student.models.ClaimModel;
 import nl.quintor.studybits.student.services.ClaimService;
 import org.dozer.Mapper;
@@ -22,7 +23,12 @@ public class ClaimController {
     private Mapper mapper;
 
     private ClaimModel toModel(Claim claim) {
-        return mapper.map(claim, ClaimModel.class);
+        ClaimModel claimModel = mapper.map(claim, ClaimModel.class);
+        University university = claim.getOwner().getOriginUniversity();
+        if(university != null) {
+            claimModel.setUniversityName(university.getName());
+        }
+        return claimModel;
     }
 
     @GetMapping

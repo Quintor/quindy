@@ -12,6 +12,6 @@ public class ConnectionRecordModel {
     private String did;
     private String nonce;
     private String role;
-    private String newcomerName;
-    private String verkey;
+    private String userName;
+    private String universityName;
 }

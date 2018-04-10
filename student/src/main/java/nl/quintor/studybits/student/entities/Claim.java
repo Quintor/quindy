@@ -27,6 +27,10 @@ public class Claim implements AuthCryptable {
 
     @ManyToOne(cascade = CascadeType.ALL)
     private SchemaKey schemaKey;
+
+    @Column(nullable = false)
+    private String label;
+
     private Integer revReqSeqNo;
 
     @Lob

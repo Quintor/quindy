@@ -28,6 +28,4 @@ public class ConnectionRecord {
     private String did;
     private String nonce;
     private String role;
-    private String newcomerName;
-    private String verkey;
 }

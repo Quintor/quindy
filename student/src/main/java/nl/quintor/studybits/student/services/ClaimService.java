@@ -38,6 +38,13 @@ public class ClaimService {
     private StudentService studentService;
     private Mapper mapper;
 
+
+    private Claim toClaimEntity(nl.quintor.studybits.indy.wrapper.dto.Claim claim, String label) {
+        Claim result = mapper.map(claim, Claim.class);
+        result.setLabel(label);
+        return result;
+    }
+
     /**
      * Retrieves all ClaimInfo, ClaimOffers, and Claims from all Universities, which are connected to a student.
      * Claims which are not saved yet, are saved. The rest is disregarded.
@@ -49,10 +56,19 @@ public class ClaimService {
         Student student = studentService.findByNameOrElseThrow(studentUserName);
         try (Prover prover = studentService.getProverForStudent(student)) {
             getAllStudentClaimInfo(student)
+                    .filter(this::isNewClaimInfo)
                     .map(AsyncUtil.wrapException(claimInfo -> getClaimOfferForClaimInfo(claimInfo, prover)))
                     .map(AsyncUtil.wrapException(claimOffer -> getClaimForClaimOffer(claimOffer, prover, student)))
                     .forEach(this::saveClaimIfNew);
         }
+    }
+
+    private boolean isNewClaimInfo(StudentClaimInfoModel claimInfoModel) {
+        boolean exists = claimRepository.existsBySchemaKeyNameAndSchemaKeyVersionAndLabel(
+                claimInfoModel.getName(),
+                claimInfoModel.getVersion(),
+                claimInfoModel.getLabel());
+        return !exists;
     }
 
     /**
@@ -85,7 +101,9 @@ public class ClaimService {
                 )
                 .getBody();
 
-        return getClaimOfferModelFromAuthEncryptedMessageModel(authEncryptedMessageModel, prover);
+        ClaimOfferModel claimOfferModel = getClaimOfferModelFromAuthEncryptedMessageModel(authEncryptedMessageModel, prover);
+        claimOfferModel.setLabel(claimInfo.getLabel());
+        return claimOfferModel;
     }
 
     /**
@@ -97,7 +115,7 @@ public class ClaimService {
      * @throws Exception
      */
     private Claim getClaimForClaimOffer(ClaimOfferModel claimOfferModel, Prover prover, Student owner) throws Exception {
-        Claim claim = getClaimFromUniversity(claimOfferModel, prover);
+        Claim claim = getClaimFromUniversity(claimOfferModel, prover, claimOfferModel.getLabel());
         claim.setOwner(owner);
         claim.setHashId(hashClaim(claim));
 
@@ -146,7 +164,7 @@ public class ClaimService {
         return claimOfferModel;
     }
 
-    private Claim getClaimFromUniversity(ClaimOfferModel claimOfferModel, Prover prover) throws Exception {
+    private Claim getClaimFromUniversity(ClaimOfferModel claimOfferModel, Prover prover, String label) throws Exception {
         AuthEncryptedMessageModel encryptedClaimRequest = getEncryptedClaimRequestForClaimOffer(claimOfferModel.getClaimOffer(), prover);
 
         log.debug("Retrieving ClaimModel from UniversityModel with claimOffer {} ", claimOfferModel);
@@ -155,7 +173,7 @@ public class ClaimService {
 
         AuthcryptedMessage authcryptedMessage = mapper.map(response, AuthcryptedMessage.class);
         return decryptAuthcryptedMessage(authcryptedMessage, prover, nl.quintor.studybits.indy.wrapper.dto.Claim.class)
-                .thenApply(wrapperClaim -> mapper.map(wrapperClaim, Claim.class))
+                .thenApply(wrapperClaim -> toClaimEntity(wrapperClaim, label))
                 .get();
     }
 

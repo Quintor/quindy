@@ -13,4 +13,5 @@ import org.springframework.hateoas.ResourceSupport;
 @EqualsAndHashCode(callSuper = true)
 public class ClaimOfferModel extends ResourceSupport {
     private ClaimOffer claimOffer;
+    private String label;
 }
