@@ -39,9 +39,4 @@ public class TestController {
         return "StudentModel Backend says: Ich lebe! Heidewitzka!";
     }
 
-    @GetMapping("/health2")
-    String health2() {
-        return "!!!!!!!";
-    }
 }
-
