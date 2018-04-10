@@ -35,7 +35,7 @@ public class StudentController {
 
     @PostMapping
     UserModel createStudent(@RequestBody UserModel userModel) {
-        Validate.isTrue(!userContext.getCurrentUser().isPresent(), "User already exists.");
+        Validate.isTrue(!userContext.userExists(), "User already exists.");
         Validate.isTrue(userContext.currentUserName().equalsIgnoreCase(userModel.getUserName()), "UserName mismatch.");
         User user = userService
                 .createStudent(
@@ -45,7 +45,6 @@ public class StudentController {
                         userModel.getLastName(),
                         userModel.getSsn(),
                         false);
-        userProofService.addProofRequest(user.getId());
         return toModel(user);
     }
 }

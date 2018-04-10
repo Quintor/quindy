@@ -43,7 +43,7 @@ public class BaseIT {
 
     Integer registerStudent(String username, String uniName) {
         return givenCorrectHeaders(STUDENT_URL)
-                .queryParam("username", username)
+                .queryParam("studentUserName", username)
                 .queryParam("universityName", uniName)
                 .post("/student/register")
                 .then()
@@ -52,11 +52,11 @@ public class BaseIT {
                 .path("id");
     }
 
-    void onboardStudent(String studentUserName, String universityName) {
+    void connectStudent(String studentUserName, String universityName) {
         givenCorrectHeaders(STUDENT_URL)
                 .queryParam("studentUserName", studentUserName)
                 .queryParam("universityName", universityName)
-                .post("/student/onboard")
+                .post("/student/connect")
                 .then()
                 .assertThat().statusCode(200);
     }

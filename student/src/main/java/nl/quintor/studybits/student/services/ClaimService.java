@@ -47,7 +47,7 @@ public class ClaimService {
      * @throws Exception
      */
     public void getAndSaveNewClaimsForOwnerUserName(String studentUserName) throws Exception {
-        Student student = studentService.findByNameOrElseThrow(studentUserName);
+        Student student = studentService.getByUserName(studentUserName);
         try (Prover prover = studentService.getProverForStudent(student)) {
             getAllStudentClaimInfo(student)
                     .forEach((StudentClaimInfoModel claimInfo) -> {
@@ -143,9 +143,9 @@ public class ClaimService {
                 .path("/claims")
                 .build().toUri();
 
-        RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.exchange(path, HttpMethod.GET, null, new ParameterizedTypeReference<List<StudentClaimInfoModel>>() {
-        }).getBody().stream();
+        return  new RestTemplate().exchange(path, HttpMethod.GET, null, new ParameterizedTypeReference<List<StudentClaimInfoModel>>() {})
+                .getBody()
+                .stream();
     }
 
     private ClaimOfferModel getClaimOfferModelFromAuthEncryptedMessageModel(AuthEncryptedMessageModel authEncryptedMessageModel, Prover prover) throws Exception {
@@ -201,12 +201,12 @@ public class ClaimService {
     }
 
     public List<Claim> findAllByOwnerUserName(String studentUserName) {
-        Student owner = studentService.findByNameOrElseThrow(studentUserName);
+        Student owner = studentService.getByUserName(studentUserName);
         return claimRepository.findAllByOwnerId(owner.getId());
     }
 
     public List<Claim> findByOwnerUserNameAndSchemaKeyName(String studentUserName, String schemaName) {
-        Student student = studentService.findByNameOrElseThrow(studentUserName);
+        Student student = studentService.getByUserName(studentUserName);
         SchemaKey schemaKey = schemaKeyService.findByNameOrElseThrow(schemaName);
 
         return claimRepository

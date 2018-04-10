@@ -29,7 +29,7 @@ public class UniversityController {
 
     @GetMapping("/{universityName}")
     UniversityModel findById(@PathVariable String universityName) {
-        return toModel(universityService.findByNameOrElseThrow(universityName));
+        return toModel(universityService.getByName(universityName));
     }
 
     @GetMapping

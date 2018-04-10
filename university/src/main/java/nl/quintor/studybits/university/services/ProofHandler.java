@@ -64,7 +64,7 @@ public abstract class ProofHandler<T extends Proof> {
     public ProofRecord addProofRequest(Long userId) {
         User user = userRepository.getOne(userId);
         Version version = ClaimUtils.getVersion(getProofType());
-        String nonce = RandomStringUtils.randomAlphanumeric(28, 36);
+        String nonce = RandomStringUtils.randomNumeric(28, 36);
         ProofRecord proofRecord = new ProofRecord(null, user, version.getName(), version.getVersion(), nonce, null);
         return proofRecordRepository.save(proofRecord);
     }
@@ -79,7 +79,7 @@ public abstract class ProofHandler<T extends Proof> {
     }
 
     @Transactional
-    public boolean handleProof(Long userId, Long proofRecordId, AuthcryptedMessage authcryptedMessage) {
+    public Boolean handleProof(Long userId, Long proofRecordId, AuthcryptedMessage authcryptedMessage) {
         ProofRecord proofRecord = getProofRecord(userId, proofRecordId);
         Validate.validState(StringUtils.isEmpty(proofRecord.getProofJson()), String.format("UserId %s already provided proof for proofRecordId %s.", userId, proofRecord));
         User user = Objects.requireNonNull(proofRecord.getUser());
@@ -87,7 +87,7 @@ public abstract class ProofHandler<T extends Proof> {
         ProofRequest proofRequest = getProofRequest(university, user, proofRecord);
         T verifiedProof = getVerifiedProof(university.getName(), proofRequest, authcryptedMessage);
         proofRecord.setProofJson(ServiceUtils.objectToJson(verifiedProof));
-        boolean handled = handleProof(user, proofRecord, verifiedProof);
+        Boolean handled = handleProof(user, proofRecord, verifiedProof);
         if(handled) {
             proofRecordRepository.save(proofRecord);
         }
@@ -137,6 +137,7 @@ public abstract class ProofHandler<T extends Proof> {
         Map<Version, Optional<ClaimSchema>> claimSchemaLookup = proofAttributes
                 .stream()
                 .flatMap(proofAttribute -> proofAttribute.getSchemaVersions().stream())
+                .distinct()
                 .collect(Collectors.toMap(v -> v, v -> findClaimSchema(universityId, v)));
 
         return proofAttributes

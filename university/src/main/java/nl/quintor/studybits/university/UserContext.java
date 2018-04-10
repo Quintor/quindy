@@ -46,4 +46,8 @@ public class UserContext {
     public Long currentUserId() {
         return Validate.notNull(currentUserIdentity().getUserId(), "User unknown.");
     }
+
+    public boolean userExists() {
+        return currentUserIdentity().getUserId() != null;
+    }
 }

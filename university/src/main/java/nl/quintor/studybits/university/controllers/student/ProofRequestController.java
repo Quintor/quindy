@@ -67,14 +67,14 @@ public class ProofRequestController {
     AuthEncryptedMessageModel getProofRequest(@PathVariable String proofName, @PathVariable Long proofId) {
         ProofHandler handler = getHandler(proofName);
         AuthcryptedMessage result = handler.getProofRequestMessage(userContext.currentUserId(), proofId);
-        return linkHelper.withLink(toModel(result), ProofRequestController.class, x -> x.handleProof(proofName, proofId,null));
+        return linkHelper.withLink(toModel(result), ProofRequestController.class, x -> x.handleProof(proofName, proofId, null));
 
     }
 
     @PostMapping("/{proofName}/{proofId}")
-    Boolean handleProof(@PathVariable String proofName, @PathVariable Long proofId, @RequestBody AuthEncryptedMessageModel authEncryptedMessageModel) {
+    Object handleProof(@PathVariable String proofName, @PathVariable Long proofId, @RequestBody AuthEncryptedMessageModel authEncryptedMessageModel) {
         ProofHandler handler = getHandler(proofName);
-        return handler.handleProof(userContext.currentUserId(),proofId, toDto(authEncryptedMessageModel));
+        return handler.handleProof(userContext.currentUserId(), proofId, toDto(authEncryptedMessageModel));
     }
 
 }
