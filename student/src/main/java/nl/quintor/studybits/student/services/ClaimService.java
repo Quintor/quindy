@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.indy.wrapper.dto.AuthCryptable;
 import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
+import nl.quintor.studybits.indy.wrapper.dto.Claim;
 import nl.quintor.studybits.indy.wrapper.dto.ClaimOffer;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.student.entities.*;
@@ -13,7 +14,6 @@ import nl.quintor.studybits.student.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.student.models.ClaimOfferModel;
 import nl.quintor.studybits.student.models.StudentClaimInfoModel;
 import nl.quintor.studybits.student.repositories.ClaimRepository;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -54,8 +54,10 @@ public class ClaimService {
                     .forEach((StudentClaimInfoModel claimInfo) -> {
                         try {
                             ClaimOfferModel claimOffer = getClaimOfferForClaimInfo(claimInfo, prover);
-                            Claim claim = getClaimForClaimOffer(claimOffer, claimInfo, prover, student);
-                            saveClaimIfNew(claim);
+                            Claim claim = getClaimFromUniversity(claimOffer, prover);
+
+                            prover.storeClaim(claim);
+                            saveClaimIfNew(claim, student, claimInfo);
                         } catch (Exception e) {
                             log.error(e.getMessage());
                         }
@@ -97,35 +99,20 @@ public class ClaimService {
     }
 
     /**
-     * Retrieves a Claim from the link connected to a ClaimOffer from the University, which holds the Claim.
-     *
-     * @param claimOfferModel : The claimOffer for a claim which holds a HATEOAS link to the claim object.
-     * @param claimInfo
-     * @param owner           :           The student object which owns the claim. Needed to create a prover to decrypt the response.in
-     * @return a Claim object.
-     * @throws Exception
-     */
-    private Claim getClaimForClaimOffer(ClaimOfferModel claimOfferModel, StudentClaimInfoModel claimInfo, Prover prover, Student owner) throws Exception {
-        Claim claim = getClaimFromUniversity(claimOfferModel, prover);
-        claim.setOwner(owner);
-        claim.setLabel(claimInfo.getLabel());
-
-        return claim;
-    }
-
-    /**
      * Saves a Claim to the database, if the claim does not yet exist in the database.
      * The hash of the claim values is used to determine whether a claim is stored yet.
-     *
-     * @param claim: The claim to be stored.
      */
-    private void saveClaimIfNew(Claim claim) {
-        Claim queryClaim = new Claim();
-        queryClaim.setSchemaKey(claim.getSchemaKey());
-        queryClaim.setLabel(claim.getLabel());
+    private void saveClaimIfNew(Claim claim, Student student, StudentClaimInfoModel claimInfo) {
+        ClaimEntity claimEntity = mapper.map(claim, ClaimEntity.class);
+        claimEntity.setOwner(student);
+        claimEntity.setLabel(claimInfo.getLabel());
 
-        if (!claimRepository.exists(Example.of(queryClaim)))
-            claimRepository.save(claim);
+        ClaimEntity queryClaimEntity = new ClaimEntity();
+        queryClaimEntity.setSchemaKey(claimEntity.getSchemaKey());
+        queryClaimEntity.setLabel(claimEntity.getLabel());
+
+        if (!claimRepository.exists(Example.of(queryClaimEntity)))
+            claimRepository.save(claimEntity);
     }
 
     /**
@@ -167,14 +154,12 @@ public class ClaimService {
                 .getHref(), encryptedClaimRequest, AuthEncryptedMessageModel.class);
 
         AuthcryptedMessage authcryptedMessage = mapper.map(response, AuthcryptedMessage.class);
-        return decryptAuthcryptedMessage(authcryptedMessage, prover, nl.quintor.studybits.indy.wrapper.dto.Claim.class)
-                .thenApply(wrapperClaim -> mapper.map(wrapperClaim, Claim.class))
-                .get();
+        return decryptAuthcryptedMessage(authcryptedMessage, prover, Claim.class).get();
     }
 
     private AuthEncryptedMessageModel getEncryptedClaimRequestForClaimOffer(ClaimOffer claimOffer, Prover prover) throws Exception {
         log.debug("Creating ClaimRequest with claimOffer {}", claimOffer);
-        return prover.createClaimRequest(claimOffer)
+        return prover.storeClaimOfferAndCreateClaimRequest(claimOffer)
                 .thenCompose(
                         AsyncUtil.wrapException(claimRequest -> {
                             log.debug("AuthEncrypting ClaimRequest {} with Prover.", claimRequest);
@@ -191,29 +176,25 @@ public class ClaimService {
         return prover.authDecrypt(authMessage, type);
     }
 
-    private String hashClaim(Claim claim) {
-        return DigestUtils.sha256Hex(claim.getValues());
-    }
-
-    public Claim findByIdOrElseThrow(Long claimId) {
+    public ClaimEntity findByIdOrElseThrow(Long claimId) {
         return claimRepository
                 .findById(claimId)
                 .orElseThrow(() -> new IllegalArgumentException("ClaimModel with id not found"));
     }
 
-    public List<Claim> findAllByOwnerUserName(String studentUserName) {
+    public List<ClaimEntity> findAllByOwnerUserName(String studentUserName) {
         Student owner = studentService.getByUserName(studentUserName);
         return claimRepository.findAllByOwnerId(owner.getId());
     }
 
-    public List<Claim> findByOwnerUserNameAndSchemaKeyName(String studentUserName, String schemaName) {
+    public List<ClaimEntity> findByOwnerUserNameAndSchemaKeyName(String studentUserName, String schemaName) {
         Student student = studentService.getByUserName(studentUserName);
         SchemaKey schemaKey = schemaKeyService.findByNameOrElseThrow(schemaName);
 
         return claimRepository
                 .findAllBySchemaKey(schemaKey)
                 .stream()
-                .filter(claim -> claim.getOwner().equals(student))
+                .filter(claimEntity -> claimEntity.getOwner().equals(student))
                 .collect(Collectors.toList());
     }
 

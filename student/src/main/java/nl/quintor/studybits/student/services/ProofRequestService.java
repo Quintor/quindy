@@ -25,7 +25,6 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 @Service
@@ -83,16 +82,8 @@ public class ProofRequestService {
         AuthEncryptedMessageModel response = new RestTemplate()
                 .getForObject(requestInfo.getLink("self").getHref(), AuthEncryptedMessageModel.class);
 
-        // TODO: This is a hacky workaround to get UserProof to work. Normally, we should get this information from the claims.
-        Map<String, String> selfAttestedAttributes = new HashMap<>();
-        if (requestInfo.getName().equals("UserProof")) {
-            selfAttestedAttributes.put("firstName", student.getFirstName());
-            selfAttestedAttributes.put("lastName", student.getLastName());
-            selfAttestedAttributes.put("ssn", student.getSsn());
-        }
-
         AuthEncryptedMessageModel model = prover.authDecrypt(mapper.map(response, AuthcryptedMessage.class), ProofRequest.class)
-                .thenCompose(AsyncUtil.wrapException(proofRequest -> prover.fulfillProofRequest(proofRequest, selfAttestedAttributes)))
+                .thenCompose(AsyncUtil.wrapException(proofRequest -> prover.fulfillProofRequest(proofRequest, new HashMap<>())))
                 .thenCompose(AsyncUtil.wrapException(prover::authEncrypt))
                 .thenApply(authcryptedMessage -> mapper.map(authcryptedMessage, AuthEncryptedMessageModel.class))
                 .get();
