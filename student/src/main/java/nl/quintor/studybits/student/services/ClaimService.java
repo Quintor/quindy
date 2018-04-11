@@ -14,7 +14,6 @@ import nl.quintor.studybits.student.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.student.models.ClaimOfferModel;
 import nl.quintor.studybits.student.models.StudentClaimInfoModel;
 import nl.quintor.studybits.student.repositories.ClaimRepository;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -34,19 +33,13 @@ import java.util.stream.Stream;
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class ClaimService {
+
     private ClaimRepository claimRepository;
     private ConnectionRecordService connectionRecordService;
     private SchemaKeyService schemaKeyService;
     private StudentService studentService;
     private StudentProverService studentProverService;
     private Mapper mapper;
-
-
-    private Claim toClaimEntity(nl.quintor.studybits.indy.wrapper.dto.Claim claim, String label) {
-        Claim result = mapper.map(claim, Claim.class);
-        result.setLabel(label);
-        return result;
-    }
 
     /**
      * Retrieves all ClaimInfo, ClaimOffers, and Claims from all Universities, which are connected to a student.
