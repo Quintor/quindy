@@ -186,7 +186,7 @@ public class ClaimService {
         return prover.authDecrypt(authMessage, type);
     }
 
-    public ClaimEntity findByIdOrElseThrow(Long claimId) {
+    public ClaimEntity getById(Long claimId) {
         return claimRepository
                 .findById(claimId)
                 .orElseThrow(() -> new IllegalArgumentException("ClaimModel with id not found"));
@@ -199,7 +199,7 @@ public class ClaimService {
 
     public List<ClaimEntity> findByOwnerUserNameAndSchemaKeyName(String studentUserName, String schemaName) {
         Student student = studentService.getByUserName(studentUserName);
-        SchemaKey schemaKey = schemaKeyService.findByNameOrElseThrow(schemaName);
+        SchemaKey schemaKey = schemaKeyService.getByName(schemaName);
 
         return claimRepository
                 .findAllBySchemaKey(schemaKey)
