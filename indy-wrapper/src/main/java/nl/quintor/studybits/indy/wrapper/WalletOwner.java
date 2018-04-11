@@ -144,14 +144,15 @@ public class WalletOwner implements AutoCloseable {
     public CompletableFuture<AuthcryptedMessage> authEncrypt(AuthCryptable message) throws JsonProcessingException, IndyException {
         log.debug("{} Authcrypting message: {}, theirDid: {}", name, message.toJSON(), message.getTheirDid());
         return getKeyForDid(message.getTheirDid()).thenCompose(wrapException((String theirKey) -> {
-            return getPairwiseByTheirDid(message.getTheirDid()).thenCompose(wrapException((GetPairwiseResult getPairwiseResult) -> getKeyForDid(getPairwiseResult
-                            .getMyDid()).thenCompose(wrapException((String myKey) -> {
-                        log.debug("{} Authcrypting with keys myKey {}, theirKey {}", name, myKey, theirKey);
-                        return Crypto.authCrypt(wallet.getWallet(), myKey, theirKey, message.toJSON()
-                                .getBytes(Charset.forName("utf8")))
-                                .thenApply(cryptedMessage -> new AuthcryptedMessage(cryptedMessage, getPairwiseResult.getMyDid()));
-                    })))
-            );
+            return getPairwiseByTheirDid(message.getTheirDid())
+                    .thenCompose(wrapException((GetPairwiseResult getPairwiseResult) -> getKeyForDid(getPairwiseResult.getMyDid())
+                            .thenCompose(wrapException((String myKey) -> {
+                                log.debug("{} Authcrypting with keys myKey {}, theirKey {}", name, myKey, theirKey);
+                                return Crypto.authCrypt(wallet.getWallet(), myKey, theirKey, message.toJSON()
+                                        .getBytes(Charset.forName("utf8")))
+                                        .thenApply(cryptedMessage -> new AuthcryptedMessage(cryptedMessage, getPairwiseResult.getMyDid()));
+                            })))
+                    );
         }));
     }
 

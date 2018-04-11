@@ -13,7 +13,6 @@ public class ClaimIT extends BaseIT {
 
         registerUniversity(UNIVERSITY_NAME);
         registerStudent(STUDENT_NAME, UNIVERSITY_NAME);
-        onboardStudent(STUDENT_NAME, UNIVERSITY_NAME);
 
         assertNoClaims(STUDENT_NAME);
         getNewClaims(STUDENT_NAME);
@@ -26,13 +25,12 @@ public class ClaimIT extends BaseIT {
     }
 
     @Test
-    public void createNewClaim() {
+    public void testCreateNewClaim() {
         String UNIVERSITY_NAME = "rug";
         String STUDENT_NAME = "student1";
 
         registerUniversity(UNIVERSITY_NAME);
         registerStudent(STUDENT_NAME, UNIVERSITY_NAME);
-        onboardStudent(STUDENT_NAME, UNIVERSITY_NAME);
 
         TranscriptModel transcriptModel = new TranscriptModel("Master of Disaster", "Awesome", "2017/18", "9.5");
 

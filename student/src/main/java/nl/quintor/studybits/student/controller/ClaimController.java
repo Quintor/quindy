@@ -1,8 +1,7 @@
 package nl.quintor.studybits.student.controller;
 
 import lombok.AllArgsConstructor;
-import nl.quintor.studybits.student.entities.Claim;
-import nl.quintor.studybits.student.entities.University;
+import nl.quintor.studybits.student.entities.ClaimEntity;
 import nl.quintor.studybits.student.models.ClaimModel;
 import nl.quintor.studybits.student.services.ClaimService;
 import org.dozer.Mapper;
@@ -22,13 +21,8 @@ public class ClaimController {
     private ClaimService claimService;
     private Mapper mapper;
 
-    private ClaimModel toModel(Claim claim) {
-        ClaimModel claimModel = mapper.map(claim, ClaimModel.class);
-        University university = claim.getOwner().getOriginUniversity();
-        if(university != null) {
-            claimModel.setUniversityName(university.getName());
-        }
-        return claimModel;
+    private ClaimModel toModel(ClaimEntity claimEntity) {
+        return mapper.map(claimEntity, ClaimModel.class);
     }
 
     @GetMapping
@@ -53,7 +47,7 @@ public class ClaimController {
     ClaimModel findById(@PathVariable String studentUserName, @PathVariable Long claimId) {
         // TODO: Add ownership check.
 
-        return toModel(claimService.findByIdOrElseThrow(claimId));
+        return toModel(claimService.getById(claimId));
     }
 
     @GetMapping("/new")

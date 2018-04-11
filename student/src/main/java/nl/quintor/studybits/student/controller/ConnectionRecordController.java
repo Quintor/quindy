@@ -46,7 +46,7 @@ public class ConnectionRecordController {
     ConnectionRecordModel findById(@PathVariable String studentUserName, @PathVariable Long connectionId) {
         // TODO: Check ownership
 
-        return toModel(connectionRecordService.findByIdOrElseThrow(connectionId));
+        return toModel(connectionRecordService.getById(connectionId));
     }
 
     @PutMapping("/{connectionId}")

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class SchemaKeyService {
     private SchemaKeyRepository schemaKeyRepository;
 
-    public SchemaKey findByNameOrElseThrow(String name) {
+    public SchemaKey getByName(String name) {
         return schemaKeyRepository
                 .findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("SchemaKey with name not found."));

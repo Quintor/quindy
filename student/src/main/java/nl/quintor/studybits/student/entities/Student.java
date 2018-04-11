@@ -17,8 +17,17 @@ public class Student {
     @GeneratedValue
     private Long id;
 
-    @Column(name = "user_name")
+    @Column(nullable = false)
     private String userName;
+
+    @Column(nullable = false)
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
+
+    @Column(nullable = false, unique = true)
+    private String ssn;
 
     @ManyToOne
     private University originUniversity;

@@ -77,13 +77,11 @@ public class Prover extends WalletOwner {
                     log.debug("{}: Obtained claims for proof request {}", name, claimsForProofRequestJson);
                     return JSONUtil.mapper.readValue(claimsForProofRequestJson, ClaimsForRequest.class);
                 }))
-                .thenCompose(wrapException(claimsForRequest -> createProofFromClaims(proofRequest, claimsForRequest, attributes, proofRequest
-                        .getTheirDid())))
+                .thenCompose(wrapException(claimsForRequest -> createProofFromClaims(proofRequest, claimsForRequest, attributes, proofRequest.getTheirDid())))
                 .thenApply(wrapException(proof -> {
                     log.debug("{}: Created proof {}", name, proof.toJSON());
                     return proof;
                 }));
-
     }
 
     CompletableFuture<Proof> createProofFromClaims(ProofRequest proofRequest, ClaimsForRequest claimsForRequest, Map<String, String> attributes, String theirDid) throws JsonProcessingException {
@@ -97,8 +95,7 @@ public class Prover extends WalletOwner {
                         .getRestrictions()
                         .isPresent())
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
-                    String value = attributes.get(entry.getValue()
-                            .getName());
+                    String value = attributes.get(entry.getValue().getName());
                     if (value == null) {
                         throw new IllegalArgumentException("Self attested attribute was not provided");
                     }
@@ -173,8 +170,9 @@ public class Prover extends WalletOwner {
                 .filter(stringAttributeInfoEntry -> stringAttributeInfoEntry.getValue()
                         .getRestrictions()
                         .isPresent())
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> Arrays.asList(claimsByReferentKey.get(entry.getKey())
-                        .getReferent(), true)));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+                    return Arrays.asList(claimsByReferentKey.get(entry.getKey()).getReferent(), true);
+                }));
 
         Map<String, String> requestedPredicates = proofRequest.getRequestedPredicates()
                 .entrySet()

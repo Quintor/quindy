@@ -35,19 +35,13 @@ public class UniversityService {
         return universityRepository.save(university);
     }
 
-    public Optional<University> findById(Long uniId) {
-        return universityRepository
-                .findById(uniId)
-                .map(this::toModel);
-    }
-
     public Optional<University> findByName(String name) {
         return universityRepository
                 .findByName(name)
                 .map(this::toModel);
     }
 
-    public University findByNameOrElseThrow(String name) {
+    public University getByName(String name) {
         return findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("UniversityModel with name not found."));
     }
@@ -67,7 +61,7 @@ public class UniversityService {
     }
 
     public void deleteByName(String universityName) {
-        University university = findByNameOrElseThrow(universityName);
+        University university = getByName(universityName);
         universityRepository.deleteById(university.getId());
     }
 
@@ -75,19 +69,35 @@ public class UniversityService {
         universityRepository.deleteAll();
     }
 
-    private URI buildOnboardingUri(University university, String endpoint, Student student) {
-        log.debug("Building onboarding uri on: university endpoint: {}, endpoint: {}, student: {}", university.getEndpoint(), endpoint, student);
+    private URI buildStudentUri(University university, Student student, String endpoint) {
+        return buildStudentUri(university, student.getUserName(), endpoint);
+    }
+
+    private URI buildStudentUri(University university, String studentUserName, String endpoint) {
+        log.debug("Building onboarding uri on: university endpoint: {}, endpoint: {}, student: {}", university.getEndpoint(), endpoint, studentUserName);
         return UriComponentsBuilder
                 .fromHttpUrl(university.getEndpoint())
-                .path("/{universityName}/student/{userName}/onboarding/{endpoint}")
-                .build(university.getName(), student.getUserName(), endpoint);
+                .path("/{universityName}/student/{userName}/{endpoint}")
+                .build(university.getName(), studentUserName, endpoint);
     }
 
     public URI buildOnboardingBeginUri(University university, Student student) {
-        return buildOnboardingUri(university, "begin", student);
+        return buildStudentUri(university, student, "onboarding/begin");
     }
 
     public URI buildOnboardingFinalizeUri(University university, Student student) {
-        return buildOnboardingUri(university, "finalize", student);
+        return buildStudentUri(university, student, "onboarding/finalize");
+    }
+
+    public URI buildCreateStudentUri(University university, Student student) {
+        return buildStudentUri(university, student, "students");
+    }
+
+    public URI buildAllProofRequestsUri(University university, Student student) {
+        return buildStudentUri(university, student, "proofrequests");
+    }
+
+    public URI buildGetStudentInfoUri(University university, String userName) {
+        return buildStudentUri(university, userName, "students");
     }
 }

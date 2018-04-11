@@ -19,13 +19,17 @@ public class TestController {
     private final UniversityService universityService;
     private final ConnectionRecordService connectionRecordService;
     private final ClaimService claimService;
+    private final ProofRequestService proofRequestService;
 
+    // TODO: Replace with Repositories and delete deleteAll() functions in Services
     @DeleteMapping("/nuke")
     public void nuke() throws Exception {
         log.info("Deleting connection records");
         connectionRecordService.deleteAll();
         log.info("Deleting claims");
         claimService.deleteAll();
+        log.info("Deleting proof request records");
+        proofRequestService.deleteAll();
         log.info("Deleting students");
         studentService.deleteAll();
         log.info("Deleting meta wallets");

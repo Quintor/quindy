@@ -23,19 +23,22 @@ public class StudentController {
         return mapper.map(student, StudentModel.class);
     }
 
-    @PostMapping("/onboard")
+    @PostMapping("/connect")
     void onboard(@RequestParam String studentUserName, @RequestParam String universityName) throws Exception {
-        studentService.onboard(studentUserName, universityName);
+        studentService.connectWithUniversity(studentUserName, universityName);
     }
 
     @PostMapping("/register")
-    StudentModel register(@RequestParam String username, @RequestParam String universityName) {
-        return toModel(studentService.createAndSave(username, universityName));
+    StudentModel register(@RequestParam String studentUserName, @RequestParam String universityName) throws Exception {
+        Student student = studentService.createAndSave(studentUserName, universityName);
+        studentService.onboard(studentUserName, universityName);
+
+        return toModel(student);
     }
 
     @GetMapping("/{studentUserName}")
     StudentModel findById(@PathVariable String studentUserName) {
-        return toModel(studentService.findByNameOrElseThrow(studentUserName));
+        return toModel(studentService.getByUserName(studentUserName));
     }
 
     @GetMapping

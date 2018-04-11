@@ -13,8 +13,8 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"hashId", "theirDid"}))
-public class Claim implements AuthCryptable {
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"schemaKey_id", "label"}))
+public class ClaimEntity implements AuthCryptable {
     @Id
     @GeneratedValue
     private Long id;
@@ -22,10 +22,8 @@ public class Claim implements AuthCryptable {
     @ManyToOne
     private Student owner;
 
-    @Column(nullable = false)
-    private String hashId;
-
     @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "schemaKey_id")
     private SchemaKey schemaKey;
 
     @Column(nullable = false)
@@ -47,4 +45,6 @@ public class Claim implements AuthCryptable {
 
     @Column(nullable = false)
     private String theirDid;
+
+
 }

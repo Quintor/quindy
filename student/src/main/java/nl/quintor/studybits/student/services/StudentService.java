@@ -12,6 +12,7 @@ import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.student.entities.MetaWallet;
 import nl.quintor.studybits.student.entities.Student;
 import nl.quintor.studybits.student.entities.University;
+import nl.quintor.studybits.student.models.StudentModel;
 import nl.quintor.studybits.student.repositories.StudentRepository;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
@@ -23,59 +24,58 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 @Service
 @Slf4j
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class StudentService {
+
     private StudentRepository studentRepository;
     private UniversityService universityService;
     private MetaWalletService metaWalletService;
+    private ProofRequestService proofRequestService;
+    private StudentProverService studentProverService;
     private ConnectionRecordService connectionRecordService;
     private IndyPool indyPool;
     private Mapper mapper;
 
-    private Student toModel(Object student) {
-        return mapper.map(student, Student.class);
+    private StudentModel toModel(Object student) {
+        return mapper.map(student, StudentModel.class);
     }
 
     @SneakyThrows
-    public Student createAndSave(String username, String uniName) {
-        if (studentRepository.existsByUserName(username))
-            throw new IllegalArgumentException("StudentModel with username exists already.");
+    public Student createAndSave(String userName, String universityName) {
+        if (studentRepository.existsByUserName(userName))
+            throw new IllegalArgumentException("StudentModel with userName exists already.");
 
-        University university = universityService.findByName(uniName)
-                .orElseThrow(() -> new IllegalArgumentException("UniversityModel with id not found"));
+        University university = universityService.getByName(universityName);
+        URI uriGetStudentInfo = universityService.buildGetStudentInfoUri(university, userName);
+        StudentModel studentModel = new RestTemplate().getForObject(uriGetStudentInfo, StudentModel.class);
 
-        MetaWallet metaWallet = metaWalletService.create(username, uniName);
+        MetaWallet metaWallet = metaWalletService.create(userName, universityName);
         try (IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(metaWallet)) {
-            Prover prover = new Prover(username, indyPool, indyWallet, username);
+            Prover prover = new Prover(userName, indyPool, indyWallet, userName);
             prover.init();
         }
-        Student student = new Student(null, username, university, metaWallet);
 
+        Student student = new Student(null, userName, studentModel.getFirstName(), studentModel.getLastName(), studentModel.getSsn(), university, metaWallet);
         return studentRepository.save(student);
     }
 
     public Optional<Student> findById(Long studentId) {
-        return studentRepository.findById(studentId)
-                .map(this::toModel);
+        return studentRepository.findById(studentId);
     }
 
     public List<Student> findAll() {
-        return studentRepository.findAll()
-                .stream()
-                .map(this::toModel)
-                .collect(Collectors.toList());
+        return studentRepository.findAll();
     }
 
     public Optional<Student> findByUserName(String name) {
         return studentRepository.findByUserName(name);
     }
 
-    public Student findByNameOrElseThrow(String name) {
+    public Student getByUserName(String name) {
         return findByUserName(name)
                 .orElseThrow(() -> new IllegalArgumentException("StudentModel with name not found."));
     }
@@ -86,7 +86,7 @@ public class StudentService {
     }
 
     public void deleteByUserName(String studentUserName) {
-        Student student = findByNameOrElseThrow(studentUserName);
+        Student student = getByUserName(studentUserName);
 
         studentRepository.deleteById(student.getId());
     }
@@ -103,10 +103,32 @@ public class StudentService {
         }
     }
 
-    public void onboard(String studentUserName, String universityName) throws Exception {
-        Student student = findByNameOrElseThrow(studentUserName);
-        University university = universityService.findByNameOrElseThrow(universityName);
+    public void connectWithUniversity(String studentUserName, String universityName) throws Exception {
+        Student student = getByUserName(studentUserName);
+        University university = universityService.getByName(universityName);
 
+        Validate.isTrue(!student.getOriginUniversity().equals(university), "Cannot connect with origin university.");
+
+        this.registerWithUniversity(student, university);
+        this.onboard(student, university);
+        proofRequestService.getAndSaveNewProofRequests(student, university);
+    }
+
+    private void registerWithUniversity(Student student, University university) {
+        URI uriCreate = universityService.buildCreateStudentUri(university, student);
+
+        ResponseEntity<StudentModel> response = new RestTemplate().postForEntity(uriCreate, toModel(student), StudentModel.class);
+        Validate.isTrue(response.getStatusCode().is2xxSuccessful());
+    }
+
+    public void onboard(String studentUserName, String universityName) throws Exception {
+        Student student = getByUserName(studentUserName);
+        University university = universityService.getByName(universityName);
+
+        this.onboard(student, university);
+    }
+
+    private void onboard(Student student, University university) throws Exception {
         URI uriBegin = universityService.buildOnboardingBeginUri(university, student);
         URI uriFinalize = universityService.buildOnboardingFinalizeUri(university, student);
         log.debug("Onboarding with uriBegin {}, uriEnd {}", uriBegin, uriFinalize);
@@ -117,20 +139,20 @@ public class StudentService {
 
         AnoncryptedMessage beginResponse = acceptConnectionRequest(student, beginRequest);
         ResponseEntity<Void> finalizeResponse = restTemplate.postForEntity(uriFinalize, beginResponse, Void.class);
-        Validate.isTrue(finalizeResponse.getStatusCode().is2xxSuccessful());
+        Validate.isTrue(finalizeResponse.getStatusCode().is2xxSuccessful(), "Could not get finalize onboarding with university");
     }
 
     private AnoncryptedMessage acceptConnectionRequest(Student student, ConnectionRequest connectionRequest) throws Exception {
-        try (Prover prover = getProverForStudent(student)) {
-            return prover.acceptConnectionRequest(connectionRequest)
-                    .thenCompose(AsyncUtil.wrapException(prover::anonEncrypt))
-                    .get();
-        }
-    }
-
-    public Prover getProverForStudent(Student student) throws Exception {
-        IndyWallet wallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet());
-        return new Prover(student.getUserName(), indyPool, wallet, student.getUserName());
+        return studentProverService.withProverForStudent(student, prover -> {
+            try {
+                return prover
+                        .acceptConnectionRequest(connectionRequest)
+                        .thenCompose(AsyncUtil.wrapException(prover::anonEncrypt))
+                        .get();
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        });
     }
 }
 

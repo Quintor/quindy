@@ -9,5 +9,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class StudentModel {
     private Long id;
+
     private String userName;
+
+    private String firstName;
+
+    private String lastName;
+
+    private String ssn;
 }

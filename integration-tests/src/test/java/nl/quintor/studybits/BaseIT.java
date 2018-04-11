@@ -30,8 +30,8 @@ public class BaseIT {
                 .assertThat().statusCode(200);
     }
 
-    Integer registerUniversity(String name) {
-        return givenCorrectHeaders(STUDENT_URL)
+    void registerUniversity(String name) {
+        givenCorrectHeaders(STUDENT_URL)
                 .queryParam("name", name)
                 .queryParam("endpoint", UNIVERSITY_URL)
                 .post("/university/register")
@@ -41,9 +41,9 @@ public class BaseIT {
                 .path("id");
     }
 
-    Integer registerStudent(String username, String uniName) {
-        return givenCorrectHeaders(STUDENT_URL)
-                .queryParam("username", username)
+    void registerStudent(String username, String uniName) {
+        givenCorrectHeaders(STUDENT_URL)
+                .queryParam("studentUserName", username)
                 .queryParam("universityName", uniName)
                 .post("/student/register")
                 .then()
@@ -52,11 +52,11 @@ public class BaseIT {
                 .path("id");
     }
 
-    void onboardStudent(String studentUserName, String universityName) {
+    void connectStudent(String studentUserName, String universityName) {
         givenCorrectHeaders(STUDENT_URL)
                 .queryParam("studentUserName", studentUserName)
                 .queryParam("universityName", universityName)
-                .post("/student/onboard")
+                .post("/student/connect")
                 .then()
                 .assertThat().statusCode(200);
     }
@@ -68,6 +68,24 @@ public class BaseIT {
                 .then()
                 .assertThat().statusCode(200);
     }
+
+    void getNewProofRequests(String studentUserName) {
+        givenCorrectHeaders(STUDENT_URL)
+                .pathParam("studentUserName", studentUserName)
+                .get("/student/{studentUserName}/proof-requests/new")
+                .then()
+                .assertThat().statusCode(200);
+    }
+
+    void assertNumberOfProofRequestsEquals(Integer expectedNumber, String studentUserName) {
+        givenCorrectHeaders(STUDENT_URL)
+                .pathParam("studentUserName", studentUserName)
+                .get("/student/{studentUserName}/proof-requests")
+                .then()
+                .assertThat().statusCode(200)
+                .body("size()", is(expectedNumber));
+    }
+
 
     void assertNumberOfClaimsEquals(Integer expectedNumber, String studentUserName) {
         givenCorrectHeaders(STUDENT_URL)
