@@ -13,4 +13,5 @@ public class ClaimModel {
     private String issuerDid;
     private String myDid;
     private String theirDid;
+    private String universityName;
 }
