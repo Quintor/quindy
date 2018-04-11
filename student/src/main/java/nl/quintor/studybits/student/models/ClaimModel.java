@@ -5,6 +5,8 @@ import lombok.Data;
 @Data
 public class ClaimModel {
     private Long id;
+    private String studentUserName;
+    private String issuingUniversityName;
     private String hashId;
     private Integer revReqSeqNo;
     private String values;

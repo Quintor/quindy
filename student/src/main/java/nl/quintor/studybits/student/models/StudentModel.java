@@ -17,4 +17,6 @@ public class StudentModel {
     private String lastName;
 
     private String ssn;
+
+    private String originUniversityName;
 }

@@ -45,7 +45,7 @@ public class StudentService {
     }
 
     @SneakyThrows
-    public Student createAndSave(String userName, String universityName) {
+    public Student createAndOnboardAndSave(String userName, String universityName) {
         if (studentRepository.existsByUserName(userName))
             throw new IllegalArgumentException("StudentModel with userName exists already.");
 
@@ -60,7 +60,11 @@ public class StudentService {
         }
 
         Student student = new Student(null, userName, studentModel.getFirstName(), studentModel.getLastName(), studentModel.getSsn(), university, metaWallet);
-        return studentRepository.save(student);
+        studentRepository.save(student);
+
+        this.onboard(student, university);
+
+        return student;
     }
 
     public Optional<Student> findById(Long studentId) {

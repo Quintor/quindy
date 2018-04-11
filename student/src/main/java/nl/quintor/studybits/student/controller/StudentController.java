@@ -30,14 +30,14 @@ public class StudentController {
 
     @PostMapping("/register")
     StudentModel register(@RequestParam String studentUserName, @RequestParam String universityName) throws Exception {
-        Student student = studentService.createAndSave(studentUserName, universityName);
+        Student student = studentService.createAndOnboardAndSave(studentUserName, universityName);
         studentService.onboard(studentUserName, universityName);
 
         return toModel(student);
     }
 
     @GetMapping("/{studentUserName}")
-    StudentModel findById(@PathVariable String studentUserName) {
+    StudentModel findByUserName(@PathVariable String studentUserName) {
         return toModel(studentService.getByUserName(studentUserName));
     }
 
