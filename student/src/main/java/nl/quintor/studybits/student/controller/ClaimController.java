@@ -47,7 +47,7 @@ public class ClaimController {
     ClaimModel findById(@PathVariable String studentUserName, @PathVariable Long claimId) {
         // TODO: Add ownership check.
 
-        return toModel(claimService.findByIdOrElseThrow(claimId));
+        return toModel(claimService.getById(claimId));
     }
 
     @GetMapping("/new")
