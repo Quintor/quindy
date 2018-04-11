@@ -90,8 +90,7 @@ public class UniversityService {
     }
 
     public URI buildCreateStudentUri(University university, Student student) {
-        String studentName = student.getUserName() + "-" + student.getOriginUniversity().getName();
-        return buildStudentUri(university, studentName, "students");
+        return buildStudentUri(university, student, "students");
     }
 
     public URI buildAllProofRequestsUri(University university, Student student) {

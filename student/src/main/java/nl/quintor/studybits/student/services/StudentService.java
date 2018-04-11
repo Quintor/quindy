@@ -121,6 +121,8 @@ public class StudentService {
     private void registerWithUniversity(Student student, University university) {
         URI uriCreate = universityService.buildCreateStudentUri(university, student);
 
+        log.debug("Connecting to university with path {}", uriCreate);
+
         ResponseEntity<StudentModel> response = new RestTemplate().postForEntity(uriCreate, toModel(student), StudentModel.class);
         Validate.isTrue(response.getStatusCode().is2xxSuccessful());
     }
