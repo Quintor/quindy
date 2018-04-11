@@ -1,7 +1,9 @@
 package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
+import nl.quintor.studybits.indy.wrapper.IndyPool;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
+import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.student.entities.MetaWallet;
 import nl.quintor.studybits.student.repositories.MetaWalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class MetaWalletService {
     private MetaWalletRepository metaWalletRepository;
     private IndyWalletService indyWalletService;
+    private IndyPool indyPool;
 
     public MetaWallet create(String username, String uniName) throws Exception {
         try (IndyWallet indyWallet = indyWalletService.create(username + "_" + uniName)) {
@@ -22,6 +25,16 @@ public class MetaWalletService {
 
             return metaWallet;
         }
+    }
+
+    public MetaWallet createAndInit(String userName, String universityName) throws Exception {
+        MetaWallet metaWallet = this.create(userName, universityName);
+        try (IndyWallet indyWallet = this.createIndyWalletFromMetaWallet(metaWallet)) {
+            Prover prover = new Prover(userName, indyPool, indyWallet, userName);
+            prover.init();
+        }
+
+        return metaWallet;
     }
 
     public IndyWallet createIndyWalletFromMetaWallet( MetaWallet metaWallet ) throws Exception {

@@ -59,11 +59,11 @@ public class Seeder {
 
     private List<Student> seedStudents() {
         log.info("Creating student 1");
-        Student rugStudent1 = studentService.createAndOnboardAndSave("student1", "rug");
+        Student rugStudent1 = studentService.createAndOnboard("student1", "rug");
         log.info("Creating student 2");
-        Student rugStudent2 = studentService.createAndOnboardAndSave("student2", "rug");
+        Student rugStudent2 = studentService.createAndOnboard("student2", "rug");
         log.info("Creating student 3");
-        Student rugStudent3 = studentService.createAndOnboardAndSave("student3", "rug");
+        Student rugStudent3 = studentService.createAndOnboard("student3", "rug");
         List<Student> students = Arrays.asList(rugStudent1, rugStudent2, rugStudent3);
         return students;
     }
