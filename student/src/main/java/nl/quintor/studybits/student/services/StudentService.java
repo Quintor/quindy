@@ -3,9 +3,6 @@ package nl.quintor.studybits.student.services;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import nl.quintor.studybits.indy.wrapper.IndyPool;
-import nl.quintor.studybits.indy.wrapper.IndyWallet;
-import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
@@ -37,7 +34,6 @@ public class StudentService {
     private ProofRequestService proofRequestService;
     private StudentProverService studentProverService;
     private ConnectionRecordService connectionRecordService;
-    private IndyPool indyPool;
     private Mapper mapper;
 
     private StudentModel toModel(Object student) {
@@ -45,22 +41,25 @@ public class StudentService {
     }
 
     @SneakyThrows
-    public Student createAndSave(String userName, String universityName) {
+    public Student createAndOnboard(String userName, String universityName) {
         if (studentRepository.existsByUserName(userName))
             throw new IllegalArgumentException("StudentModel with userName exists already.");
 
         University university = universityService.getByName(universityName);
-        URI uriGetStudentInfo = universityService.buildGetStudentInfoUri(university, userName);
-        StudentModel studentModel = new RestTemplate().getForObject(uriGetStudentInfo, StudentModel.class);
-
-        MetaWallet metaWallet = metaWalletService.create(userName, universityName);
-        try (IndyWallet indyWallet = metaWalletService.createIndyWalletFromMetaWallet(metaWallet)) {
-            Prover prover = new Prover(userName, indyPool, indyWallet, userName);
-            prover.init();
-        }
+        StudentModel studentModel = this.getStudentInfo(userName, university);
+        MetaWallet metaWallet = metaWalletService.createAndInit(userName, universityName);
 
         Student student = new Student(null, userName, studentModel.getFirstName(), studentModel.getLastName(), studentModel.getSsn(), university, metaWallet);
-        return studentRepository.save(student);
+        studentRepository.save(student);
+
+        this.onboard(student, university);
+
+        return student;
+    }
+
+    private StudentModel getStudentInfo(String userName, University university) {
+        URI uriGetStudentInfo = universityService.buildGetStudentInfoUri(university, userName);
+        return new RestTemplate().getForObject(uriGetStudentInfo, StudentModel.class);
     }
 
     public Optional<Student> findById(Long studentId) {
@@ -116,6 +115,8 @@ public class StudentService {
 
     private void registerWithUniversity(Student student, University university) {
         URI uriCreate = universityService.buildCreateStudentUri(university, student);
+
+        log.debug("Connecting to university with path {}", uriCreate);
 
         ResponseEntity<StudentModel> response = new RestTemplate().postForEntity(uriCreate, toModel(student), StudentModel.class);
         Validate.isTrue(response.getStatusCode().is2xxSuccessful());

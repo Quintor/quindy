@@ -5,8 +5,11 @@
           http://dozer.sourceforge.net/schema/beanmapping.xsd">
 
     <mapping>
-        <class-a>nl.quintor.studybits.student.models.ProofRequestInfo</class-a>
-        <class-b>nl.quintor.studybits.student.models.ProofRequestModel</class-b>
-
+        <class-a>nl.quintor.studybits.student.entities.Student</class-a>
+        <class-b>nl.quintor.studybits.student.models.StudentModel</class-b>
+        <field type="one-way">
+            <a>originUniversity.name</a>
+            <b>originUniversityName</b>
+        </field>
     </mapping>
 </mappings>

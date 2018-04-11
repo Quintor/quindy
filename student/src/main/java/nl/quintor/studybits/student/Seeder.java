@@ -50,7 +50,6 @@ public class Seeder {
         return studentService.findAll().isEmpty();
     }
 
-
     private List<University> seedUniversities() {
         University rug = universityService.createAndSave("rug", "http://localhost:8090");
         University gent = universityService.createAndSave("gent", "http://localhost:8090");
@@ -58,17 +57,14 @@ public class Seeder {
         return Arrays.asList(rug, gent);
     }
 
-
     private List<Student> seedStudents() {
         log.info("Creating student 1");
-        Student rugStudent1 = studentService.createAndSave("student1", "rug");
+        Student rugStudent1 = studentService.createAndOnboard("student1", "rug");
         log.info("Creating student 2");
-        Student rugStudent2 = studentService.createAndSave("student2", "rug");
+        Student rugStudent2 = studentService.createAndOnboard("student2", "rug");
         log.info("Creating student 3");
-        Student rugStudent3 = studentService.createAndSave("student3", "rug");
+        Student rugStudent3 = studentService.createAndOnboard("student3", "rug");
         List<Student> students = Arrays.asList(rugStudent1, rugStudent2, rugStudent3);
         return students;
     }
-
-
 }
