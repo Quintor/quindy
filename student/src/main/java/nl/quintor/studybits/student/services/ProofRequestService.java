@@ -110,7 +110,7 @@ public class ProofRequestService {
                 .existsByStudentAndNameAndVersion(proofRequestRecord.getStudent(), proofRequestRecord.getName(), proofRequestRecord.getVersion());
     }
 
-    public ProofRequestRecord getFromModel(ProofRequestModel proofRequestModel) {
+    public ProofRequestRecord getRecordFromModel(ProofRequestModel proofRequestModel) {
         return proofRequestRecordRepository
                 .findByStudentUserNameAndNameAndVersion(proofRequestModel.getStudentUserName(), proofRequestModel.getName(), proofRequestModel
                         .getVersion())
@@ -126,6 +126,7 @@ public class ProofRequestService {
         proofRequestRecord.setProofId(proofRequestInfo.getProofId());
         proofRequestRecord.setName(proofRequestInfo.getName());
         proofRequestRecord.setVersion(proofRequestInfo.getVersion());
+        proofRequestRecord.setAttributes(proofRequestInfo.getAttributes());
 
         return proofRequestRecord;
     }

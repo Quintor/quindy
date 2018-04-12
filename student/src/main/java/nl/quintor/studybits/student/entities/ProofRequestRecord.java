@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Getter
@@ -30,5 +31,8 @@ public class ProofRequestRecord {
     private String name;
 
     private String version;
+
+    @ElementCollection
+    private List<String> attributes;
 
 }

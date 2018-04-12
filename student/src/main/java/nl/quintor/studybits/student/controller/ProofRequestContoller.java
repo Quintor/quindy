@@ -34,7 +34,7 @@ public class ProofRequestContoller {
 
     @PostMapping
     void fulfillProofRequest(@RequestBody ProofRequestModel proofRequestModel) throws Exception {
-        ProofRequestRecord proofRequestRecord = proofRequestService.getFromModel(proofRequestModel);
+        ProofRequestRecord proofRequestRecord = proofRequestService.getRecordFromModel(proofRequestModel);
         proofRequestService.fulfillProofRequest(proofRequestRecord);
     }
 

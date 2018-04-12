@@ -2,12 +2,10 @@ package nl.quintor.studybits.student.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nl.quintor.studybits.student.Seeder;
 import nl.quintor.studybits.student.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -20,6 +18,7 @@ public class TestController {
     private final ConnectionRecordService connectionRecordService;
     private final ClaimService claimService;
     private final ProofRequestService proofRequestService;
+    private final Seeder seeder;
 
     // TODO: Replace with Repositories and delete deleteAll() functions in Services
     @DeleteMapping("/nuke")
@@ -36,6 +35,11 @@ public class TestController {
         metaWalletService.deleteAll();
         log.info("Deleting universities");
         universityService.deleteAll();
+    }
+
+    @PostMapping("/seed")
+    void seed() {
+        seeder.seed();
     }
 
     @GetMapping("/health")
