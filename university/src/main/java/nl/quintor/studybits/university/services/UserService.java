@@ -44,18 +44,21 @@ public class UserService {
     public User createStudent(String universityName, String userName, String firstName, String lastName, String ssn, boolean confirmed) {
         University university = getUniversity(universityName);
         User user = new User(userName, firstName, lastName, ssn, confirmed, university, new StudentUser());
-        return save(user);
+        return save(user, confirmed);
     }
 
     public User createAdmin(String universityName, String userName, String firstName, String lastName, String ssn, boolean confirmed) {
         University university = getUniversity(universityName);
         User user = new User(userName, firstName, lastName, ssn, confirmed, university, new AdminUser());
-        return save(user);
+        return save(user, confirmed);
     }
 
-    private User save(User user) {
+    private User save(User user, boolean confirmed) {
         User result = userRepository.save(user);
-        userProofService.addProofRequest(result.getId());
+        if (!confirmed) {
+            userProofService.addProofRequest(result.getId());
+        }
+
         return result;
     }
 
