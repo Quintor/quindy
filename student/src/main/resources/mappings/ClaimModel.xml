@@ -15,5 +15,9 @@
             <a>owner.originUniversity.name</a>
             <b>issuingUniversityName</b>
         </field>
+        <field type="one-way">
+            <a>schemaKey.name</a>
+            <b>schemaKeyName</b>
+        </field>
     </mapping>
 </mappings>

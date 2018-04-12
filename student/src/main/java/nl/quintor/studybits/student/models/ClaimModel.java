@@ -7,7 +7,8 @@ public class ClaimModel {
     private Long id;
     private String studentUserName;
     private String issuingUniversityName;
-    private String hashId;
+    private String schemaKeyName;
+    private String label;
     private Integer revReqSeqNo;
     private String values;
     private String signature;
@@ -15,5 +16,4 @@ public class ClaimModel {
     private String issuerDid;
     private String myDid;
     private String theirDid;
-    private String universityName;
 }
