@@ -6,7 +6,7 @@
 
     <mapping>
         <class-a>nl.quintor.studybits.university.entities.ProofRecord</class-a>
-        <class-b>nl.quintor.studybits.university.models.ProofRequestInfo</class-b>
+        <class-b>nl.quintor.studybits.university.dto.ProofRequestInfoDto</class-b>
         <field>
             <a>id</a>
             <b>proofId</b>

@@ -2,6 +2,7 @@ package nl.quintor.studybits.university.controllers.student;
 
 import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
 import nl.quintor.studybits.university.UserContext;
+import nl.quintor.studybits.university.dto.ProofRequestInfoDto;
 import nl.quintor.studybits.university.helpers.LinkHelper;
 import nl.quintor.studybits.university.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.university.models.ProofRequestInfo;
@@ -51,15 +52,24 @@ public class ProofRequestController {
         this.mapper = mapper;
     }
 
+    private ProofRequestInfo toProofRequestInfo(ProofRequestInfoDto dto) {
+        ProofRequestInfo proofRequestInfo = mapper.map(dto, ProofRequestInfo.class);
+        return linkHelper.withLink(proofRequestInfo, ProofRequestController.class,
+                c -> c.getProofRequest(proofRequestInfo.getName(), proofRequestInfo.getProofId()));
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<ProofRequestInfoDto> findProofRequests(ProofHandler proofHandler) {
+        return proofHandler.findProofRequests(userContext.currentUserId());
+    }
+
     @GetMapping
     List<ProofRequestInfo> findAllProofRequests() {
-        return proofService
-                .findAllProofRequestRecords(userContext.currentUserId())
+        return proofHandlerMap
+                .values()
                 .stream()
-                .map(proofRecord -> mapper.map(proofRecord, ProofRequestInfo.class))
-                .map(proofRequestInfo -> linkHelper
-                        .withLink(proofRequestInfo, ProofRequestController.class,
-                                c -> c.getProofRequest(proofRequestInfo.getName(), proofRequestInfo.getProofId())))
+                .flatMap(proofHandler -> findProofRequests(proofHandler).stream())
+                .map(this::toProofRequestInfo)
                 .collect(Collectors.toList());
     }
 
