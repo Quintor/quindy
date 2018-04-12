@@ -45,5 +45,11 @@ services:
         condition: service_healthy
       backend-university:
         condition: service_healthy
+  frontend:
+    build:
+      context: ../StudyBits-Frontend/student
+    network_mode: "host"
+    ports:
+    - "4200:4200"
 
 
