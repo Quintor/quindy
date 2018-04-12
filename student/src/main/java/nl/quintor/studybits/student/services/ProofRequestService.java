@@ -14,10 +14,10 @@ import nl.quintor.studybits.student.models.ProofRequestInfo;
 import nl.quintor.studybits.student.models.ProofRequestModel;
 import nl.quintor.studybits.student.repositories.ProofRequestRecordRepository;
 import nl.quintor.studybits.student.repositories.StudentRepository;
-import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.hateoas.Link;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -57,13 +57,18 @@ public class ProofRequestService {
     }
 
     public void fulfillProofRequest(ProofRequestRecord proofRequestRecord) throws Exception {
-        ProofRequestInfo proofRequestInfo = mapper.map(proofRequestRecord, ProofRequestInfo.class);
+        ProofRequestInfo proofRequestInfo = this.getInfoFromRecord(proofRequestRecord);
+
         studentProverService.withProverForStudent(proofRequestRecord.getStudent(), prover -> {
             try {
                 AuthEncryptedMessageModel proof = this.getProofForProofRequest(proofRequestRecord.getStudent(), prover, proofRequestInfo);
                 Boolean result = this.sendProofToUniversity(proof);
 
-                Validate.isTrue(result, "Could not fulfill proof request. University returned failure.");
+                if (result) {
+                    this.proofRequestRecordRepository.delete(proofRequestRecord);
+                } else {
+                    throw new IllegalStateException("Could not fulfill proof request. University returned failure.");
+                }
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
@@ -107,7 +112,8 @@ public class ProofRequestService {
 
     public ProofRequestRecord getFromModel(ProofRequestModel proofRequestModel) {
         return proofRequestRecordRepository
-                .findByStudentUserNameAndNameAndVersion(proofRequestModel.getStudentUserName(), proofRequestModel.getName(), proofRequestModel.getVersion())
+                .findByStudentUserNameAndNameAndVersion(proofRequestModel.getStudentUserName(), proofRequestModel.getName(), proofRequestModel
+                        .getVersion())
                 .orElseThrow(() -> new IllegalArgumentException("Could not " + "find ProofRequestRecord for ProofRequestModel."));
     }
 
@@ -126,5 +132,11 @@ public class ProofRequestService {
 
     public void deleteAll() {
         proofRequestRecordRepository.deleteAll();
+    }
+
+    private ProofRequestInfo getInfoFromRecord(ProofRequestRecord proofRequestRecord) {
+        ProofRequestInfo proofRequestInfo = mapper.map(proofRequestRecord, ProofRequestInfo.class);
+        proofRequestInfo.add(new Link(proofRequestRecord.getLink(), "self"));
+        return proofRequestInfo;
     }
 }
