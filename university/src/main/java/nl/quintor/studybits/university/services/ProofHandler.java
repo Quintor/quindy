@@ -4,11 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.*;
-import nl.quintor.studybits.university.dto.ClaimUtils;
+import nl.quintor.studybits.university.dto.*;
 import nl.quintor.studybits.university.dto.Proof;
 import nl.quintor.studybits.university.dto.ProofAttribute;
-import nl.quintor.studybits.university.dto.Version;
 import nl.quintor.studybits.university.entities.*;
+import nl.quintor.studybits.university.helpers.Lazy;
 import nl.quintor.studybits.university.repositories.ClaimSchemaRepository;
 import nl.quintor.studybits.university.repositories.ProofRecordRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
@@ -21,10 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,15 +35,18 @@ public abstract class ProofHandler<T extends Proof> {
     protected final ClaimSchemaRepository claimSchemaRepository;
     protected final UserRepository userRepository;
     protected final Mapper mapper;
-
-    private AuthcryptedMessage toDto(AuthEncryptedMessage authEncryptedMessage) {
-        return mapper.map(authEncryptedMessage, AuthcryptedMessage.class);
-    }
+    protected final Lazy<List<ProofAttribute>> proofAttributes = new Lazy<>();
 
     protected abstract Class<T> getProofType();
 
     @Transactional
     protected abstract boolean handleProof(User user, ProofRecord proofRecord, T proof);
+
+    private ProofRequestInfoDto toDto(ProofRecord proofRecord, List<String> attributes) {
+        ProofRequestInfoDto result = mapper.map(proofRecord, ProofRequestInfoDto.class);
+        result.setAttributes(attributes);
+        return result;
+    }
 
     @SneakyThrows
     private T newProof() {
@@ -59,6 +59,25 @@ public abstract class ProofHandler<T extends Proof> {
 
     public String getProofName() {
         return getProofVersion().getName();
+    }
+
+    private List<ProofAttribute> getProofAttributes() {
+        return proofAttributes.getOrCompute(() -> ClaimUtils.getProofAttributes(getProofType()));
+    }
+
+    public List<ProofRequestInfoDto> findProofRequests(Long userId) {
+        List<ProofRecord> proofRecords = proofRecordRepository.findAllByUserIdAndProofNameAndProofJsonIsNull(userId, getProofName());
+        if(proofRecords.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<String> attributes = getProofAttributes()
+                .stream()
+                .map(x -> x.getAttributeName())
+                .collect(Collectors.toList());
+        return proofRecords
+                .stream()
+                .map(proofRecord -> toDto(proofRecord, attributes))
+                .collect(Collectors.toList());
     }
 
     public ProofRecord addProofRequest(Long userId) {
@@ -133,14 +152,13 @@ public abstract class ProofHandler<T extends Proof> {
     }
 
     private Map<String, AttributeInfo> getRequestedAttributes(Long universityId) {
-        List<ProofAttribute> proofAttributes = ClaimUtils.getProofAttributes(getProofType());
-        Map<Version, Optional<ClaimSchema>> claimSchemaLookup = proofAttributes
+        Map<Version, Optional<ClaimSchema>> claimSchemaLookup = getProofAttributes()
                 .stream()
                 .flatMap(proofAttribute -> proofAttribute.getSchemaVersions().stream())
                 .distinct()
                 .collect(Collectors.toMap(v -> v, v -> findClaimSchema(universityId, v)));
 
-        return proofAttributes
+        return getProofAttributes()
                 .stream()
                 .collect(Collectors.toMap(
                         ProofAttribute::getFieldName,
