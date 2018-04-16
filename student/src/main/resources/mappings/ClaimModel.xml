@@ -8,11 +8,11 @@
         <class-a>nl.quintor.studybits.student.entities.ClaimEntity</class-a>
         <class-b>nl.quintor.studybits.student.models.ClaimModel</class-b>
         <field type="one-way">
-            <a>owner.userName</a>
+            <a>student.userName</a>
             <b>studentUserName</b>
         </field>
         <field type="one-way">
-            <a>owner.originUniversity.name</a>
+            <a>student.originUniversity.name</a>
             <b>issuingUniversityName</b>
         </field>
         <field type="one-way">

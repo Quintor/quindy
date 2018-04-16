@@ -65,7 +65,8 @@ public class ProofRequestService {
                 Boolean result = this.sendProofToUniversity(proof);
 
                 if (result) {
-                    this.proofRequestRecordRepository.delete(proofRequestRecord);
+                    proofRequestRecord.setIsReviewed(true);
+                    this.proofRequestRecordRepository.save(proofRequestRecord);
                 } else {
                     throw new IllegalStateException("Could not fulfill proof request. University returned failure.");
                 }
@@ -127,6 +128,7 @@ public class ProofRequestService {
         proofRequestRecord.setName(proofRequestInfo.getName());
         proofRequestRecord.setVersion(proofRequestInfo.getVersion());
         proofRequestRecord.setAttributes(proofRequestInfo.getAttributes());
+        proofRequestRecord.setIsReviewed(false);
 
         return proofRequestRecord;
     }

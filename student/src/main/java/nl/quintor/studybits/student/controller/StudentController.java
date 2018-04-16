@@ -29,7 +29,7 @@ public class StudentController {
     }
 
     @PostMapping("/register")
-    StudentModel register(@RequestParam String studentUserName, @RequestParam String universityName) {
+    StudentModel register(@RequestParam String studentUserName, @RequestParam String universityName) throws Exception {
         return toModel(studentService.createAndOnboard(studentUserName, universityName));
     }
 

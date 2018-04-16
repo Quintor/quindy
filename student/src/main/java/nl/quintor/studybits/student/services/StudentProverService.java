@@ -7,6 +7,7 @@ import nl.quintor.studybits.student.entities.Student;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -23,6 +24,7 @@ public class StudentProverService {
 
     private Map<Long, Prover> proverMap = new HashMap<>();
 
+    @Transactional
     public void withProverForStudent(Student student, Consumer<Prover> consumer) throws Exception {
         withProverForStudent(student, prover -> {
             consumer.accept(prover);
@@ -30,6 +32,7 @@ public class StudentProverService {
         });
     }
 
+    @Transactional
     public <R> R withProverForStudent(Student student, Function<Prover, R> consumer) throws Exception {
         Prover existingProver = proverMap.get(student.getId());
         if (existingProver != null) {

@@ -25,4 +25,6 @@ public class ProofRequestModel {
     private String version;
 
     private List<String> attributes;
+
+    private Boolean isReviewed;
 }

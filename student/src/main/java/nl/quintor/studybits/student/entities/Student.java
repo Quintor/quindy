@@ -12,6 +12,7 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"userName", "originUniversity_id"}))
 public class Student {
     @Id
     @GeneratedValue
@@ -30,6 +31,7 @@ public class Student {
     private String ssn;
 
     @ManyToOne
+    @JoinColumn(name = "originUniversity_id")
     private University originUniversity;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)

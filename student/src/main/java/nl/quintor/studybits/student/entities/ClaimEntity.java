@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import nl.quintor.studybits.indy.wrapper.dto.AuthCryptable;
 
 import javax.persistence.*;
 
@@ -13,16 +12,17 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"schemaKey_id", "label"}))
-public class ClaimEntity implements AuthCryptable {
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "schemaKey_id", "label"}))
+public class ClaimEntity {
     @Id
     @GeneratedValue
     private Long id;
 
-    @ManyToOne
-    private Student owner;
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "student_id")
+    private Student student;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL, optional = false)
     @JoinColumn(name = "schemaKey_id")
     private SchemaKey schemaKey;
 
@@ -32,15 +32,20 @@ public class ClaimEntity implements AuthCryptable {
     private Integer revReqSeqNo;
 
     @Lob
+    @Column(nullable = false)
     private String values;
 
     @Lob
+    @Column(nullable = false)
     private String signature;
 
     @Lob
+    @Column(nullable = false)
     private String signatureCorrectnessProof;
 
+    @Column(nullable = false)
     private String issuerDid;
+
     private String myDid;
 
     @Column(nullable = false)

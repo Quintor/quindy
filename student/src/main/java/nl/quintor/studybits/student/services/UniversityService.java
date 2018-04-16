@@ -37,8 +37,7 @@ public class UniversityService {
 
     public Optional<University> findByName(String name) {
         return universityRepository
-                .findByName(name)
-                .map(this::toModel);
+                .findByName(name);
     }
 
     public University getByName(String name) {

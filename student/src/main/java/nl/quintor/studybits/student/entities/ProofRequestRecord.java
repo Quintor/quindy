@@ -19,20 +19,29 @@ public class ProofRequestRecord {
     private Long id;
 
     @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(name = "student_id")
     private Student student;
 
     @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(name = "university_id")
     private University university;
 
+    @Column(nullable = false)
     private String link;
 
+    @Column(nullable = false)
     private Long proofId;
 
+    @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private String version;
 
     @ElementCollection
     private List<String> attributes;
+
+    @Column(nullable = false)
+    private Boolean isReviewed;
 
 }
