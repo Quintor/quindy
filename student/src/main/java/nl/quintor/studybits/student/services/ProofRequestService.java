@@ -66,6 +66,7 @@ public class ProofRequestService {
 
                 if (result) {
                     proofRequestRecord.setIsReviewed(true);
+                    connectionRecordService.setConfirmed(proofRequestRecord.getStudent(), proofRequestRecord.getUniversity(), true);
                     this.proofRequestRecordRepository.save(proofRequestRecord);
                 } else {
                     throw new IllegalStateException("Could not fulfill proof request. University returned failure.");

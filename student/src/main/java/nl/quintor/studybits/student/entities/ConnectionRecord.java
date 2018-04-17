@@ -12,7 +12,7 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "university_id", "did"}))
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "university_id"}))
 public class ConnectionRecord {
     @Id
     @GeneratedValue
@@ -31,6 +31,9 @@ public class ConnectionRecord {
 
     @Column(nullable = false)
     private String nonce;
+
+    @Column(nullable = false)
+    private Boolean confirmed;
 
     private String role;
 }
