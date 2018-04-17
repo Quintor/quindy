@@ -134,10 +134,6 @@ public class ProofRequestService {
         return proofRequestRecord;
     }
 
-    public void deleteAll() {
-        proofRequestRecordRepository.deleteAll();
-    }
-
     private ProofRequestInfo getInfoFromRecord(ProofRequestRecord proofRequestRecord) {
         ProofRequestInfo proofRequestInfo = mapper.map(proofRequestRecord, ProofRequestInfo.class);
         proofRequestInfo.add(new Link(proofRequestRecord.getLink(), "self"));

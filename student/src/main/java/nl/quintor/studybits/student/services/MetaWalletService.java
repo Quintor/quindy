@@ -1,6 +1,7 @@
 package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import nl.quintor.studybits.indy.wrapper.IndyPool;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.indy.wrapper.Prover;
@@ -12,24 +13,15 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class MetaWalletService {
+
     private MetaWalletRepository metaWalletRepository;
     private IndyWalletService indyWalletService;
     private IndyPool indyPool;
 
-    public MetaWallet create(String username, String uniName) throws Exception {
-        try (IndyWallet indyWallet = indyWalletService.create(username + "_" + uniName)) {
-            MetaWallet metaWallet = new MetaWallet();
-            metaWallet.setName(indyWallet.getName());
-            metaWallet.setMainDid(indyWallet.getMainDid());
-            metaWallet.setMainKey(indyWallet.getMainKey());
-
-            return metaWallet;
-        }
-    }
-
     public MetaWallet createAndInit(String userName, String universityName) throws Exception {
         MetaWallet metaWallet = this.create(userName, universityName);
-        try (IndyWallet indyWallet = this.createIndyWalletFromMetaWallet(metaWallet)) {
+
+        try (IndyWallet indyWallet = this.openIndyWalletFromMetaWallet(metaWallet)) {
             Prover prover = new Prover(userName, indyPool, indyWallet, userName);
             prover.init();
         }
@@ -37,21 +29,33 @@ public class MetaWalletService {
         return metaWallet;
     }
 
-    public IndyWallet createIndyWalletFromMetaWallet( MetaWallet metaWallet ) throws Exception {
+    private MetaWallet create(String studentUserName, String universityName) throws Exception {
+
+        String walletName = String.format("%s_%s", studentUserName, universityName);
+
+        try (IndyWallet indyWallet = indyWalletService.create(walletName)) {
+            MetaWallet metaWallet = new MetaWallet(null, null, indyWallet.getName(), indyWallet.getMainDid(), indyWallet.getMainKey());
+            return metaWalletRepository.saveAndFlush(metaWallet);
+        }
+    }
+
+    public IndyWallet openIndyWalletFromMetaWallet(MetaWallet metaWallet) throws Exception {
         return new IndyWallet(metaWallet.getName(), metaWallet.getMainDid(), metaWallet.getMainKey());
     }
 
-
-    public void delete(MetaWallet wallet) throws Exception {
-        IndyWallet indyWallet = createIndyWalletFromMetaWallet(wallet);
-        indyWallet.close();
-        IndyWallet.delete(indyWallet.getName());
-
-        metaWalletRepository.delete(wallet);
+    public void deleteAll() {
+        metaWalletRepository
+                .findAll()
+                .forEach(this::delete);
     }
 
-    public void deleteAll() {
-        metaWalletRepository.deleteAll();
+    @SneakyThrows
+    private void delete(MetaWallet metaWallet) {
+        IndyWallet indyWallet = openIndyWalletFromMetaWallet(metaWallet);
+        indyWallet.close();
+        IndyWallet.delete(indyWallet.getName());
+        metaWallet.getStudent().setMetaWallet(null);
 
+        metaWalletRepository.delete(metaWallet);
     }
 }

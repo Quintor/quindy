@@ -50,7 +50,8 @@ public class StudentService {
         MetaWallet metaWallet = metaWalletService.createAndInit(userName, universityName);
 
         Student student = new Student(null, userName, studentModel.getFirstName(), studentModel.getLastName(), studentModel.getSsn(), university, metaWallet);
-        studentRepository.saveAndFlush(student);
+        metaWallet.setStudent(student);
+        studentRepository.save(student);
 
         this.onboard(student, university);
 
@@ -90,18 +91,6 @@ public class StudentService {
         studentRepository.deleteById(student.getId());
     }
 
-    public void deleteAll() throws Exception {
-        log.debug("Deleting all students and wallets");
-        List<Student> students = findAll();
-
-        for (Student student : students) {
-            metaWalletService.delete(student.getMetaWallet());
-            studentRepository.deleteById(student.getId());
-
-            log.debug("Deleted student {} with wallet {}", student.getId(), student.getMetaWallet().getId());
-        }
-    }
-
     public void connectWithUniversity(String studentUserName, String universityName) throws Exception {
         Student student = getByUserName(studentUserName);
         University university = universityService.getByName(universityName);
@@ -122,16 +111,7 @@ public class StudentService {
         Validate.isTrue(response.getStatusCode().is2xxSuccessful());
     }
 
-    @Transactional
-    public void onboard(String studentUserName, String universityName) throws Exception {
-        Student student = getByUserName(studentUserName);
-        University university = universityService.getByName(universityName);
-
-        this.onboard(student, university);
-    }
-
-    @Transactional
-    public void onboard(Student student, University university) throws Exception {
+    private void onboard(Student student, University university) throws Exception {
         URI uriBegin = universityService.buildOnboardingBeginUri(university, student);
         URI uriFinalize = universityService.buildOnboardingFinalizeUri(university, student);
         log.debug("Onboarding with uriBegin {}, uriEnd {}", uriBegin, uriFinalize);

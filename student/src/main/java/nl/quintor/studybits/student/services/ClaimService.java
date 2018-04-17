@@ -208,8 +208,4 @@ public class ClaimService {
                         .filter(claimEntity -> claimEntity.getStudent().equals(student))
                 ).collect(Collectors.toList());
     }
-
-    public void deleteAll() {
-        claimRepository.deleteAll();
-    }
 }

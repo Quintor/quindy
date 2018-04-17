@@ -30,10 +30,10 @@ public class Student {
     @Column(nullable = false, unique = true)
     private String ssn;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "originUniversity_id")
     private University originUniversity;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne
     private MetaWallet metaWallet;
 }

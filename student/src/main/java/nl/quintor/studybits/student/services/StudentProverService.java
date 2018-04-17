@@ -38,7 +38,7 @@ public class StudentProverService {
         if (existingProver != null) {
             return consumer.apply(existingProver);
         } else {
-            try (IndyWallet wallet = metaWalletService.createIndyWalletFromMetaWallet(student.getMetaWallet())) {
+            try (IndyWallet wallet = metaWalletService.openIndyWalletFromMetaWallet(student.getMetaWallet())) {
                 try (Prover prover = new Prover(student.getUserName(), indyPool, wallet, student.getUserName())) {
                     proverMap.put(student.getId(), prover);
                     R result = consumer.apply(prover);

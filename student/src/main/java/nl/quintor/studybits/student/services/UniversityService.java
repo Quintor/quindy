@@ -64,10 +64,6 @@ public class UniversityService {
         universityRepository.deleteById(university.getId());
     }
 
-    public void deleteAll() {
-        universityRepository.deleteAll();
-    }
-
     private URI buildStudentUri(University university, Student student, String endpoint) {
         return buildStudentUri(university, student.getUserName(), endpoint);
     }

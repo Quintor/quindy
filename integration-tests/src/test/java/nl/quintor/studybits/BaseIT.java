@@ -36,20 +36,16 @@ public class BaseIT {
                 .queryParam("endpoint", UNIVERSITY_URL)
                 .post("/university/register")
                 .then()
-                .assertThat().statusCode(200)
-                .extract()
-                .path("id");
+                .assertThat().statusCode(200);
     }
 
-    void registerStudent(String username, String uniName) {
+    void registerStudent(String studentUserName, String universityName) {
         givenCorrectHeaders(STUDENT_URL)
-                .queryParam("studentUserName", username)
-                .queryParam("universityName", uniName)
+                .queryParam("studentUserName", studentUserName)
+                .queryParam("universityName", universityName)
                 .post("/student/register")
                 .then()
-                .assertThat().statusCode(200)
-                .extract()
-                .path("id");
+                .assertThat().statusCode(200);
     }
 
     void connectStudent(String studentUserName, String universityName) {
