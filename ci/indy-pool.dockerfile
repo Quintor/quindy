@@ -4,6 +4,14 @@ FROM ubuntu:16.04
 
 ARG uid=1000
 
+ARG pip_ver=9.0.3
+
+ARG indy_plenum_ver=1.2.237
+ARG indy_anoncreds_ver=1.0.32
+ARG indy_node_ver=1.2.297
+ARG python3_indy_crypto_ver=0.2.0
+ARG indy_crypto_ver=0.2.0
+
 # Install environment
 RUN apt-get update -y && apt-get install -y \
 	git \
@@ -17,7 +25,7 @@ RUN apt-get update -y && apt-get install -y \
 	supervisor
 
 RUN pip3 install -U \
-	pip \
+	pip==${pip_ver} \
 	setuptools
 
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
@@ -25,12 +33,6 @@ ARG indy_stream=master
 RUN echo "deb https://repo.sovrin.org/deb xenial $indy_stream" >> /etc/apt/sources.list
 
 RUN useradd -ms /bin/bash -u $uid indy
-
-ARG indy_plenum_ver=1.2.237
-ARG indy_anoncreds_ver=1.0.32
-ARG indy_node_ver=1.2.297
-ARG python3_indy_crypto_ver=0.2.0
-ARG indy_crypto_ver=0.2.0
 
 RUN apt-get update -y && apt-get install -y \
         indy-plenum=${indy_plenum_ver} \
