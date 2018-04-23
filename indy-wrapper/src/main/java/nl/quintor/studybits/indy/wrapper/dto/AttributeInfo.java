@@ -13,5 +13,4 @@ import java.util.Optional;
 public class AttributeInfo implements Serializable {
     private String name;
     private Optional<List<Filter>> restrictions;
-
 }
