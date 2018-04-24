@@ -16,8 +16,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
-
 @Slf4j
 public class ProofUtils {
 

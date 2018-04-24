@@ -7,7 +7,7 @@ public class ConnectIT extends BaseIT {
     public void testConnectWithUniversity() {
         String UNIVERSITY_NAME = "rug";
         String CONNECTING_UNI_NAME = "gent";
-        String STUDENT_NAME = "student3";
+        String STUDENT_NAME = "johan";
 
         registerUniversity(UNIVERSITY_NAME);
         registerUniversity(CONNECTING_UNI_NAME);

@@ -12,6 +12,7 @@ public class ConnectionRecordModel {
     private String did;
     private String nonce;
     private String role;
-    private String userName;
+    private Boolean confirmed;
+    private String studentUserName;
     private String universityName;
 }

@@ -65,7 +65,9 @@ public class ProofRequestService {
                 Boolean result = this.sendProofToUniversity(proof);
 
                 if (result) {
-                    this.proofRequestRecordRepository.delete(proofRequestRecord);
+                    proofRequestRecord.setIsReviewed(true);
+                    connectionRecordService.setConfirmed(proofRequestRecord.getStudent(), proofRequestRecord.getUniversity(), true);
+                    this.proofRequestRecordRepository.save(proofRequestRecord);
                 } else {
                     throw new IllegalStateException("Could not fulfill proof request. University returned failure.");
                 }
@@ -110,7 +112,7 @@ public class ProofRequestService {
                 .existsByStudentAndNameAndVersion(proofRequestRecord.getStudent(), proofRequestRecord.getName(), proofRequestRecord.getVersion());
     }
 
-    public ProofRequestRecord getFromModel(ProofRequestModel proofRequestModel) {
+    public ProofRequestRecord getRecordFromModel(ProofRequestModel proofRequestModel) {
         return proofRequestRecordRepository
                 .findByStudentUserNameAndNameAndVersion(proofRequestModel.getStudentUserName(), proofRequestModel.getName(), proofRequestModel
                         .getVersion())
@@ -126,12 +128,10 @@ public class ProofRequestService {
         proofRequestRecord.setProofId(proofRequestInfo.getProofId());
         proofRequestRecord.setName(proofRequestInfo.getName());
         proofRequestRecord.setVersion(proofRequestInfo.getVersion());
+        proofRequestRecord.setAttributes(proofRequestInfo.getAttributes());
+        proofRequestRecord.setIsReviewed(false);
 
         return proofRequestRecord;
-    }
-
-    public void deleteAll() {
-        proofRequestRecordRepository.deleteAll();
     }
 
     private ProofRequestInfo getInfoFromRecord(ProofRequestRecord proofRequestRecord) {

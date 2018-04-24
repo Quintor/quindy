@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@AllArgsConstructor(onConstructor=@__(@Autowired))
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class UniversityService {
 
     private static final boolean LAZY_ISSUER_CREATION = true;
@@ -47,7 +47,7 @@ public class UniversityService {
 
     public University create(String universityName) {
         University university = universityRepository.save(new University(null, universityName, new ArrayList<>()));
-        if(!LAZY_ISSUER_CREATION) {
+        if (!LAZY_ISSUER_CREATION) {
             issuerService.ensureIssuer(universityName);
         }
         return university;
@@ -173,7 +173,7 @@ public class UniversityService {
         return authEncrypt(getIssuer(universityName), authCryptable);
     }
 
-    public  <R extends AuthCryptable> R authDecrypt(String universityName, AuthcryptedMessage authcryptedMessage, Class<R> valueType) {
+    public <R extends AuthCryptable> R authDecrypt(String universityName, AuthcryptedMessage authcryptedMessage, Class<R> valueType) {
         return authDecrypt(getIssuer(universityName), authcryptedMessage, valueType);
     }
 
@@ -200,6 +200,25 @@ public class UniversityService {
         return claimSchemaRepository
                 .findByUniversityNameIgnoreCaseAndSchemaNameAndSchemaVersion(universityName, schemaName, schemaVersion)
                 .orElseThrow(() -> new IllegalArgumentException("Schema key not found."));
+    }
+
+    public List<SchemaDefinition> getSchemaDefinitions(String universityName) {
+        Issuer issuer = getIssuer(universityName);
+        return getUniversityIssuer(universityName)
+                .getDefinedSchemaKeys()
+                .stream()
+                .map(schemaKey -> getSchemaDefinitionFromSchemaKey(issuer, schemaKey))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private SchemaDefinition getSchemaDefinitionFromSchemaKey(Issuer issuer, SchemaKey schemaKey) {
+        try {
+            return issuer.getSchema(schemaKey.getDid(), schemaKey).get().getData();
+        } catch (Exception e) {
+            log.error("{}, Could not get SchemaDefinition for SchemaKey {}", e, schemaKey);
+            return null;
+        }
     }
 
 }

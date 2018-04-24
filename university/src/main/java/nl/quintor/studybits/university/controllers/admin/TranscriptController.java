@@ -10,7 +10,10 @@ import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/{universityName}/admin/{userName}/transcripts")
@@ -33,5 +36,12 @@ public class TranscriptController {
     @GetMapping
     List<TranscriptRecord> findAllByUniversity() {
         return transcriptService.findAllByUniversity(userContext.currentUniversityName());
+    }
+
+    @GetMapping("/attributes")
+    List<String> getTranscriptAttributes() {
+        return Arrays.stream(TranscriptModel.class.getFields())
+                .map(Field::getName)
+                .collect(Collectors.toList());
     }
 }

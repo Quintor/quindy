@@ -17,12 +17,12 @@ import nl.quintor.studybits.student.repositories.ClaimRepository;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.domain.Example;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -48,6 +48,7 @@ public class ClaimService {
      * @param studentUserName: The userName of the student for which Claims should be fetched.
      * @throws Exception
      */
+    @Transactional
     public void getAndSaveNewClaimsForOwnerUserName(String studentUserName) throws Exception {
         Student student = studentService.getByUserName(studentUserName);
         studentProverService.withProverForStudent(student, prover -> {
@@ -114,14 +115,12 @@ public class ClaimService {
      */
     private void saveClaimIfNew(Claim claim, Student student, StudentClaimInfoModel claimInfo) {
         ClaimEntity claimEntity = mapper.map(claim, ClaimEntity.class);
-        claimEntity.setOwner(student);
+        SchemaKey schemaKey = schemaKeyService.getOrCreate(claimEntity.getSchemaKey());
+        claimEntity.setStudent(student);
         claimEntity.setLabel(claimInfo.getLabel());
+        claimEntity.setSchemaKey(schemaKey);
 
-        ClaimEntity queryClaimEntity = new ClaimEntity();
-        queryClaimEntity.setSchemaKey(claimEntity.getSchemaKey());
-        queryClaimEntity.setLabel(claimEntity.getLabel());
-
-        if (!claimRepository.exists(Example.of(queryClaimEntity)))
+        if(!claimRepository.existsBySchemaKeyNameAndSchemaKeyVersionAndLabel(schemaKey.getName(), schemaKey.getVersion(), claimEntity.getLabel()))
             claimRepository.save(claimEntity);
     }
 
@@ -193,22 +192,20 @@ public class ClaimService {
     }
 
     public List<ClaimEntity> findAllByOwnerUserName(String studentUserName) {
-        Student owner = studentService.getByUserName(studentUserName);
-        return claimRepository.findAllByOwnerId(owner.getId());
+        Student student = studentService.getByUserName(studentUserName);
+        return claimRepository.findAllByStudentId(student.getId());
     }
 
     public List<ClaimEntity> findByOwnerUserNameAndSchemaKeyName(String studentUserName, String schemaName) {
         Student student = studentService.getByUserName(studentUserName);
-        SchemaKey schemaKey = schemaKeyService.getByName(schemaName);
+        List<SchemaKey> schemaKeys = schemaKeyService.getAllByName(schemaName);
 
-        return claimRepository
-                .findAllBySchemaKey(schemaKey)
+        return schemaKeys
                 .stream()
-                .filter(claimEntity -> claimEntity.getOwner().equals(student))
-                .collect(Collectors.toList());
-    }
-
-    public void deleteAll() {
-        claimRepository.deleteAll();
+                .flatMap(schemaKey -> claimRepository
+                        .findAllBySchemaKey(schemaKey)
+                        .stream()
+                        .filter(claimEntity -> claimEntity.getStudent().equals(student))
+                ).collect(Collectors.toList());
     }
 }

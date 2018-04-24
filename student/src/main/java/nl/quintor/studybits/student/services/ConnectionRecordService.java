@@ -28,6 +28,7 @@ public class ConnectionRecordService {
         ConnectionRecord connectionRecord = toModel(beginRequest);
         connectionRecord.setUniversity(university);
         connectionRecord.setStudent(student);
+        connectionRecord.setConfirmed(university.equals(student.getOriginUniversity()));
 
         connectionRecordRepository.save(connectionRecord);
     }
@@ -37,6 +38,12 @@ public class ConnectionRecordService {
                 .findById(connectionId)
                 .map(this::toModel)
                 .orElseThrow(() -> new IllegalArgumentException("ConnectionRecord with id not found."));
+    }
+
+    public ConnectionRecord getByStudentAndUniversity(Student student, University university) {
+        return connectionRecordRepository
+                .findByStudentAndUniversity(student, university)
+                .orElseThrow(() -> new IllegalArgumentException("Could not find connection record for student and university."));
     }
 
     public List<ConnectionRecord> findAllByStudentUserName(String studentUserName) {
@@ -52,7 +59,10 @@ public class ConnectionRecordService {
         connectionRecordRepository.save(connectionRecord);
     }
 
-    public void deleteAll() {
-        connectionRecordRepository.deleteAll();
+    public void setConfirmed(Student student, University university, Boolean isConfirmed) {
+        ConnectionRecord connectionRecord = getByStudentAndUniversity(student, university);
+        connectionRecord.setConfirmed(isConfirmed);
+
+        connectionRecordRepository.save(connectionRecord);
     }
 }

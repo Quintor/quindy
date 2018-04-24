@@ -37,8 +37,7 @@ public class UniversityService {
 
     public Optional<University> findByName(String name) {
         return universityRepository
-                .findByName(name)
-                .map(this::toModel);
+                .findByName(name);
     }
 
     public University getByName(String name) {
@@ -63,10 +62,6 @@ public class UniversityService {
     public void deleteByName(String universityName) {
         University university = getByName(universityName);
         universityRepository.deleteById(university.getId());
-    }
-
-    public void deleteAll() {
-        universityRepository.deleteAll();
     }
 
     private URI buildStudentUri(University university, Student student, String endpoint) {

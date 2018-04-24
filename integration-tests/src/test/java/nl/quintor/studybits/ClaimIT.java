@@ -9,7 +9,7 @@ public class ClaimIT extends BaseIT {
     @Test
     public void testGetNewClaims() {
         String UNIVERSITY_NAME = "rug";
-        String STUDENT_NAME = "student3";
+        String STUDENT_NAME = "johan";
 
         registerUniversity(UNIVERSITY_NAME);
         registerStudent(STUDENT_NAME, UNIVERSITY_NAME);
@@ -18,7 +18,7 @@ public class ClaimIT extends BaseIT {
         getNewClaims(STUDENT_NAME);
 
         givenCorrectHeaders(STUDENT_URL)
-                .get("/student/{studentUserName}/claims", "student3")
+                .get("/student/{studentUserName}/claims", STUDENT_NAME)
                 .then()
                 .assertThat().statusCode(200)
                 .body("size()", greaterThan(0));
@@ -27,7 +27,7 @@ public class ClaimIT extends BaseIT {
     @Test
     public void testCreateNewClaim() {
         String UNIVERSITY_NAME = "rug";
-        String STUDENT_NAME = "student1";
+        String STUDENT_NAME = "peter";
 
         registerUniversity(UNIVERSITY_NAME);
         registerStudent(STUDENT_NAME, UNIVERSITY_NAME);
