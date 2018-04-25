@@ -6,14 +6,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.List;
+import java.util.HashMap;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class PositionRecord {
+public class ExchangePositionRecord {
 
     @Id
     @GeneratedValue
@@ -23,9 +23,13 @@ public class PositionRecord {
     @JoinColumn(name = "university_id", nullable = false)
     private University university;
 
+    @ManyToOne()
+    @JoinColumn(name = "claimSchema_id", nullable = false)
+    private ClaimSchema claimSchema;
+
     @Column(nullable = false)
     private Boolean isOpen;
 
-    @ElementCollection
-    private List<String> attributes;
+    @Lob
+    private HashMap<String, String> attributes;
 }

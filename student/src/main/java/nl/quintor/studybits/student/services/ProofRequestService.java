@@ -34,15 +34,16 @@ public class ProofRequestService {
     private ProofRequestRecordRepository proofRequestRecordRepository;
     private StudentRepository studentRepository;
     private UniversityService universityService;
-    private ConnectionRecordService connectionRecordService;
+    private ConnectionService connectionService;
     private StudentProverService studentProverService;
     private Mapper mapper;
 
     public void getAndSaveNewProofRequests(String studentUserName) {
+        // We need to use the Repository here, since we can't autowire StudentService to avoid circular imports.
         Student student = studentRepository.findByUserName(studentUserName)
                 .orElseThrow(() -> new IllegalArgumentException("Could not find student with userName."));
 
-        connectionRecordService
+        connectionService
                 .findAllByStudentUserName(studentUserName)
                 .stream()
                 .map(ConnectionRecord::getUniversity)
@@ -66,7 +67,7 @@ public class ProofRequestService {
 
                 if (result) {
                     proofRequestRecord.setIsReviewed(true);
-                    connectionRecordService.setConfirmed(proofRequestRecord.getStudent(), proofRequestRecord.getUniversity(), true);
+                    connectionService.setConfirmed(proofRequestRecord.getStudent(), proofRequestRecord.getUniversity(), true);
                     this.proofRequestRecordRepository.save(proofRequestRecord);
                 } else {
                     throw new IllegalStateException("Could not fulfill proof request. University returned failure.");

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://dozer.sourceforge.net"
+          xsi:schemaLocation="http://dozer.sourceforge.net
+          http://dozer.sourceforge.net/schema/beanmapping.xsd">
+
+    <mapping>
+        <class-a>nl.quintor.studybits.university.entities.ExchangePositionRecord</class-a>
+        <class-b>nl.quintor.studybits.university.models.ExchangePositionModel</class-b>
+        <field>
+            <a>university.name</a>
+            <b>universityName</b>
+        </field>
+        <field>
+            <a>claimSchema.schemaName</a>
+            <b>schemaName</b>
+        </field>
+        <field>
+            <a>claimSchema.schemaVersion</a>
+            <b>schemaVersion</b>
+        </field>
+        <field>
+            <a>attributes</a>
+            <b>attributes</b>
+            <b-hint>java.util.HashMap</b-hint>
+        </field>
+    </mapping>
+</mappings>

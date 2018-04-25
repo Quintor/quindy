@@ -95,4 +95,12 @@ public class UniversityService {
     public URI buildGetStudentInfoUri(University university, String userName) {
         return buildStudentUri(university, userName, "students");
     }
+
+    public URI buildAllExchangePositionsUri(University university, Student student) {
+        return buildStudentUri(university, student, "positions");
+    }
+
+    public URI buildStudentClaimUri(University university, Student student) {
+        return buildStudentUri(university, student, "claims");
+    }
 }

@@ -204,19 +204,20 @@ public class UniversityService {
 
     public List<SchemaDefinition> getSchemaDefinitions(String universityName) {
         Issuer issuer = getIssuer(universityName);
-        return getUniversityIssuer(universityName)
-                .getDefinedSchemaKeys()
+        return getUniversity(universityName)
+                .getClaimSchemas()
                 .stream()
-                .map(schemaKey -> getSchemaDefinitionFromSchemaKey(issuer, schemaKey))
+                .map(claimSchema -> getSchemaDefinitionFromSchemaKey(issuer, claimSchema))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
-    private SchemaDefinition getSchemaDefinitionFromSchemaKey(Issuer issuer, SchemaKey schemaKey) {
+    private SchemaDefinition getSchemaDefinitionFromSchemaKey(Issuer issuer, ClaimSchema claimSchema) {
         try {
+            SchemaKey schemaKey = new SchemaKey(claimSchema.getSchemaName(), claimSchema.getSchemaVersion(), claimSchema.getSchemaIssuerDid());
             return issuer.getSchema(schemaKey.getDid(), schemaKey).get().getData();
         } catch (Exception e) {
-            log.error("{}, Could not get SchemaDefinition for SchemaKey {}", e, schemaKey);
+            log.error("{}, Could not get SchemaDefinition for SchemaKey {}", e, claimSchema);
             return null;
         }
     }
