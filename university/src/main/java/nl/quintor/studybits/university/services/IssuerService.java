@@ -33,11 +33,8 @@ public class IssuerService {
     }
 
     public Issuer ensureIssuer(String issuerName) {
-        return issuers.computeIfAbsent(
-                issuerName,
-                name -> createIssuer(issuerName)
-                .orElseGet(() -> getIssuer(issuerName))
-        );
+        return issuers.computeIfAbsent(issuerName, name
+                -> createIssuer(issuerName).orElseGet(() -> getIssuer(issuerName)));
     }
 
     private Optional<Issuer> createIssuer(String name) {

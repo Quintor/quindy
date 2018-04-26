@@ -31,7 +31,7 @@ public class ExchangePositionRecord {
     @JoinColumn(name = "university_id", nullable = false)
     private University university;
 
-    @ManyToOne()
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "claimSchema_id", nullable = false)
     private ClaimSchema claimSchema;
 

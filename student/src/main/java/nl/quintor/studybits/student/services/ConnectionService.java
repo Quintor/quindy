@@ -48,7 +48,7 @@ public class ConnectionService {
 
     public List<ConnectionRecord> findAllByStudentUserName(String studentUserName) {
         return connectionRecordRepository
-                .findAllByStudentUserName(studentUserName)
+                .findAllByStudentUserNameIgnoreCase(studentUserName)
                 .stream()
                 .map(this::toModel)
                 .collect(Collectors.toList());

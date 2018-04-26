@@ -8,6 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
-    Optional<Student> findByUserName(String username );
-    boolean existsByUserName(String username );
+    Optional<Student> findByUserNameIgnoreCase(String username );
+    boolean existsByUserNameIgnoreCase(String username );
 }

@@ -35,9 +35,6 @@ public class ClaimSchema {
     @Column(nullable = false)
     private Boolean claimDefined;
 
-    @ElementCollection
-    private List<String> attrNames;
-
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "known_claim_issuers",
             joinColumns = @JoinColumn(name = "claimschema_id"),

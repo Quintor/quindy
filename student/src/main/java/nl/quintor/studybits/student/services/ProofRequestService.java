@@ -40,7 +40,7 @@ public class ProofRequestService {
 
     public void getAndSaveNewProofRequests(String studentUserName) {
         // We need to use the Repository here, since we can't autowire StudentService to avoid circular imports.
-        Student student = studentRepository.findByUserName(studentUserName)
+        Student student = studentRepository.findByUserNameIgnoreCase(studentUserName)
                 .orElseThrow(() -> new IllegalArgumentException("Could not find student with userName."));
 
         connectionService
@@ -105,7 +105,7 @@ public class ProofRequestService {
     }
 
     public List<ProofRequestRecord> findAllByStudentUserName(String studentUserName) {
-        return proofRequestRecordRepository.findAllByStudentUserName(studentUserName);
+        return proofRequestRecordRepository.findAllByStudentUserNameIgnoreCase(studentUserName);
     }
 
     private boolean notExisting(ProofRequestRecord proofRequestRecord) {
@@ -115,7 +115,7 @@ public class ProofRequestService {
 
     public ProofRequestRecord getRecordFromModel(ProofRequestModel proofRequestModel) {
         return proofRequestRecordRepository
-                .findByStudentUserNameAndNameAndVersion(proofRequestModel.getStudentUserName(), proofRequestModel.getName(), proofRequestModel
+                .findByStudentUserNameIgnoreCaseAndNameIgnoreCaseAndVersion(proofRequestModel.getStudentUserName(), proofRequestModel.getName(), proofRequestModel
                         .getVersion())
                 .orElseThrow(() -> new IllegalArgumentException("Could not " + "find ProofRequestRecord for ProofRequestModel."));
     }

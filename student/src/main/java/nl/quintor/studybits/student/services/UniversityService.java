@@ -13,7 +13,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,21 +27,17 @@ public class UniversityService {
     }
 
     public University createAndSave(String name, String endpoint) {
-        if (universityRepository.existsByName(name))
+        if (universityRepository.existsByNameIgnoreCase(name))
             throw new IllegalArgumentException("UniversityModel with name exists already.");
 
         University university = new University(null, name, endpoint);
         return universityRepository.save(university);
     }
 
-    public Optional<University> findByName(String name) {
-        return universityRepository
-                .findByName(name);
-    }
-
     public University getByName(String name) {
-        return findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("UniversityModel with name not found."));
+        return universityRepository
+                .findByNameIgnoreCase(name)
+                .orElseThrow(() -> new IllegalArgumentException("UniversityModel not found with name: " + name));
     }
 
     public List<University> findAll() {

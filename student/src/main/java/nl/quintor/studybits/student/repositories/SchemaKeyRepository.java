@@ -9,6 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface SchemaKeyRepository extends JpaRepository<SchemaKey, Long> {
-    Optional<SchemaKey> findByNameAndVersion(String name, String version);
-    List<SchemaKey> findByName(String name);
+    Optional<SchemaKey> findByNameIgnoreCaseAndVersion(String name, String version);
+    List<SchemaKey> findByNameIgnoreCase(String name);
 }

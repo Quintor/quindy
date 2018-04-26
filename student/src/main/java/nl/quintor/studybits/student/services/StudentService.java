@@ -44,7 +44,7 @@ public class StudentService {
 
     @Transactional
     public Student createAndOnboard(String userName, String universityName) throws Exception {
-        if (studentRepository.existsByUserName(userName))
+        if (studentRepository.existsByUserNameIgnoreCase(userName))
             throw new IllegalArgumentException("StudentModel with userName exists already.");
 
         University university = universityService.getByName(universityName);
@@ -74,7 +74,7 @@ public class StudentService {
     }
 
     public Optional<Student> findByUserName(String name) {
-        return studentRepository.findByUserName(name);
+        return studentRepository.findByUserNameIgnoreCase(name);
     }
 
     public List<University> findAllConnectedUniversities(String userName) {

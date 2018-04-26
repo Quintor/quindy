@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class UniversityService {
 
-    private static final boolean LAZY_ISSUER_CREATION = true;
+    private static final boolean LAZY_ISSUER_CREATION = false;
 
     private final UniversityRepository universityRepository;
     private final ClaimSchemaRepository claimSchemaRepository;

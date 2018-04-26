@@ -17,7 +17,7 @@ public class ClaimSchemaService {
     public ClaimSchema getByUniversityNameAndSchemaNameAndSchemaVersion(String universityName, String schemaName, String schemaVersion) {
         return claimSchemaRepository
                 .findByUniversityNameIgnoreCaseAndSchemaNameAndSchemaVersion(universityName, schemaName, schemaVersion)
-                .orElseThrow(() -> new IllegalArgumentException("ClaimSchema with uniName, schemaName, and schemaVersion not found"));
+                .orElseThrow(() -> new IllegalArgumentException(String.format("ClaimSchema with uniName: %s, schemaName: %s, and schemaVersion: %s not found", universityName, schemaName, schemaVersion)));
     }
 
 
