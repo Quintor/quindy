@@ -12,12 +12,8 @@
             <b>universityName</b>
         </field>
         <field>
-            <a>claimSchema.schemaName</a>
-            <b>schemaName</b>
-        </field>
-        <field>
-            <a>claimSchema.schemaVersion</a>
-            <b>schemaVersion</b>
+            <a>id</a>
+            <b>universitySeqNo</b>
         </field>
         <field>
             <a>attributes</a>

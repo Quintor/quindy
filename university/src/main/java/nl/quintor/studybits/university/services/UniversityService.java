@@ -14,6 +14,7 @@ import nl.quintor.studybits.university.dto.UniversityIssuer;
 import nl.quintor.studybits.university.entities.*;
 import nl.quintor.studybits.university.repositories.ClaimIssuerRepository;
 import nl.quintor.studybits.university.repositories.ClaimSchemaRepository;
+import nl.quintor.studybits.university.repositories.SchemaDefinitionRepository;
 import nl.quintor.studybits.university.repositories.UniversityRepository;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
@@ -32,10 +33,11 @@ import java.util.stream.Collectors;
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class UniversityService {
 
-    private static final boolean LAZY_ISSUER_CREATION = false;
+    private static final boolean LAZY_ISSUER_CREATION = true;
 
     private final UniversityRepository universityRepository;
     private final ClaimSchemaRepository claimSchemaRepository;
+    private final SchemaDefinitionRepository schemaDefinitionRepository;
     private final IssuerService issuerService;
     private final ClaimIssuerRepository claimIssuerRepository;
     private final Mapper mapper;
@@ -202,7 +204,7 @@ public class UniversityService {
                 .orElseThrow(() -> new IllegalArgumentException("Schema key not found."));
     }
 
-    public List<SchemaDefinition> getSchemaDefinitions(String universityName) {
+    public List<SchemaDefinitionRecord> getSchemaDefinitions(String universityName) {
         Issuer issuer = getIssuer(universityName);
         return getUniversity(universityName)
                 .getClaimSchemas()
@@ -212,10 +214,11 @@ public class UniversityService {
                 .collect(Collectors.toList());
     }
 
-    private SchemaDefinition getSchemaDefinitionFromSchemaKey(Issuer issuer, ClaimSchema claimSchema) {
+    private SchemaDefinitionRecord getSchemaDefinitionFromSchemaKey(Issuer issuer, ClaimSchema claimSchema) {
         try {
             SchemaKey schemaKey = new SchemaKey(claimSchema.getSchemaName(), claimSchema.getSchemaVersion(), claimSchema.getSchemaIssuerDid());
-            return issuer.getSchema(schemaKey.getDid(), schemaKey).get().getData();
+            SchemaDefinitionRecord record = mapper.map(issuer.getSchema(schemaKey.getDid(), schemaKey).get().getData(), SchemaDefinitionRecord.class);
+            return schemaDefinitionRepository.save(record);
         } catch (Exception e) {
             log.error("{}, Could not get SchemaDefinition for SchemaKey {}", e, claimSchema);
             return null;

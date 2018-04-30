@@ -2,7 +2,6 @@ package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.indy.wrapper.dto.ProofRequest;
-import nl.quintor.studybits.university.entities.ClaimSchema;
 import nl.quintor.studybits.university.entities.ExchangePositionRecord;
 import nl.quintor.studybits.university.entities.University;
 import nl.quintor.studybits.university.models.ExchangePositionModel;
@@ -17,13 +16,12 @@ import java.util.List;
 public class ExchangePositionService {
 
     private final UniversityService universityService;
-    private final ClaimService claimService;
     private final ExchangePositionRecordRepository exchangePositionRecordRepository;
 
     public ExchangePositionRecord create(ExchangePositionModel model) {
         University university = universityService.getUniversity(model.getUniversityName());
-        ClaimSchema claimSchema = claimService.getClaimSchemaByNameAndVersion(university.getName(), model.getSchemaName(), model.getSchemaVersion());
-        ExchangePositionRecord record = new ExchangePositionRecord(null, university, claimSchema, model.getIsOpen(), model.getAttributes());
+
+        ExchangePositionRecord record = new ExchangePositionRecord(null, university, model.getSchemaDefinitionRecord(), model.getState(), model.getAttributes());
         return exchangePositionRecordRepository.save(record);
     }
 

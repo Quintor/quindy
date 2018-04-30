@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import nl.quintor.studybits.university.enums.ExchangePositionState;
 
 import javax.persistence.*;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import java.util.HashMap;
 @AllArgsConstructor
 @Getter
 @Setter
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"university_id", "schema_definition_record_id"}))
 public class ExchangePositionRecord {
 
     @Id
@@ -23,12 +25,12 @@ public class ExchangePositionRecord {
     @JoinColumn(name = "university_id", nullable = false)
     private University university;
 
-    @ManyToOne()
-    @JoinColumn(name = "claimSchema_id", nullable = false)
-    private ClaimSchema claimSchema;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "schema_definition_record_id", nullable = false)
+    private SchemaDefinitionRecord schemaDefinitionRecord;
 
     @Column(nullable = false)
-    private Boolean isOpen;
+    private ExchangePositionState state;
 
     @Lob
     private HashMap<String, String> attributes;

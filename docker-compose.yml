@@ -1,10 +1,20 @@
 version: '2.3'
 services:
   pool:
-    build:
-      context: ci
-      dockerfile: indy-pool.dockerfile
+    image: registry.quintor.nl/studybits_pool
     network_mode: "host"
+
+  backend-university:
+    depends_on:
+      - pool
+    build:
+      context: university
+    network_mode: "host"
+    healthcheck:
+      test: curl -f http://localhost:8090/test/health || exit 1
+      interval: 5s
+      timeout: 2s
+      retries: 35
 
   backend-student:
     depends_on:
@@ -18,17 +28,7 @@ services:
       interval: 5s
       timeout: 2s
       retries: 35
-  backend-university:
-    depends_on:
-      - pool
-    build:
-      context: university
-    network_mode: "host"
-    healthcheck:
-      test: curl -f http://localhost:8090/test/health || exit 1
-      interval: 5s
-      timeout: 2s
-      retries: 35
+
   tests:
     build:
       context: integration-tests
@@ -38,9 +38,8 @@ services:
         condition: service_healthy
       backend-university:
         condition: service_healthy
-  frontend:
-    build:
-      context: ../StudyBits-Frontend/student
-    network_mode: "host"
 
-
+#  frontend-student:
+#    build:
+#      context: ../StudyBits-Frontend/student
+#    network_mode: "host"

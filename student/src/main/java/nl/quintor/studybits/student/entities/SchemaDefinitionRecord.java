@@ -13,7 +13,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SchemaDefinition {
+public class SchemaDefinitionRecord {
     @Id
     @GeneratedValue
     private Long id;

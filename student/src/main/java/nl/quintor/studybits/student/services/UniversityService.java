@@ -59,6 +59,11 @@ public class UniversityService {
         universityRepository.deleteById(university.getId());
     }
 
+    private URI buildStudentUri(String universityName, Student student, String endpoint) {
+        University university = getByName(universityName);
+        return buildStudentUri(university, student.getUserName(), endpoint);
+    }
+
     private URI buildStudentUri(University university, Student student, String endpoint) {
         return buildStudentUri(university, student.getUserName(), endpoint);
     }
@@ -97,5 +102,9 @@ public class UniversityService {
 
     public URI buildStudentClaimUri(University university, Student student) {
         return buildStudentUri(university, student, "claims");
+    }
+
+    public URI buildClaimSchemaUri(String universityName, Student student) {
+        return buildStudentUri(universityName, student, "claims/schema");
     }
 }

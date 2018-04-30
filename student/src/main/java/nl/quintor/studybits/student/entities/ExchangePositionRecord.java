@@ -21,22 +21,19 @@ public class ExchangePositionRecord {
     @GeneratedValue
     private Long id;
 
-    @Column(nullable = false)
-    private Long universitySeqNo;
-
-    @Column(nullable = false)
-    private ExchangePositionState state;
-
     @ManyToOne()
     @JoinColumn(name = "university_id", nullable = false)
     private University university;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "claimSchema_id", nullable = false)
-    private ClaimSchema claimSchema;
+    @JoinColumn(name = "schema_definition_record_id", nullable = false)
+    private SchemaDefinitionRecord schemaDefinitionRecord;
 
     @Column(nullable = false)
-    private Boolean isOpen;
+    private Long universitySeqNo;
+
+    @Column(nullable = false)
+    private ExchangePositionState state;
 
     @Lob
     private HashMap<String, String> attributes;

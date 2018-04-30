@@ -1,6 +1,5 @@
 package nl.quintor.studybits.indy.wrapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionResponse;
@@ -20,6 +19,7 @@ import static org.hyperledger.indy.sdk.ledger.Ledger.buildNymRequest;
 public class TrustAnchor extends WalletOwner {
     private Map<String, ConnectionRequest> openConnectionRequests = new HashMap<>();
     private Map<String, String> rolesByDid = new HashMap<>();
+
     public TrustAnchor(String name, IndyPool pool, IndyWallet wallet) {
         super(name, pool, wallet);
         log.info("{}: Instantiated TrustAnchor: {}", name, name);

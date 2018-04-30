@@ -2,7 +2,6 @@ package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nl.quintor.studybits.student.entities.ClaimSchema;
 import nl.quintor.studybits.student.entities.ExchangePositionRecord;
 import nl.quintor.studybits.student.entities.Student;
 import nl.quintor.studybits.student.entities.University;
@@ -28,7 +27,6 @@ public class ExchangePositionService {
     private final ExchangePositionRecordRepository positionRepository;
     private final StudentService studentService;
     private final UniversityService universityService;
-    private final ClaimSchemaService claimSchemaService;
     private final Mapper mapper;
 
     public void getAndSaveNewExchangePositions(String studentUserName) {
@@ -59,7 +57,7 @@ public class ExchangePositionService {
         return new RestTemplate().exchange(uri, HttpMethod.GET, null, new ParameterizedTypeReference<List<ExchangePositionModel>>() {})
                 .getBody()
                 .stream()
-                .map(this::fromModel);
+                .map(model -> this.fromModel(model, student));
     }
 
     private void saveExchangePositionIfNew(ExchangePositionRecord positionRecord) {
@@ -68,13 +66,11 @@ public class ExchangePositionService {
         }
     }
 
-    private ExchangePositionRecord fromModel(ExchangePositionModel model) {
-        University university = universityService.getByName(model.getUniversityName());
-        ClaimSchema claimSchema = claimSchemaService.getByUniversityNameAndSchemaNameAndSchemaVersion(model.getUniversityName(), model.getSchemaName(), model.getSchemaVersion());
-
+    private ExchangePositionRecord fromModel(ExchangePositionModel model, Student student) {
         ExchangePositionRecord record = mapper.map(model, ExchangePositionRecord.class);
+
+        University university = universityService.getByName(model.getUniversityName());
         record.setUniversity(university);
-        record.setClaimSchema(claimSchema);
 
         return record;
     }

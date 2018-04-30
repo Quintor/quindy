@@ -3,6 +3,7 @@ package nl.quintor.studybits.student.models;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nl.quintor.studybits.student.entities.SchemaDefinitionRecord;
 import nl.quintor.studybits.student.enums.ExchangePositionState;
 
 import java.util.HashMap;
@@ -11,11 +12,9 @@ import java.util.HashMap;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ExchangePositionModel {
-    private Boolean isOpen;
-    private ExchangePositionState state;
-    private Long universitySeqNo;
     private String universityName;
-    private String schemaName;
-    private String schemaVersion;
+    private SchemaDefinitionRecord schemaDefinitionRecord;
+    private Long universitySeqNo;
+    private ExchangePositionState state;
     private HashMap<String, String> attributes;
 }
