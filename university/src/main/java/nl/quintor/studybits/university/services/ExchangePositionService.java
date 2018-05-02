@@ -3,12 +3,14 @@ package nl.quintor.studybits.university.services;
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.indy.wrapper.dto.ProofRequest;
 import nl.quintor.studybits.university.entities.ExchangePositionRecord;
+import nl.quintor.studybits.university.entities.SchemaDefinitionRecord;
 import nl.quintor.studybits.university.entities.University;
 import nl.quintor.studybits.university.models.ExchangePositionModel;
-import nl.quintor.studybits.university.repositories.ExchangePositionRecordRepository;
+import nl.quintor.studybits.university.repositories.ExchangePositionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Service
@@ -16,21 +18,24 @@ import java.util.List;
 public class ExchangePositionService {
 
     private final UniversityService universityService;
-    private final ExchangePositionRecordRepository exchangePositionRecordRepository;
+    private final ExchangePositionRepository exchangePositionRepository;
+    private final SchemaDefinitionService schemaDefinitionService;
 
+    @Transactional
     public ExchangePositionRecord create(ExchangePositionModel model) {
         University university = universityService.getUniversity(model.getUniversityName());
+        SchemaDefinitionRecord schemaDefinitionRecord = schemaDefinitionService.getByNameAndVersion(model.getSchemaDefinitionRecord().getName(), model.getSchemaDefinitionRecord().getVersion());
+        ExchangePositionRecord record = new ExchangePositionRecord(null, university, schemaDefinitionRecord, model.getState(), model.getAttributes());
 
-        ExchangePositionRecord record = new ExchangePositionRecord(null, university, model.getSchemaDefinitionRecord(), model.getState(), model.getAttributes());
-        return exchangePositionRecordRepository.save(record);
+        return exchangePositionRepository.save(record);
     }
 
     public List<ExchangePositionRecord> findAll() {
-        return exchangePositionRecordRepository.findAll();
+        return exchangePositionRepository.findAll();
     }
 
     public List<ExchangePositionRecord> findAllByUniversityName(String universityName) {
-        return exchangePositionRecordRepository.findAllByUniversityName(universityName);
+        return exchangePositionRepository.findAllByUniversityName(universityName);
     }
 
     public ProofRequest createProofRequestForExchangePosition(ExchangePositionRecord record) {

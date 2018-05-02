@@ -3,6 +3,7 @@ package nl.quintor.studybits.student.services;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.student.entities.ExchangePositionRecord;
+import nl.quintor.studybits.student.entities.SchemaDefinitionRecord;
 import nl.quintor.studybits.student.entities.Student;
 import nl.quintor.studybits.student.entities.University;
 import nl.quintor.studybits.student.models.ExchangePositionModel;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,8 +29,10 @@ public class ExchangePositionService {
     private final ExchangePositionRecordRepository positionRepository;
     private final StudentService studentService;
     private final UniversityService universityService;
+    private final SchemaDefinitionService schemaDefinitionService;
     private final Mapper mapper;
 
+    @Transactional
     public void getAndSaveNewExchangePositions(String studentUserName) {
         Student student = studentService.getByUserName(studentUserName);
         List<University> universities = studentService.findAllConnectedUniversities(studentUserName);
@@ -38,6 +42,7 @@ public class ExchangePositionService {
                 .forEach(this::saveExchangePositionIfNew);
     }
 
+    @Transactional
     public List<ExchangePositionRecord> getAllForStudentName(String studentUserName) {
         return studentService
                 .findAllConnectedUniversities(studentUserName)
@@ -62,6 +67,9 @@ public class ExchangePositionService {
 
     private void saveExchangePositionIfNew(ExchangePositionRecord positionRecord) {
         if (!positionRepository.existsByUniversitySeqNoAndUniversityName(positionRecord.getUniversitySeqNo(), positionRecord.getUniversity().getName())) {
+            SchemaDefinitionRecord schemaDefinitionRecord = schemaDefinitionService.getOrSave(positionRecord.getSchemaDefinitionRecord());
+            positionRecord.setSchemaDefinitionRecord(schemaDefinitionRecord);
+
             positionRepository.save(positionRecord);
         }
     }
