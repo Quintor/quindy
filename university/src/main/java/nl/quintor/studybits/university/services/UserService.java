@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor(onConstructor=@__(@Autowired))
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class UserService {
 
     private final UserRepository userRepository;
@@ -52,6 +52,7 @@ public class UserService {
         User user = new User(userName, firstName, lastName, ssn, confirmed, university, new AdminUser());
         return save(user, confirmed);
     }
+
 
     private User save(User user, boolean confirmed) {
         User result = userRepository.save(user);

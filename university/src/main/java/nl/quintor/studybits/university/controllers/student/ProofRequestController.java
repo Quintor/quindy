@@ -37,9 +37,9 @@ public class ProofRequestController {
         return mapper.map(authEncryptedMessageModel, AuthcryptedMessage.class);
     }
 
-    private ProofHandler getHandler(String proofName) {
+    public ProofHandler getHandler(String proofName) {
         Validate.notNull(proofName, "Proof name cannot be null.");
-        return Validate.notNull(proofHandlerMap.get(proofName.toLowerCase()), "Unknown proof.");
+        return Validate.notNull(proofHandlerMap.get(proofName.toLowerCase()), String.format("Unknown proof: %s", proofName));
     }
 
     @Autowired
@@ -78,7 +78,6 @@ public class ProofRequestController {
         ProofHandler handler = getHandler(proofName);
         AuthcryptedMessage result = handler.getProofRequestMessage(userContext.currentUserId(), proofId);
         return linkHelper.withLink(toModel(result), ProofRequestController.class, x -> x.handleProof(proofName, proofId, null));
-
     }
 
     @PostMapping("/{proofName}/{proofId}")
@@ -86,5 +85,4 @@ public class ProofRequestController {
         ProofHandler handler = getHandler(proofName);
         return handler.handleProof(userContext.currentUserId(), proofId, toDto(authEncryptedMessageModel));
     }
-
 }

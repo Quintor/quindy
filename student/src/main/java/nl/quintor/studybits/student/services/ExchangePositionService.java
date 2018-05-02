@@ -6,7 +6,9 @@ import nl.quintor.studybits.student.entities.ExchangePositionRecord;
 import nl.quintor.studybits.student.entities.SchemaDefinitionRecord;
 import nl.quintor.studybits.student.entities.Student;
 import nl.quintor.studybits.student.entities.University;
+import nl.quintor.studybits.student.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.student.models.ExchangePositionModel;
+import nl.quintor.studybits.student.models.ProofRequestInfo;
 import nl.quintor.studybits.student.repositories.ExchangePositionRecordRepository;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,8 @@ public class ExchangePositionService {
     private final StudentService studentService;
     private final UniversityService universityService;
     private final SchemaDefinitionService schemaDefinitionService;
+    private final ProofRequestService proofRequestService;
+    private final StudentProverService studentProverService;
     private final Mapper mapper;
 
     @Transactional
@@ -62,11 +66,11 @@ public class ExchangePositionService {
         return new RestTemplate().exchange(uri, HttpMethod.GET, null, new ParameterizedTypeReference<List<ExchangePositionModel>>() {})
                 .getBody()
                 .stream()
-                .map(model -> this.fromModel(model, student));
+                .map(this::fromModel);
     }
 
     private void saveExchangePositionIfNew(ExchangePositionRecord positionRecord) {
-        if (!positionRepository.existsByUniversitySeqNoAndUniversityName(positionRecord.getUniversitySeqNo(), positionRecord.getUniversity().getName())) {
+        if (!positionRepository.existsByProofRecordIdAndUniversityNameIgnoreCase(positionRecord.getProofRecordId(), positionRecord.getUniversity().getName())) {
             SchemaDefinitionRecord schemaDefinitionRecord = schemaDefinitionService.getOrSave(positionRecord.getSchemaDefinitionRecord());
             positionRecord.setSchemaDefinitionRecord(schemaDefinitionRecord);
 
@@ -74,13 +78,35 @@ public class ExchangePositionService {
         }
     }
 
-    private ExchangePositionRecord fromModel(ExchangePositionModel model, Student student) {
-        ExchangePositionRecord record = mapper.map(model, ExchangePositionRecord.class);
+    public void acceptExchangePosition(String studentUserName, ExchangePositionModel positionModel) throws Exception {
+        log.info("Student {} - Accepting ExchangePositionModel: {}", studentUserName, positionModel);
+        Student student = studentService.getByUserName(studentUserName);
+        ExchangePositionRecord record = fromModel(positionModel);
+
+        ProofRequestInfo proofRequestInfo = proofRequestService.getProofRequestForExchangePosition(student, record);
+        studentProverService.withProverForStudent(student, prover -> {
+            try {
+                AuthEncryptedMessageModel messageModel = proofRequestService.getProofForProofRequest(student, prover, proofRequestInfo);
+                boolean result = proofRequestService.sendProofToUniversity(messageModel);
+                if (!result) {
+                    log.error("Could not accept ExchangePosition. Fail upon sending to University.");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private ExchangePositionRecord fromModel(ExchangePositionModel model) {
+        ExchangePositionRecord exchangePosition = mapper.map(model, ExchangePositionRecord.class);
 
         University university = universityService.getByName(model.getUniversityName());
-        record.setUniversity(university);
+        SchemaDefinitionRecord schemaDefinition = schemaDefinitionService.getByNameAndVersion(model.getSchemaDefinitionRecord().getName(), model.getSchemaDefinitionRecord().getVersion());
 
-        return record;
+        exchangePosition.setUniversity(university);
+        exchangePosition.setSchemaDefinitionRecord(schemaDefinition);
+
+        return exchangePosition;
     }
 
 }

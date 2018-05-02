@@ -20,4 +20,10 @@ public class SchemaDefinitionService {
                 .findByNameIgnoreCaseAndVersion(record.getName(), record.getVersion())
                 .orElseGet(() -> schemaDefinitionRepository.save(record));
     }
+
+    public SchemaDefinitionRecord getByNameAndVersion(String name, String version) {
+        return schemaDefinitionRepository
+                .findByNameIgnoreCaseAndVersion(name, version)
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Could not find SchemaDefinition with name: %s and version: %s", name, version)));
+    }
 }

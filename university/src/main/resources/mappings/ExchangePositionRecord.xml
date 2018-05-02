@@ -12,8 +12,8 @@
             <b>universityName</b>
         </field>
         <field>
-            <a>id</a>
-            <b>universitySeqNo</b>
+            <a>proofRecord.id</a>
+            <b>proofRecordId</b>
         </field>
         <field>
             <a>attributes</a>

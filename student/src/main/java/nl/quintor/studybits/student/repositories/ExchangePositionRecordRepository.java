@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface ExchangePositionRecordRepository extends JpaRepository<ExchangePositionRecord, Long> {
-    Boolean existsByUniversitySeqNoAndUniversityName(Long universitySeqNo, String universityName);
+    Boolean existsByProofRecordIdAndUniversityNameIgnoreCase(Long universitySeqNo, String universityName);
     List<ExchangePositionRecord> findAllByUniversity(University university);
 }

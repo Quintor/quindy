@@ -14,7 +14,7 @@ import java.util.HashMap;
 @AllArgsConstructor
 @Getter
 @Setter
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"universitySeqNo", "university_id"}))
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"proofRecordId", "university_id"}))
 public class ExchangePositionRecord {
 
     @Id
@@ -30,7 +30,7 @@ public class ExchangePositionRecord {
     private SchemaDefinitionRecord schemaDefinitionRecord;
 
     @Column(nullable = false)
-    private Long universitySeqNo;
+    private Long proofRecordId;
 
     @Column(nullable = false)
     private ExchangePositionState state;

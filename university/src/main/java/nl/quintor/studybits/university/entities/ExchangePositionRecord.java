@@ -21,13 +21,17 @@ public class ExchangePositionRecord {
     @GeneratedValue
     private Long id;
 
-    @ManyToOne()
-    @JoinColumn(name = "university_id", nullable = false)
+    @ManyToOne(optional = false, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "university_id")
     private University university;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "schema_definition_record_id", nullable = false)
     private SchemaDefinitionRecord schemaDefinitionRecord;
+
+    @OneToOne(mappedBy = "exchangePositionRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "proof_record_id", nullable = false)
+    private ProofRecord proofRecord;
 
     @Column(nullable = false)
     private ExchangePositionState state;

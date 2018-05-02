@@ -7,7 +7,10 @@ import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.university.dto.*;
 import nl.quintor.studybits.university.dto.Proof;
 import nl.quintor.studybits.university.dto.ProofAttribute;
-import nl.quintor.studybits.university.entities.*;
+import nl.quintor.studybits.university.entities.ClaimSchema;
+import nl.quintor.studybits.university.entities.ProofRecord;
+import nl.quintor.studybits.university.entities.University;
+import nl.quintor.studybits.university.entities.User;
 import nl.quintor.studybits.university.helpers.Lazy;
 import nl.quintor.studybits.university.repositories.ClaimSchemaRepository;
 import nl.quintor.studybits.university.repositories.ProofRecordRepository;
@@ -27,7 +30,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Service
-@AllArgsConstructor(onConstructor=@__(@Autowired))
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public abstract class ProofHandler<T extends Proof> {
 
     protected final UniversityService universityService;
@@ -40,7 +43,7 @@ public abstract class ProofHandler<T extends Proof> {
     protected abstract Class<T> getProofType();
 
     @Transactional
-    protected abstract boolean handleProof(User user, ProofRecord proofRecord, T proof);
+    protected abstract boolean handleProof(Object object, ProofRecord proofRecord, T proof);
 
     private ProofRequestInfoDto toDto(ProofRecord proofRecord, List<String> attributes) {
         ProofRequestInfoDto result = mapper.map(proofRecord, ProofRequestInfoDto.class);
@@ -67,7 +70,7 @@ public abstract class ProofHandler<T extends Proof> {
 
     public List<ProofRequestInfoDto> findProofRequests(Long userId) {
         List<ProofRecord> proofRecords = proofRecordRepository.findAllByUserIdAndProofNameAndProofJsonIsNull(userId, getProofName());
-        if(proofRecords.isEmpty()) {
+        if (proofRecords.isEmpty()) {
             return new ArrayList<>();
         }
         List<String> attributes = getProofAttributes()
@@ -80,17 +83,21 @@ public abstract class ProofHandler<T extends Proof> {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public ProofRecord addProofRequest(Long userId) {
         User user = userRepository.getOne(userId);
         Version version = ClaimUtils.getVersion(getProofType());
         String nonce = RandomStringUtils.randomNumeric(28, 36);
-        ProofRecord proofRecord = new ProofRecord(null, user, version.getName(), version.getVersion(), nonce, null);
+        ProofRecord proofRecord = new ProofRecord(null, user, version.getName(), version.getVersion(), nonce, null, null);
         return proofRecordRepository.save(proofRecord);
     }
 
-
     public AuthcryptedMessage getProofRequestMessage(Long userId, Long proofRecordId) {
         ProofRecord proofRecord = getProofRecord(userId, proofRecordId);
+        return getProofRequestMessage(proofRecord);
+    }
+
+    public AuthcryptedMessage getProofRequestMessage(ProofRecord proofRecord) {
         User user = Objects.requireNonNull(proofRecord.getUser());
         University university = Objects.requireNonNull(user.getUniversity());
         ProofRequest proofRequest = getProofRequest(university, user, proofRecord);
@@ -107,7 +114,7 @@ public abstract class ProofHandler<T extends Proof> {
         T verifiedProof = getVerifiedProof(university.getName(), proofRequest, authcryptedMessage);
         proofRecord.setProofJson(ServiceUtils.objectToJson(verifiedProof));
         Boolean handled = handleProof(user, proofRecord, verifiedProof);
-        if(handled) {
+        if (handled) {
             proofRecordRepository.save(proofRecord);
         }
         return handled;
@@ -134,7 +141,7 @@ public abstract class ProofHandler<T extends Proof> {
         try {
             FieldUtils.writeField(result, proofAttribute.getKey(), proofAttribute.getValue(), true);
         } catch (IllegalAccessException e) {
-            String message = String.format("Unable to write proof attribute to field '%s' of type '%s'.",proofAttribute.getKey(), result.getClass().getName());
+            String message = String.format("Unable to write proof attribute to field '%s' of type '%s'.", proofAttribute.getKey(), result.getClass().getName());
             throw new IllegalStateException(message, e);
         }
     }
@@ -168,7 +175,7 @@ public abstract class ProofHandler<T extends Proof> {
 
     private AttributeInfo getAttributeInfo(ProofAttribute proofAttribute, Map<Version, Optional<ClaimSchema>> claimSchemaLookup) {
         List<Version> versions = proofAttribute.getSchemaVersions();
-        if(versions.isEmpty()) {
+        if (versions.isEmpty()) {
             return new AttributeInfo(proofAttribute.getAttributeName(), Optional.empty());
         }
 

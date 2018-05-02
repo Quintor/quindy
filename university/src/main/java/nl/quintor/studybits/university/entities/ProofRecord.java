@@ -18,7 +18,7 @@ public class ProofRecord {
     @GeneratedValue
     private Long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(cascade = CascadeType.ALL, optional = false)
     @JoinColumn(name = "user_id")
     private User user;
 
@@ -33,4 +33,7 @@ public class ProofRecord {
 
     @Lob
     private String proofJson;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private ExchangePositionRecord exchangePositionRecord;
 }

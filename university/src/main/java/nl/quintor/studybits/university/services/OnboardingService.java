@@ -2,26 +2,18 @@ package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import nl.quintor.studybits.indy.wrapper.Issuer;
 import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
-import nl.quintor.studybits.indy.wrapper.dto.ConnectionResponse;
-import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
-import nl.quintor.studybits.university.UserContext;
 import nl.quintor.studybits.university.entities.IndyConnection;
 import nl.quintor.studybits.university.entities.User;
-import nl.quintor.studybits.university.models.OnboardBegin;
-import nl.quintor.studybits.university.models.OnboardFinalize;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.function.BiFunction;
-
 @Service
-@AllArgsConstructor(onConstructor=@__(@Autowired))
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class OnboardingService {
 
     private final UserRepository userRepository;

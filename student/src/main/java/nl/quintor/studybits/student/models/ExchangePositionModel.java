@@ -14,7 +14,7 @@ import java.util.HashMap;
 public class ExchangePositionModel {
     private String universityName;
     private SchemaDefinitionRecord schemaDefinitionRecord;
-    private Long universitySeqNo;
+    private Long proofRecordId;
     private ExchangePositionState state;
     private HashMap<String, String> attributes;
 }

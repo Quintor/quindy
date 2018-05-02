@@ -2,6 +2,7 @@ package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nl.quintor.studybits.student.entities.ExchangePositionRecord;
 import nl.quintor.studybits.student.entities.Student;
 import nl.quintor.studybits.student.entities.University;
 import nl.quintor.studybits.student.repositories.UniversityRepository;
@@ -104,7 +105,7 @@ public class UniversityService {
         return buildStudentUri(university, student, "claims");
     }
 
-    public URI buildClaimSchemaUri(String universityName, Student student) {
-        return buildStudentUri(universityName, student, "claims/schema");
+    public URI buildExchangePositionProofRequestUri(University university, Student student, ExchangePositionRecord record) {
+        return buildStudentUri(university, student, String.format("proofrequests/%s/%d", record.getSchemaDefinitionRecord().getName(), record.getProofRecordId()));
     }
 }
