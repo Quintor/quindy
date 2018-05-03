@@ -14,7 +14,7 @@ import java.util.HashMap;
 @AllArgsConstructor
 @Getter
 @Setter
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"university_id", "schema_definition_record_id"}))
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"university_id", "proof_record_id"}))
 public class ExchangePositionRecord {
 
     @Id
@@ -29,7 +29,7 @@ public class ExchangePositionRecord {
     @JoinColumn(name = "schema_definition_record_id", nullable = false)
     private SchemaDefinitionRecord schemaDefinitionRecord;
 
-    @OneToOne(mappedBy = "exchangePositionRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "proof_record_id", nullable = false)
     private ProofRecord proofRecord;
 

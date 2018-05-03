@@ -27,10 +27,6 @@ public class TestController {
     public void nuke() {
         log.debug("Deleting users");
         userRepository.deleteAll();
-        log.debug("Deleting Exchange Positions");
-        exchangePositionRepository.deleteAll();
-        log.debug("Deleting Schema Definitions");
-        schemaDefinitionRepository.deleteAll();
         log.debug("Seeding");
         seeder.seed(false);
     }

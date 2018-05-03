@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ExchangePositionRecordRepository extends JpaRepository<ExchangePositionRecord, Long> {
+public interface ExchangePositionRepository extends JpaRepository<ExchangePositionRecord, Long> {
     Boolean existsByProofRecordIdAndUniversityNameIgnoreCase(Long universitySeqNo, String universityName);
     List<ExchangePositionRecord> findAllByUniversity(University university);
 }

@@ -24,7 +24,7 @@ public class ExchangePositionController {
 
     @GetMapping
     List<ExchangePositionModel> getAllForStudentName(@PathVariable String studentUserName) {
-        return exchangePositionService.getAllForStudentName(studentUserName)
+        return exchangePositionService.getAllExchangePositionsForStudentName(studentUserName)
                 .stream()
                 .map(this::toModel)
                 .collect(Collectors.toList());

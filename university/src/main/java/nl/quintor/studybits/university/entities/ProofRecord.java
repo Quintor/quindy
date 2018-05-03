@@ -34,6 +34,7 @@ public class ProofRecord {
     @Lob
     private String proofJson;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "proofRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "exchange_position_record_id", nullable = false)
     private ExchangePositionRecord exchangePositionRecord;
 }

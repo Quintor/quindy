@@ -9,7 +9,7 @@ import nl.quintor.studybits.student.entities.University;
 import nl.quintor.studybits.student.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.student.models.ExchangePositionModel;
 import nl.quintor.studybits.student.models.ProofRequestInfo;
-import nl.quintor.studybits.student.repositories.ExchangePositionRecordRepository;
+import nl.quintor.studybits.student.repositories.ExchangePositionRepository;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class ExchangePositionService {
 
-    private final ExchangePositionRecordRepository positionRepository;
+    private final ExchangePositionRepository positionRepository;
     private final StudentService studentService;
     private final UniversityService universityService;
     private final SchemaDefinitionService schemaDefinitionService;
@@ -47,15 +47,15 @@ public class ExchangePositionService {
     }
 
     @Transactional
-    public List<ExchangePositionRecord> getAllForStudentName(String studentUserName) {
+    public List<ExchangePositionRecord> getAllExchangePositionsForStudentName(String studentUserName) {
         return studentService
                 .findAllConnectedUniversities(studentUserName)
                 .stream()
-                .flatMap(this::getAllForUniversity)
+                .flatMap(this::findAllExchangePositionsForUniversity)
                 .collect(Collectors.toList());
     }
 
-    private Stream<ExchangePositionRecord> getAllForUniversity(University university) {
+    private Stream<ExchangePositionRecord> findAllExchangePositionsForUniversity(University university) {
         return positionRepository
                 .findAllByUniversity(university)
                 .stream();
@@ -101,7 +101,7 @@ public class ExchangePositionService {
         ExchangePositionRecord exchangePosition = mapper.map(model, ExchangePositionRecord.class);
 
         University university = universityService.getByName(model.getUniversityName());
-        SchemaDefinitionRecord schemaDefinition = schemaDefinitionService.getByNameAndVersion(model.getSchemaDefinitionRecord().getName(), model.getSchemaDefinitionRecord().getVersion());
+        SchemaDefinitionRecord schemaDefinition = schemaDefinitionService.getOrSave(model.getSchemaDefinitionRecord());
 
         exchangePosition.setUniversity(university);
         exchangePosition.setSchemaDefinitionRecord(schemaDefinition);

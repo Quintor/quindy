@@ -21,7 +21,7 @@ public class ExchangePositionRecord {
     @GeneratedValue
     private Long id;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "university_id", nullable = false)
     private University university;
 

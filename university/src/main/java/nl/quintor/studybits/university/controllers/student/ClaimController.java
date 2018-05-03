@@ -57,8 +57,7 @@ public class ClaimController {
                 .stream()
                 .map(claimRecord -> mapper.map(claimRecord, StudentClaimInfo.class))
                 .map(studentClaimInfo -> linkHelper
-                        .withLink(studentClaimInfo, ClaimController.class,
-                                c -> c.getClaimOffer(studentClaimInfo.getName(), studentClaimInfo.getClaimId())))
+                        .withLink(studentClaimInfo, ClaimController.class, c -> c.getClaimOffer(studentClaimInfo.getName(), studentClaimInfo.getClaimId())))
                 .collect(Collectors.toList());
     }
 

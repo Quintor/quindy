@@ -106,6 +106,6 @@ public class UniversityService {
     }
 
     public URI buildExchangePositionProofRequestUri(University university, Student student, ExchangePositionRecord record) {
-        return buildStudentUri(university, student, String.format("proofrequests/%s/%d", record.getSchemaDefinitionRecord().getName(), record.getProofRecordId()));
+        return buildStudentUri(university, student, String.format("proofrequests/%s/%d", record.getSchemaDefinitionRecord().getName().toLowerCase() + "proof", record.getProofRecordId()));
     }
 }

@@ -215,9 +215,15 @@ public abstract class ProofHandler<T extends Proof> {
         ProofRecord proofRecord = proofRecordRepository
                 .findById(proofRecordId)
                 .orElseThrow(() -> new IllegalArgumentException("Proof record not found."));
-        User user = Objects.requireNonNull(proofRecord.getUser(), "Proof record without user.");
-        Validate.validState(user.getId().equals(userId), "Proof record user mismatch.");
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException(String.format("User with id: %d not known", userId)));
+        proofRecord.setUser(user);
+
+        Objects.requireNonNull(proofRecord.getUser(), "Proof record without user.");
+        // TODO: Decide whether you want to create "Open" or "User-specific" proof records
+//        Validate.validState(user.getId().equals(userId), "Proof record user mismatch.");
+        // TODO: Decide whether this check is necessary, since for "Open" proof records, the user is the issuing party (University), not the proving party (Student)
         Validate.notNull(user.getConnection(), "User onboarding incomplete!");
+
         Version version = getProofVersion();
         Validate.isTrue(version.getName().equals(proofRecord.getProofName()), "Proof name mismatch.");
         Validate.isTrue(version.getVersion().equals(proofRecord.getProofVersion()), "Proof version mismatch.");

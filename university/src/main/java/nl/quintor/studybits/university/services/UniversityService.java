@@ -76,7 +76,7 @@ public class UniversityService {
         List<SchemaKey> definedSchemaKeys = university
                 .getClaimSchemas()
                 .stream()
-                .filter(ClaimSchema::getClaimDefined)
+//                .filter(ClaimSchema::getClaimDefined)
                 .map(ServiceUtils::convertToSchemaKey)
                 .collect(Collectors.toList());
         Issuer issuer = getIssuer(university.getName());
@@ -214,20 +214,24 @@ public class UniversityService {
         return getUniversity(universityName)
                 .getClaimSchemas()
                 .stream()
-                .map(claimSchema -> getSchemaDefinitionFromSchemaKey(issuer, claimSchema))
-                .filter(Objects::nonNull)
+                .map(claimSchema -> getSchemaDefinition(issuer, claimSchema))
                 .collect(Collectors.toList());
+    }
+
+    private SchemaDefinitionRecord getSchemaDefinition(Issuer issuer, ClaimSchema claimSchema) {
+        return schemaDefinitionRepository
+                .findByNameIgnoreCaseAndVersion(claimSchema.getSchemaName(), claimSchema.getSchemaVersion())
+                .orElseGet(() -> getSchemaDefinitionFromSchemaKey(issuer, claimSchema));
     }
 
     private SchemaDefinitionRecord getSchemaDefinitionFromSchemaKey(Issuer issuer, ClaimSchema claimSchema) {
         try {
             SchemaKey schemaKey = new SchemaKey(claimSchema.getSchemaName(), claimSchema.getSchemaVersion(), claimSchema.getSchemaIssuerDid());
             SchemaDefinitionRecord record = mapper.map(issuer.getSchema(schemaKey.getDid(), schemaKey).get().getData(), SchemaDefinitionRecord.class);
-            return schemaDefinitionRepository.save(record);
+            return schemaDefinitionRepository.saveAndFlush(record);
         } catch (Exception e) {
             log.error("{}, Could not get SchemaDefinition for SchemaKey {}", e, claimSchema);
-            return null;
+            throw new IllegalArgumentException(String.format("Could not find SchemaDefinition for name: %s and version: %s", claimSchema.getSchemaName(), claimSchema.getSchemaVersion()));
         }
     }
-
 }

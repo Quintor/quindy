@@ -1,6 +1,5 @@
 package nl.quintor.studybits.university.entities;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"name", "version"}))
 public class SchemaDefinitionRecord {
     @Id
     @GeneratedValue
@@ -25,7 +25,6 @@ public class SchemaDefinitionRecord {
     @Column(nullable = false)
     private String version;
 
-    @JsonProperty("attr_names")
     @ElementCollection
     private List<String> attrNames;
 }
