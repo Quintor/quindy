@@ -101,6 +101,10 @@ public class UniversityService {
         return buildStudentUri(university, student, "positions");
     }
 
+    public URI buildAllExchangeApplicationUri(University university, Student student) {
+        return buildStudentUri(university, student, "applications");
+    }
+
     public URI buildStudentClaimUri(University university, Student student) {
         return buildStudentUri(university, student, "claims");
     }

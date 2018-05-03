@@ -16,4 +16,9 @@ public class TranscriptProof implements Proof {
     })
     private String status;
 
+    @ProofAttributeInfo(schemas = {
+            @VersionInfo(name = "Transcript", version="0.1")
+    })
+    private String average;
+
 }

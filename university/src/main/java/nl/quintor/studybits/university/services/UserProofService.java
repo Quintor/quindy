@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service;
 public class UserProofService extends ProofHandler<UserProof>  {
 
     @Autowired
-    public UserProofService(UniversityService universityService, ProofRecordRepository proofRecordRepository, ClaimSchemaRepository claimSchemaRepository, UserRepository userRepository, Mapper mapper) {
-        super(universityService, proofRecordRepository, claimSchemaRepository, userRepository, mapper);
+    public UserProofService(UniversityService universityService, ProofRecordRepository proofRecordRepository, ClaimSchemaRepository claimSchemaRepository, ExchangeApplicationService exchangeApplicationService, UserRepository userRepository, Mapper mapper) {
+        super(universityService, proofRecordRepository, claimSchemaRepository, exchangeApplicationService, userRepository, mapper);
     }
 
     @Override

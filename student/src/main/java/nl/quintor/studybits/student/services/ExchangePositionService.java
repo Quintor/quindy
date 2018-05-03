@@ -97,7 +97,7 @@ public class ExchangePositionService {
         });
     }
 
-    private ExchangePositionRecord fromModel(ExchangePositionModel model) {
+    public ExchangePositionRecord fromModel(ExchangePositionModel model) {
         ExchangePositionRecord exchangePosition = mapper.map(model, ExchangePositionRecord.class);
 
         University university = universityService.getByName(model.getUniversityName());

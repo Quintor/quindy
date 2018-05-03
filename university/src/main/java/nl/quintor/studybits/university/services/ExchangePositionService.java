@@ -37,6 +37,12 @@ public class ExchangePositionService {
         return exchangePositionRepository.save(record);
     }
 
+    public ExchangePositionRecord getByProofRecordId(Long proofRecordId) {
+        return exchangePositionRepository
+                .findByProoRecordId(proofRecordId)
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Could not find ExchangePositionRecord by ProofRecordId: %d", proofRecordId)));
+    }
+
     public List<ExchangePositionRecord> findAll() {
         return exchangePositionRepository.findAll();
     }

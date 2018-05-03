@@ -36,6 +36,7 @@ public abstract class ProofHandler<T extends Proof> {
     protected final UniversityService universityService;
     protected final ProofRecordRepository proofRecordRepository;
     protected final ClaimSchemaRepository claimSchemaRepository;
+    protected final ExchangeApplicationService exchangeApplicationService;
     protected final UserRepository userRepository;
     protected final Mapper mapper;
     protected final Lazy<List<ProofAttribute>> proofAttributes = new Lazy<>();

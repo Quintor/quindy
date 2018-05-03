@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service;
 public class TranscriptProofService extends ProofHandler<TranscriptProof> {
 
     @Autowired
-    public TranscriptProofService(UniversityService universityService, ProofRecordRepository proofRecordRepository, ClaimSchemaRepository claimSchemaRepository, UserRepository userRepository, Mapper mapper) {
-        super(universityService, proofRecordRepository, claimSchemaRepository, userRepository, mapper);
+    public TranscriptProofService(UniversityService universityService, ProofRecordRepository proofRecordRepository, ClaimSchemaRepository claimSchemaRepository, ExchangeApplicationService exchangeApplicationService, UserRepository userRepository, Mapper mapper) {
+        super(universityService, proofRecordRepository, claimSchemaRepository, exchangeApplicationService, userRepository, mapper);
     }
 
     @Override
@@ -32,6 +32,10 @@ public class TranscriptProofService extends ProofHandler<TranscriptProof> {
 
         Validate.isTrue(transcript.getDegree().equalsIgnoreCase(proof.getDegree()), "Degree mismatch.");
         Validate.isTrue(transcript.getStatus().equalsIgnoreCase(proof.getStatus()), "Status mismatch.");
+
+        if (proofRecord.getExchangePositionRecord() != null) {
+            exchangeApplicationService.create(transcript, proofRecord, proof);
+        }
 
         return true;
     }

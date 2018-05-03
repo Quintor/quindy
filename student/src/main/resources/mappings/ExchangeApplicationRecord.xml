@@ -5,20 +5,15 @@
           http://dozer.sourceforge.net/schema/beanmapping.xsd">
 
     <mapping>
-        <class-a>nl.quintor.studybits.university.entities.ExchangePositionRecord</class-a>
-        <class-b>nl.quintor.studybits.university.models.ExchangePositionModel</class-b>
+        <class-a>nl.quintor.studybits.student.entities.ExchangeApplicationRecord</class-a>
+        <class-b>nl.quintor.studybits.student.models.ExchangeApplicationModel</class-b>
         <field type="one-way">
             <a>university.name</a>
             <b>universityName</b>
         </field>
         <field type="one-way">
-            <a>proofRecord.id</a>
-            <b>proofRecordId</b>
-        </field>
-        <field>
-            <a>attributes</a>
-            <b>attributes</b>
-            <b-hint>java.util.HashMap</b-hint>
+            <a>student.userName</a>
+            <b>userName</b>
         </field>
     </mapping>
 </mappings>
