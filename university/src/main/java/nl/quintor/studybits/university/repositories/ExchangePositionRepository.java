@@ -10,5 +10,5 @@ import java.util.Optional;
 @Repository
 public interface ExchangePositionRepository extends JpaRepository<ExchangePositionRecord, Long> {
     List<ExchangePositionRecord> findAllByUniversityName(String universityName);
-    Optional<ExchangePositionRecord> findByProoRecordId(Long proofRecordId);
+    Optional<ExchangePositionRecord> findByProofRecordId(Long proofRecordId);
 }

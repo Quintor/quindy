@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class UniversityService {
 
-    private static final boolean LAZY_ISSUER_CREATION = true;
+    private static final boolean LAZY_ISSUER_CREATION = false;
 
     private final UniversityRepository universityRepository;
     private final ClaimSchemaRepository claimSchemaRepository;
@@ -45,7 +45,6 @@ public class UniversityService {
         return universityRepository.findAll();
     }
 
-    @Transactional
     public University create(String universityName) {
         University university = universityRepository.save(new University(null, null, universityName, new ArrayList<>(), new ArrayList<>()));
         User user = new User(university);

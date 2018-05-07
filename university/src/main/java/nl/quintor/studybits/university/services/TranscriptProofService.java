@@ -16,9 +16,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class TranscriptProofService extends ProofHandler<TranscriptProof> {
 
+    private final ExchangeApplicationService exchangeApplicationService;
+
     @Autowired
     public TranscriptProofService(UniversityService universityService, ProofRecordRepository proofRecordRepository, ClaimSchemaRepository claimSchemaRepository, ExchangeApplicationService exchangeApplicationService, UserRepository userRepository, Mapper mapper) {
-        super(universityService, proofRecordRepository, claimSchemaRepository, exchangeApplicationService, userRepository, mapper);
+        super(universityService, proofRecordRepository, claimSchemaRepository, userRepository, mapper);
+        this.exchangeApplicationService = exchangeApplicationService;
     }
 
     @Override

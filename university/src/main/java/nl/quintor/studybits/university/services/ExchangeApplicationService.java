@@ -8,6 +8,7 @@ import nl.quintor.studybits.university.enums.ExchangeApplicationState;
 import nl.quintor.studybits.university.models.ExchangeApplicationModel;
 import nl.quintor.studybits.university.models.ExchangePositionModel;
 import nl.quintor.studybits.university.repositories.ExchangeApplicationRepository;
+import nl.quintor.studybits.university.repositories.ExchangePositionRepository;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ import java.util.List;
 public class ExchangeApplicationService {
 
     private final ExchangeApplicationRepository exchangeApplicationRepository;
-    private final ExchangePositionService exchangePositionService;
+    private final ExchangePositionRepository exchangePositionRepository;
     private final UserService userService;
     private final UniversityService universityService;
     private final Mapper mapper;
@@ -50,7 +51,9 @@ public class ExchangeApplicationService {
     private ExchangeApplicationRecord fromModel(ExchangeApplicationModel model) {
         University university = universityService.getUniversity(model.getUniversityName());
         User user = userService.getByUniversityNameAndUserName(university.getName(), model.getUserName());
-        ExchangePositionRecord exchangePositionRecord = exchangePositionService.getByProofRecordId(model.getExchangePositionModel().getProofRecordId());
+        ExchangePositionRecord exchangePositionRecord = exchangePositionRepository
+                .findByProofRecordId(model.getExchangePositionModel().getProofRecordId())
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Could not find ExchangePosition with id: %d", model.getExchangePositionModel().getProofRecordId())));
         return new ExchangeApplicationRecord(model.getId(), university, user, exchangePositionRecord, model.getState(), model.getProof());
     }
 

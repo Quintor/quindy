@@ -39,7 +39,7 @@ public class ExchangePositionService {
 
     public ExchangePositionRecord getByProofRecordId(Long proofRecordId) {
         return exchangePositionRepository
-                .findByProoRecordId(proofRecordId)
+                .findByProofRecordId(proofRecordId)
                 .orElseThrow(() -> new IllegalArgumentException(String.format("Could not find ExchangePositionRecord by ProofRecordId: %d", proofRecordId)));
     }
 

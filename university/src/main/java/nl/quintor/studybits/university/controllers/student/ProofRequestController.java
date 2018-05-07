@@ -7,7 +7,6 @@ import nl.quintor.studybits.university.helpers.LinkHelper;
 import nl.quintor.studybits.university.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.university.models.ProofRequestInfo;
 import nl.quintor.studybits.university.services.ProofHandler;
-import nl.quintor.studybits.university.services.ProofService;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +24,6 @@ public class ProofRequestController {
 
     private final UserContext userContext;
     private final LinkHelper linkHelper;
-    private final ProofService proofService;
     private final Map<String, ProofHandler> proofHandlerMap;
     private final Mapper mapper;
 
@@ -43,10 +41,9 @@ public class ProofRequestController {
     }
 
     @Autowired
-    public ProofRequestController(UserContext userContext, LinkHelper linkHelper, ProofService proofService, ProofHandler[] proofHandlers, Mapper mapper) {
+    public ProofRequestController(UserContext userContext, LinkHelper linkHelper, ProofHandler[] proofHandlers, Mapper mapper) {
         this.userContext = userContext;
         this.linkHelper = linkHelper;
-        this.proofService = proofService;
         this.proofHandlerMap = Arrays.stream(proofHandlers)
                 .collect(Collectors.toMap(x -> x.getProofName().toLowerCase(), x -> x));
         this.mapper = mapper;
