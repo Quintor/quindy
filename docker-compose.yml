@@ -1,9 +1,7 @@
 version: '2.3'
 services:
   pool:
-    build:
-      context: ci
-      dockerfile: indy-pool.dockerfile
+    image: registry.quintor.nl/studybits_pool
     ports:
     - "9701-9708:9701-9708"
     # Host networking is used, because we need to know the pool IP at build time, which is kind-of tricky
@@ -17,6 +15,8 @@ services:
       context: student
     ports:
     - "8095:8095"
+    environment:
+    - RUST_LOG=info
     network_mode: "host"
     healthcheck:
       test: curl -f http://localhost:8095/test/health || exit 1
@@ -30,6 +30,8 @@ services:
       context: university
     ports:
       - "8090:8090"
+    environment:
+      - RUST_LOG=info
     network_mode: "host"
     healthcheck:
       test: curl -f http://localhost:8090/test/health || exit 1
