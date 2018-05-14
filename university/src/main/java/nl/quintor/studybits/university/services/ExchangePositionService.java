@@ -22,14 +22,14 @@ public class ExchangePositionService {
     private final UniversityService universityService;
     private final ExchangePositionRepository exchangePositionRepository;
     private final SchemaDefinitionService schemaDefinitionService;
-    private final ProofRequestController proofRequestController;
+    private final ProofService proofService;
 
     @Transactional
     public ExchangePositionRecord create(ExchangePositionModel model) {
         University university = universityService.getUniversity(model.getUniversityName());
         SchemaDefinitionRecord schemaDefinitionRecord = schemaDefinitionService.getByNameAndVersion(model.getSchemaDefinitionRecord().getName(), model.getSchemaDefinitionRecord().getVersion());
 
-        ProofHandler handler = proofRequestController.getHandler(schemaDefinitionRecord.getName().toLowerCase() + "proof");
+        ProofHandler handler = proofService.getHandler(schemaDefinitionRecord.getName().toLowerCase() + "proof");
         ProofRecord proofRecord = handler.addProofRequest(university.getUser().getId());
 
         ExchangePositionRecord record = new ExchangePositionRecord(null, university, schemaDefinitionRecord, proofRecord, model.getState(), model.getAttributes());
@@ -39,7 +39,7 @@ public class ExchangePositionService {
 
     public ExchangePositionRecord getByProofRecordId(Long proofRecordId) {
         return exchangePositionRepository
-                .findByProoRecordId(proofRecordId)
+                .findByProofRecordId(proofRecordId)
                 .orElseThrow(() -> new IllegalArgumentException(String.format("Could not find ExchangePositionRecord by ProofRecordId: %d", proofRecordId)));
     }
 
