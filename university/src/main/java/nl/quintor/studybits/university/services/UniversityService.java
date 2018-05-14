@@ -134,6 +134,7 @@ public class UniversityService {
         Issuer issuer = getIssuer(universityName);
         ClaimSchema claimSchema = getClaimSchema(universityName, schemaDefinition);
         SchemaKey schemaKey = ServiceUtils.convertToSchemaKey(claimSchema);
+        log.info("Creating claim offer with schemaKey: {}, and did: {}", schemaKey, indyConnection.getDid());
         ClaimOffer claimOffer = issuer.createClaimOffer(schemaKey, indyConnection.getDid()).get();
         AuthcryptedMessage authcryptedMessage = issuer.authEncrypt(claimOffer).get();
         return new AuthCryptableResult<>(claimOffer, authcryptedMessage);

@@ -30,23 +30,18 @@ public class UniversityController {
     }
 
     @PostMapping
-    void login() {
+    public void login() {
         if (!universityService.findUniversity(userContext.currentUniversityName()).isPresent()) {
             throw new IllegalArgumentException("University with name not found.");
         }
     }
 
     @GetMapping
-    List<UniversityModel> findAll() {
+    public List<UniversityModel> findAll() {
         return universityService
                 .findAll()
                 .stream()
                 .map(this::toModel)
                 .collect(Collectors.toList());
-    }
-
-    @GetMapping("/schemas")
-    List<SchemaDefinition> getSchemaDefinitions() {
-        return universityService.getSchemaDefinitions(userContext.currentUniversityName());
     }
 }

@@ -54,10 +54,12 @@ public class Seeder {
 
         SchemaDefinition enrolmentSchemaDefinition = ClaimUtils.getSchemaDefinition(Enrolment.class);
         SchemaKey enrolmentSchemaKey = universityService.defineSchema("rug", enrolmentSchemaDefinition);
+        universityService.defineClaim("rug", enrolmentSchemaDefinition);
         universityService.addSchema("gent", enrolmentSchemaKey);
 
         SchemaDefinition transcriptSchemaDefinition = ClaimUtils.getSchemaDefinition(Transcript.class);
         SchemaKey transcriptSchemaKey = universityService.defineSchema("rug", transcriptSchemaDefinition);
+        universityService.defineClaim("rug", transcriptSchemaDefinition);
         universityService.addSchema("gent", transcriptSchemaKey);
 
         exchangeUniversityClaimIssuerSchemaInfo("gent", "rug");
