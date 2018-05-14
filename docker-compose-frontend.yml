@@ -17,8 +17,8 @@ services:
       context: student
     ports:
     - "8095:8095"
-#    environment:
-#    - RUST_LOG=info
+    environment:
+    - RUST_LOG=info
     network_mode: "host"
     healthcheck:
       test: curl -f http://localhost:8095/test/health || exit 1
@@ -32,8 +32,8 @@ services:
       context: university
     ports:
       - "8090:8090"
-#    environment:
-#    - RUST_LOG=info
+    environment:
+      - RUST_LOG=info
     network_mode: "host"
     healthcheck:
       test: curl -f http://localhost:8090/test/health || exit 1
@@ -49,4 +49,11 @@ services:
         condition: service_healthy
       backend-university:
         condition: service_healthy
+  frontend:
+    build:
+      context: ../StudyBits-Frontend/student
+    network_mode: "host"
+    ports:
+    - "4200:4200"
+
 
