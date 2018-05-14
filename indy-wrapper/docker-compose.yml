@@ -5,7 +5,9 @@ services:
       context: .
     network_mode: "host"
   pool:
-    image: registry.quintor.nl/studybits_pool
+    build:
+      context: ../ci
+      dockerfile: indy-pool.dockerfile
     ports:
     - "9701-9708:9701-9708"
     # Host networking is used, because we need to know the pool IP at build time, which is kind-of tricky
