@@ -87,7 +87,10 @@ public class Issuer extends TrustAnchor {
 
     public CompletableFuture<ClaimOffer> createClaimOffer(SchemaKey schemaKey, String targetDid) throws JsonProcessingException, IndyException {
         return getSchema(issuerDid, schemaKey)
-                .thenCompose(wrapException(schema -> Anoncreds.issuerCreateClaimOffer(wallet.getWallet(), schema.toJSON(), issuerDid, targetDid)))
+                .thenCompose(wrapException(schema -> {
+                    log.debug("{}: Creating claim offer with schema {}, issuerDid {}, targetDid {}", name, schema.toJSON(), issuerDid, targetDid);
+                    return Anoncreds.issuerCreateClaimOffer(wallet.getWallet(), schema.toJSON(), issuerDid, targetDid);
+                }))
                 .thenCombine(getPairwiseByTheirDid(targetDid),
                         wrapBiFunctionException((claimOfferJson, pairwiseResult) -> {
                             log.debug("{} Created claimOffer: {}", name, claimOfferJson);
