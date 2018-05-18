@@ -20,16 +20,16 @@ import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapBiConsumerExc
  * The Strings in the respective maps are the claim referents.
  */ public class EntitiesFromLedger {
     private Map<String, Schema> schemas;
-    private Map<String, JsonNode> claimDefs;
+    private Map<String, CredentialDefinition> claimDefs;
     // TODO: Revocation
     // private Map<String, JsonNode> revRegs;
 
     public static Collector<EntitiesForClaimReferent, ?, EntitiesFromLedger> collector() {
         return Collector.of(() -> new EntitiesFromLedger(new HashMap<>(), new HashMap<>()), wrapBiConsumerException(( EntitiesFromLedger entitiesFromLedger, EntitiesForClaimReferent entitiesForClaimReferent ) -> {
             entitiesFromLedger.getSchemas()
-                              .put(entitiesForClaimReferent.getReferent(), entitiesForClaimReferent.getSchema());
+                              .put(entitiesForClaimReferent.getSchema().getId(), entitiesForClaimReferent.getSchema());
             entitiesFromLedger.getClaimDefs()
-                              .put(entitiesForClaimReferent.getReferent(), JSONUtil.mapper.readValue(entitiesForClaimReferent.getClaimDef(), JsonNode.class));
+                              .put(entitiesForClaimReferent.getClaimDef().getId(), entitiesForClaimReferent.getClaimDef());
         }), ( entities1, entities2 ) -> {
             entities1.getSchemas()
                      .putAll(entities2.getSchemas());

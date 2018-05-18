@@ -2,6 +2,7 @@ package nl.quintor.studybits.indy.wrapper.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,17 +11,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @NoArgsConstructor
-public class Claim implements Serializable, AuthCryptable {
+public class Credential implements Serializable, AuthCryptable {
     private JsonNode values;
-    @JsonProperty("schema_key")
-    private SchemaKey schemaKey;
+    @JsonProperty("schema_id")
+    private String schemaId;
+    @JsonProperty("cred_def_id")
+    private String credDefId;
     private JsonNode signature;
     @JsonProperty("signature_correctness_proof")
     private JsonNode signatureCorrectnessProof;
-    @JsonProperty("issuer_did")
-    private String issuerDid;
-    @JsonProperty("rev_reg_seq_no")
-    private Integer revReqSeqNo;
+    @JsonProperty("rev_reg_id")
+    private Integer revRegId;
+    @JsonProperty("rev_reg")
+    private JsonNode revReg;
+    private JsonNode witness;
 
     @JsonIgnore
     private String theirDid;

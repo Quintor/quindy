@@ -17,7 +17,7 @@ public class Proof implements Serializable, AuthCryptable {
     private JsonNode proof;
     @JsonProperty( "requested_proof" )
     private RequestedProof requestedProof;
-    private Map<String, ClaimIdentifier> identifiers;
+    private List<CredentialIdentifier> identifiers;
 
     @JsonIgnore
     private String theirDid;
@@ -26,13 +26,31 @@ public class Proof implements Serializable, AuthCryptable {
     @Data
     @NoArgsConstructor
     public static class RequestedProof {
-        private Map<String, String> predicates;
+        private Map<String, ProofReference> predicates;
         @JsonProperty( "self_attested_attrs" )
         private Map<String, String> selfAttestedAttributes;
         @JsonProperty( "revealed_attrs" )
-        private Map<String, List<String>> revealedAttributes;
+        private Map<String, RevealedValue> revealedAttributes;
 
         @JsonProperty( "unrevealed_attrs" )
         private JsonNode unrevealedAttrs;
+    }
+
+    @AllArgsConstructor
+    @Data
+    @NoArgsConstructor
+    public static class RevealedValue {
+        @JsonProperty("sub_proof_index")
+        private int subProofIndex;
+        private String raw;
+        private String encoded;
+    }
+
+    @AllArgsConstructor
+    @Data
+    @NoArgsConstructor
+    public static class ProofReference {
+        @JsonProperty("sub_proof_index")
+        private int subProofIndex;
     }
 }

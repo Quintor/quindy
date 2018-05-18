@@ -11,6 +11,6 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 public class ClaimsForRequest implements Serializable {
-    private Map<String, List<ClaimReferent>> attrs;
-    private Map<String, List<ClaimReferent>> predicates;
+    private Map<String, List<CredentialReferent>> attrs;
+    private Map<String, List<CredentialReferent>> predicates;
 }

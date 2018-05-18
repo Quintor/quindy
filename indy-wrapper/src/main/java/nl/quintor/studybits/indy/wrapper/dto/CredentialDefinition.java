@@ -6,16 +6,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
-@Data
 @AllArgsConstructor
+@Data
 @NoArgsConstructor
-public class Schema implements Serializable {
-    private String id;
-    private String name;
+public class CredentialDefinition implements Serializable {
     private String ver;
-    private String version;
-    private List<String> attrNames;
-    private int seqNo;
+    private String id;
+    private String schemaId;
+    private String type;
+    private String tag;
+    private JsonNode value;
 }

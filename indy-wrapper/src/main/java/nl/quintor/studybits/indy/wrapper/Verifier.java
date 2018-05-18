@@ -3,10 +3,7 @@ package nl.quintor.studybits.indy.wrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.extern.slf4j.Slf4j;
-import nl.quintor.studybits.indy.wrapper.dto.EntitiesFromLedger;
-import nl.quintor.studybits.indy.wrapper.dto.Proof;
-import nl.quintor.studybits.indy.wrapper.dto.ProofAttribute;
-import nl.quintor.studybits.indy.wrapper.dto.ProofRequest;
+import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.exception.IndyWrapperException;
 import nl.quintor.studybits.indy.wrapper.util.IntegerEncodingUtil;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
@@ -18,6 +15,7 @@ import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,7 +28,10 @@ public class Verifier extends WalletOwner {
     }
 
     public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof) {
-        return getEntitiesFromLedger(proof.getIdentifiers())
+        Map<String, CredentialIdentifier> identifierMap = proof.getIdentifiers()
+                .stream()
+                .collect(Collectors.toMap(CredentialIdentifier::getCredDefId, Function.identity()));
+        return getEntitiesFromLedger(identifierMap)
                 .thenCompose(wrapException(entitiesFromLedger -> validateProof(proofRequest, proof, entitiesFromLedger)))
                 .thenRun(() -> validateProofEncodings(proof))
                 .thenApply(v -> extractProofAttributes(proofRequest, proof));
@@ -47,9 +48,8 @@ public class Verifier extends WalletOwner {
         String proofJson = proof.toJSON();
         String schemaJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getSchemas());
         String claimDefsJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getClaimDefs());
-        String revocRegs = "{}";
         return Anoncreds
-                .verifierVerifyProof(proofRequestJson, proofJson, schemaJson, claimDefsJson, revocRegs)
+                .verifierVerifyProof(proofRequestJson, proofJson, schemaJson, claimDefsJson, "{}", "{}")
                 .thenAccept(result -> ValidateResult(result, "Invalid proof: verifierVerifyProof failed."));
     }
 
@@ -68,7 +68,7 @@ public class Verifier extends WalletOwner {
 
     private List<ProofAttribute> extractProofAttributes(ProofRequest proofRequest, Proof proof) {
         Map<String, String> attributeNameLookup = proofRequest
-                .getRequestedAttrs()
+                .getRequestedAttributes()
                 .entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().getName()));
@@ -84,7 +84,7 @@ public class Verifier extends WalletOwner {
                 .getRevealedAttributes()
                 .entrySet()
                 .stream()
-                .map(entry -> new ProofAttribute(entry.getKey(), attributeNameLookup.get(entry.getKey()), entry.getValue().get(1)));
+                .map(entry -> new ProofAttribute(entry.getKey(), attributeNameLookup.get(entry.getKey()), entry.getValue().getRaw()));
 
         return Stream
                 .concat(selfAttestedStream, revealedStream)

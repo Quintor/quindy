@@ -24,9 +24,8 @@ public class ProofUtils {
         String proofJson = proof.toJSON();
         String schemaJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getSchemas());
         String claimDefsJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getClaimDefs());
-        String revocRegs = "{}";
         return Anoncreds
-                .verifierVerifyProof(proofRequestJson, proofJson, schemaJson, claimDefsJson, revocRegs)
+                .verifierVerifyProof(proofRequestJson, proofJson, schemaJson, claimDefsJson, "{}", "{}")
                 .thenAccept(result -> ValidateResult(result, "Invalid proof: verifierVerifyProof failed."))
                 .thenApply(_void -> validateProofEncodings(proof))
                 .thenAccept(result -> ValidateResult(result, "Invalid proof: encodings invalid"))
@@ -52,7 +51,7 @@ public class ProofUtils {
 
     private static List<ProofAttribute> extractProofAttributes(ProofRequest proofRequest, Proof proof) {
         Map<String, String> attributeNameLookup = proofRequest
-                .getRequestedAttrs()
+                .getRequestedAttributes()
                 .entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().getName()));
@@ -68,7 +67,7 @@ public class ProofUtils {
                 .getRevealedAttributes()
                 .entrySet()
                 .stream()
-                .map(entry -> new ProofAttribute(entry.getKey(), attributeNameLookup.get(entry.getKey()), entry.getValue().get(1)));
+                .map(entry -> new ProofAttribute(entry.getKey(), attributeNameLookup.get(entry.getKey()), entry.getValue().getRaw()));
 
         return Stream
                 .concat(selfAttestedStream, revealedStream)

@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * needed to verify the proof for that particular claim referent.
  */ public class EntitiesForClaimReferent {
     private Schema schema;
-    private String claimDef;
+    private CredentialDefinition claimDef;
     @JsonIgnore
     private String referent;
     // TODO: Revocation

@@ -6,22 +6,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @AllArgsConstructor
 @Data
 @NoArgsConstructor
-public class ClaimOffer implements Serializable, AuthCryptable {
-    @JsonProperty("issuer_did")
-    private String issuerDid;
-    @JsonProperty("schema_key")
-    private SchemaKey schemaKey;
-    @JsonProperty("key_correctness_proof")
-    private JsonNode keyCorrectnessProof;
-
-    private String nonce;
+public class CredentialRequest implements Serializable, AuthCryptable {
+    private String request;
+    private String metadata;
+    private CredentialOffer credentialOffer;
 
     @JsonIgnore
-    @Setter
     private String theirDid;
 }

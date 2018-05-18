@@ -41,26 +41,26 @@ public class Main {
         String aliceAcmeDid = onboardWalletOwner(acme, alice);
 
         // Create schemas
-        SchemaKey jobCertificateSchemaKey = government.createAndSendSchema("Job-Certificate", "0.2",
+        String jobCertificateSchemaId = government.createAndSendSchema("Job-Certificate", "0.2",
                 "first_name", "last_name", "salary", "employee_status", "experience").get();
 
-        SchemaKey transcriptSchemaKey = government.createAndSendSchema("Transcript", "1.2",
+        String transcriptSchemaId = government.createAndSendSchema("Transcript", "1.2",
                 "first_name", "last_name", "degree", "status", "year", "average", "ssn").get();
 
 
         // Create claim definitions
-        faber.defineClaim(transcriptSchemaKey).get();
+        String transcriptCredentialDefId = faber.defineCredential(transcriptSchemaId).get();
 
-        acme.defineClaim(jobCertificateSchemaKey).get();
+        String jobCertificateCredentialDefId = acme.defineCredential(jobCertificateSchemaId).get();
 
 
 
-        AuthcryptedMessage transcriptClaimOffer = faber.createClaimOffer(transcriptSchemaKey, aliceFaberDid)
+        AuthcryptedMessage transcriptClaimOffer = faber.createCredentialOffer(transcriptCredentialDefId, aliceFaberDid)
                 .thenCompose(AsyncUtil.wrapException(faber::authEncrypt)).get();
 
 
-        AuthcryptedMessage transcriptClaimRequest = alice.authDecrypt(transcriptClaimOffer, ClaimOffer.class)
-        .thenCompose(AsyncUtil.wrapException(alice::storeClaimOfferAndCreateClaimRequest))
+        AuthcryptedMessage transcriptClaimRequest = alice.authDecrypt(transcriptClaimOffer, CredentialOffer.class)
+                .thenCompose(AsyncUtil.wrapException(alice::createCredentialRequest))
                 .thenCompose(AsyncUtil.wrapException(alice::authEncrypt)).get();
 
 
@@ -73,31 +73,33 @@ public class Main {
         claimValues.put("year", 2015);
         claimValues.put("average", 5);
 
-        AuthcryptedMessage claim = faber.authDecrypt(transcriptClaimRequest, ClaimRequest.class)
-                .thenCompose(AsyncUtil.wrapException(claimRequest -> faber.createClaim(claimRequest, claimValues)))
+        AuthcryptedMessage claim = faber.authDecrypt(transcriptClaimRequest, CredentialRequest.class)
+                .thenCompose(AsyncUtil.wrapException(claimRequest -> faber.createCredential(claimRequest, claimValues)))
                 .thenCompose(AsyncUtil.wrapException(faber::authEncrypt)).get();
 
 
-        alice.authDecrypt(claim, Claim.class)
-                .thenCompose(AsyncUtil.wrapException(alice::storeClaim)).get();
+        alice.authDecrypt(claim, CredentialWithRequest.class)
+                .thenCompose(AsyncUtil.wrapException(credentialWithRequest -> {
+                    return alice.storeCredential(credentialWithRequest);
+                })).get();
 
-        List<ClaimInfo> claims = alice.findAllClaims()
+        List<CredentialInfo> claims = alice.findAllClaims()
                                       .get();
 
         System.out.println(claims);
 
 
-        List<Filter> transcriptFilter = Collections.singletonList(new Filter(faber.getIssuerDid(), transcriptSchemaKey));
+        List<Filter> transcriptFilter = Collections.singletonList(new Filter(transcriptCredentialDefId));
         ProofRequest jobApplicationProofRequest = ProofRequest.builder()
                                                               .name("Job-Application")
                                                               .nonce("1432422343242122312411212")
                                                               .version("0.1")
-                                                              .requestedAttr("attr1_referent", new AttributeInfo("first_name", Optional.empty()))
-                                                              .requestedAttr("attr2_referent", new AttributeInfo("last_name", Optional.empty()))
-                                                              .requestedAttr("attr3_referent", new AttributeInfo("degree", Optional.of(transcriptFilter)))
-                                                              .requestedAttr("attr4_referent", new AttributeInfo("status", Optional.of(transcriptFilter)))
-                                                              .requestedAttr("attr5_referent", new AttributeInfo("ssn", Optional.of(transcriptFilter)))
-                                                              .requestedAttr("attr6_referent", new AttributeInfo("phone_number", Optional.empty()))
+                                                              .requestedAttribute("attr1_referent", new AttributeInfo("first_name", Optional.empty()))
+                                                              .requestedAttribute("attr2_referent", new AttributeInfo("last_name", Optional.empty()))
+                                                              .requestedAttribute("attr3_referent", new AttributeInfo("degree", Optional.of(transcriptFilter)))
+                                                              .requestedAttribute("attr4_referent", new AttributeInfo("status", Optional.of(transcriptFilter)))
+                                                              .requestedAttribute("attr5_referent", new AttributeInfo("ssn", Optional.of(transcriptFilter)))
+                                                              .requestedAttribute("attr6_referent", new AttributeInfo("phone_number", Optional.empty()))
                                                               .requestedPredicate("predicate1_referent", new PredicateInfo("average", ">=", 4, Optional.of(transcriptFilter)))
                                                               .build();
 
@@ -142,8 +144,6 @@ public class Main {
 
         steward.authDecrypt(verinym, Verinym.class)
                 .thenCompose(AsyncUtil.wrapException(steward::acceptVerinymRequest)).get();
-
-        newcomer.init();
     }
 
     private static String onboardWalletOwner(TrustAnchor trustAnchor, WalletOwner newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {

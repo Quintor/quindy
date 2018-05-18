@@ -4,6 +4,8 @@ services:
     build:
       context: .
     network_mode: "host"
+    environment:
+    - RUST_LOG=info
   pool:
     build:
       context: ../ci
