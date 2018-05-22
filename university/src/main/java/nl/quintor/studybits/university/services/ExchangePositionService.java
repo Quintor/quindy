@@ -2,7 +2,6 @@ package nl.quintor.studybits.university.services;
 
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.indy.wrapper.dto.ProofRequest;
-import nl.quintor.studybits.university.controllers.student.ProofRequestController;
 import nl.quintor.studybits.university.entities.ExchangePositionRecord;
 import nl.quintor.studybits.university.entities.ProofRecord;
 import nl.quintor.studybits.university.entities.SchemaDefinitionRecord;
@@ -22,15 +21,14 @@ public class ExchangePositionService {
     private final UniversityService universityService;
     private final ExchangePositionRepository exchangePositionRepository;
     private final SchemaDefinitionService schemaDefinitionService;
-    private final ProofService proofService;
+    private final TranscriptProofService transcriptProofService;
 
     @Transactional
     public ExchangePositionRecord create(ExchangePositionModel model) {
         University university = universityService.getUniversity(model.getUniversityName());
         SchemaDefinitionRecord schemaDefinitionRecord = schemaDefinitionService.getByNameAndVersion(model.getSchemaDefinitionRecord().getName(), model.getSchemaDefinitionRecord().getVersion());
 
-        ProofHandler handler = proofService.getHandler(schemaDefinitionRecord.getName().toLowerCase() + "proof");
-        ProofRecord proofRecord = handler.addProofRequest(university.getUser().getId());
+        ProofRecord proofRecord = transcriptProofService.addProofRequest(university.getUser().getId());
 
         ExchangePositionRecord record = new ExchangePositionRecord(null, university, schemaDefinitionRecord, proofRecord, model.getState(), model.getAttributes());
 
