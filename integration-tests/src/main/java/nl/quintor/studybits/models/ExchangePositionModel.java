@@ -1,15 +1,13 @@
-package nl.quintor.studybits.university.models;
+package nl.quintor.studybits.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import nl.quintor.studybits.university.enums.ExchangePositionState;
+import nl.quintor.studybits.enums.ExchangePositionState;
 
 import java.util.HashMap;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class ExchangePositionModel {
     private String universityName;
     private SchemaDefinitionModel schemaDefinitionModel;

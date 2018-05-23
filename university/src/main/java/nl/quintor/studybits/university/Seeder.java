@@ -60,6 +60,8 @@ public class Seeder {
         universityService.defineClaim("rug", transcriptSchemaDefinition);
         universityService.addSchema("gent", transcriptSchemaKey);
 
+        exchangeUniversityClaimIssuerSchemaInfo("rug", "rug");
+        exchangeUniversityClaimIssuerSchemaInfo("gent", "gent");
         exchangeUniversityClaimIssuerSchemaInfo("gent", "rug");
         exchangeUniversityClaimIssuerSchemaInfo("rug", "gent");
     }
@@ -96,6 +98,7 @@ public class Seeder {
         userService.createStudent("gent", "student3-gent", "Senne", "de Waal", "1111-22-0003", true);
         userService.createStudent("gent", "student4-gent", "Jan", "Jansen", "7777-88-0001", false);
 
+        universityService.getSchemaDefinitions("rug");
     }
 
 }

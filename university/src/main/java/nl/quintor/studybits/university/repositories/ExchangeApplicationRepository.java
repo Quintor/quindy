@@ -2,6 +2,8 @@ package nl.quintor.studybits.university.repositories;
 
 import nl.quintor.studybits.university.entities.ExchangeApplicationRecord;
 import nl.quintor.studybits.university.entities.ExchangePositionRecord;
+import nl.quintor.studybits.university.entities.University;
+import nl.quintor.studybits.university.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +14,7 @@ import java.util.Optional;
 public interface ExchangeApplicationRepository extends JpaRepository<ExchangeApplicationRecord, Long> {
     List<ExchangeApplicationRecord> findAllByUniversityNameIgnoreCase(String universityName);
 
-    Optional<ExchangeApplicationRecord> findByExchangePositionRecord(ExchangePositionRecord positionRecord);
-
     List<ExchangeApplicationRecord> findAllByUserUserName(String userName);
+
+    Optional<ExchangeApplicationRecord> findByUniversityAndUserAndExchangePositionRecord(University university, User user, ExchangePositionRecord exchangePositionRecord);
 }

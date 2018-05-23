@@ -73,6 +73,15 @@ public class BaseIT {
                 .assertThat().statusCode(200);
     }
 
+
+    void setupStudentUniversityTriangle(String studentName, String originUniversityName, String exchangeUniversityName) {
+        registerUniversity(originUniversityName);
+        registerUniversity(exchangeUniversityName);
+        registerStudent(studentName, originUniversityName);
+        getNewClaims(studentName);
+        connectStudent(studentName, exchangeUniversityName);
+    }
+
     void assertNumberOfProofRequestsEquals(Integer expectedNumber, String studentUserName) {
         givenCorrectHeaders(STUDENT_URL)
                 .pathParam("studentUserName", studentUserName)

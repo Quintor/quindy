@@ -162,11 +162,15 @@ public class UniversityService {
         log.debug("University '{}': Adding claim issuer schema information: {}", universityName, claimIssuerSchema);
         SchemaKey schemaKey = claimIssuerSchema.getSchemaKey();
         ClaimSchema claimSchema = getClaimSchema(universityName, schemaKey.getName(), schemaKey.getVersion());
-        ClaimIssuer claimIssuer = claimIssuerRepository
-                .findByDid(claimIssuerSchema.getClaimIssuerDid())
-                .orElseGet(() -> new ClaimIssuer(claimIssuerSchema.getClaimIssuerName(), claimIssuerSchema.getClaimIssuerDid()));
+        ClaimIssuer claimIssuer = getClaimIssuer(claimIssuerSchema);
         claimSchema.getClaimIssuers().add(claimIssuer);
         claimSchemaRepository.save(claimSchema);
+    }
+
+    private ClaimIssuer getClaimIssuer(ClaimIssuerSchema claimIssuerSchema) {
+        return claimIssuerRepository
+                .findByDid(claimIssuerSchema.getClaimIssuerDid())
+                .orElseGet(() -> new ClaimIssuer(claimIssuerSchema.getClaimIssuerName(), claimIssuerSchema.getClaimIssuerDid()));
     }
 
     @SneakyThrows

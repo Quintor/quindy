@@ -8,14 +8,11 @@ import nl.quintor.studybits.university.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.university.models.ProofRequestInfo;
 import nl.quintor.studybits.university.services.ProofHandler;
 import nl.quintor.studybits.university.services.ProofService;
-import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 

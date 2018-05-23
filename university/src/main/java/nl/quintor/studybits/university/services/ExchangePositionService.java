@@ -26,7 +26,7 @@ public class ExchangePositionService {
     @Transactional
     public ExchangePositionRecord create(ExchangePositionModel model) {
         University university = universityService.getUniversity(model.getUniversityName());
-        SchemaDefinitionRecord schemaDefinitionRecord = schemaDefinitionService.getByNameAndVersion(model.getSchemaDefinitionRecord().getName(), model.getSchemaDefinitionRecord().getVersion());
+        SchemaDefinitionRecord schemaDefinitionRecord = schemaDefinitionService.getByNameAndVersion(model.getSchemaDefinitionModel().getName(), model.getSchemaDefinitionModel().getVersion());
 
         ProofRecord proofRecord = transcriptProofService.addProofRequest(university.getUser().getId());
 

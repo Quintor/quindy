@@ -1,5 +1,6 @@
 package nl.quintor.studybits;
 
+import nl.quintor.studybits.models.TranscriptModel;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.greaterThan;

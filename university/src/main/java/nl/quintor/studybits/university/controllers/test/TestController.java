@@ -3,6 +3,7 @@ package nl.quintor.studybits.university.controllers.test;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.university.Seeder;
+import nl.quintor.studybits.university.repositories.ExchangeApplicationRepository;
 import nl.quintor.studybits.university.repositories.SchemaDefinitionRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,13 @@ public class TestController {
 
     private final UserRepository userRepository;
     private final SchemaDefinitionRepository schemaDefinitionRepository;
+    private final ExchangeApplicationRepository exchangeApplicationRepository;
     private final Seeder seeder;
 
     @DeleteMapping("/nuke")
     public void nuke() {
+        log.debug("Deleting Exchange Applications");
+        exchangeApplicationRepository.deleteAll();
         log.debug("Deleting users");
         userRepository.deleteAll();
         log.debug("Deleting Schema Definitions");

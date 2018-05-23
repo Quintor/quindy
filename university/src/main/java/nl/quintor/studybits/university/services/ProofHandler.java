@@ -43,7 +43,7 @@ public abstract class ProofHandler<T extends Proof> {
     protected abstract Class<T> getProofType();
 
     @Transactional
-    protected abstract boolean handleProof(Object object, ProofRecord proofRecord, T proof);
+    protected abstract boolean handleProof(User prover, ProofRecord proofRecord, T proof);
 
     private ProofRequestInfoDto toDto(ProofRecord proofRecord, List<String> attributes) {
         ProofRequestInfoDto result = mapper.map(proofRecord, ProofRequestInfoDto.class);
@@ -93,27 +93,27 @@ public abstract class ProofHandler<T extends Proof> {
     }
 
     public AuthcryptedMessage getProofRequestMessage(Long userId, Long proofRecordId) {
-        ProofRecord proofRecord = getProofRecord(userId, proofRecordId);
-        return getProofRequestMessage(proofRecord);
+        ProofRecord proofRecord = getProofRecord(proofRecordId);
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException(String.format("Could not find user with id: {}", userId)));
+        return getProofRequestMessage(user, proofRecord);
     }
 
-    public AuthcryptedMessage getProofRequestMessage(ProofRecord proofRecord) {
-        User user = Objects.requireNonNull(proofRecord.getUser());
+    public AuthcryptedMessage getProofRequestMessage(User user, ProofRecord proofRecord) {
         University university = Objects.requireNonNull(user.getUniversity());
         ProofRequest proofRequest = getProofRequest(university, user, proofRecord);
         return universityService.authEncrypt(university.getName(), proofRequest);
     }
 
     @Transactional
-    public Boolean handleProof(Long userId, Long proofRecordId, AuthcryptedMessage authcryptedMessage) {
-        ProofRecord proofRecord = getProofRecord(userId, proofRecordId);
-        Validate.validState(StringUtils.isEmpty(proofRecord.getProofJson()), String.format("UserId %s already provided proof for proofRecordId %s.", userId, proofRecord));
-        User user = Objects.requireNonNull(proofRecord.getUser());
-        University university = Objects.requireNonNull(user.getUniversity());
-        ProofRequest proofRequest = getProofRequest(university, user, proofRecord);
+    public Boolean handleProof(Long proverId, Long proofRecordId, AuthcryptedMessage authcryptedMessage) {
+        User prover = userRepository.findById(proverId).orElseThrow(() -> new IllegalArgumentException(String.format("User with id: %d not known", proverId)));
+        ProofRecord proofRecord = getProofRecord(proofRecordId);
+        Validate.validState(StringUtils.isEmpty(proofRecord.getProofJson()), String.format("UserId %s already provided proof for proofRecordId %s.", proverId, proofRecordId));
+        University university = Objects.requireNonNull(prover.getUniversity());
+        ProofRequest proofRequest = getProofRequest(university, prover, proofRecord);
         T verifiedProof = getVerifiedProof(university.getName(), proofRequest, authcryptedMessage);
         proofRecord.setProofJson(ServiceUtils.objectToJson(verifiedProof));
-        Boolean handled = handleProof(user, proofRecord, verifiedProof);
+        Boolean handled = handleProof(prover, proofRecord, verifiedProof);
         if (handled) {
             proofRecordRepository.save(proofRecord);
         }
@@ -121,7 +121,7 @@ public abstract class ProofHandler<T extends Proof> {
     }
 
     public T getProof(Long userId, Long proofRecordId) {
-        ProofRecord proofRecord = getProofRecord(userId, proofRecordId);
+        ProofRecord proofRecord = getProofRecord(proofRecordId);
         Validate.validState(StringUtils.isEmpty(proofRecord.getProofJson()), String.format("UserId %s did not provide proof for proofRecordId %s.", userId, proofRecord));
         User user = Objects.requireNonNull(proofRecord.getUser());
         return ServiceUtils.jsonToObject(proofRecord.getProofJson(), getProofType());
@@ -211,18 +211,15 @@ public abstract class ProofHandler<T extends Proof> {
     }
 
 
-    private ProofRecord getProofRecord(Long userId, Long proofRecordId) {
+    private ProofRecord getProofRecord(Long proofRecordId) {
         ProofRecord proofRecord = proofRecordRepository
                 .findById(proofRecordId)
                 .orElseThrow(() -> new IllegalArgumentException("Proof record not found."));
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException(String.format("User with id: %d not known", userId)));
-        proofRecord.setUser(user);
-
         Objects.requireNonNull(proofRecord.getUser(), "Proof record without user.");
         // TODO: Decide whether you want to create "Open" or "User-specific" proof records
 //        Validate.validState(user.getId().equals(userId), "Proof record user mismatch.");
         // TODO: Decide whether this check is necessary, since for "Open" proof records, the user is the issuing party (University), not the proving party (Student)
-        Validate.notNull(user.getConnection(), "User onboarding incomplete!");
+//        Validate.notNull(proofRecord.getUser().getConnection(), "User onboarding incomplete!");
 
         Version version = getProofVersion();
         Validate.isTrue(version.getName().equals(proofRecord.getProofName()), "Proof name mismatch.");

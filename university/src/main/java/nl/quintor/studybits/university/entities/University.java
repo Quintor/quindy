@@ -27,7 +27,7 @@ public class University {
     @Column(nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "university", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "university", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @Column(nullable = false)
     private List<ClaimSchema> claimSchemas = new ArrayList<>();
 

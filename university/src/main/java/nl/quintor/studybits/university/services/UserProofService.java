@@ -27,15 +27,13 @@ public class UserProofService extends ProofHandler<UserProof>  {
     }
 
     @Override
-    protected boolean handleProof(Object object, ProofRecord proofRecord, UserProof proof) {
-        User user = (User) object;
+    protected boolean handleProof(User prover, ProofRecord proofRecord, UserProof proof) {
+        Validate.isTrue(prover.getFirstName().equals(proof.getFirstName()), "Firstname mismatch." );
+        Validate.isTrue(prover.getLastName().equals(proof.getLastName()), "Lastname mismatch.");
+        Validate.isTrue(prover.getSsn().equals(proof.getSsn()), "Ssn mismatch.");
 
-        Validate.isTrue(user.getFirstName().equals(proof.getFirstName()), "Firstname mismatch." );
-        Validate.isTrue(user.getLastName().equals(proof.getLastName()), "Lastname mismatch.");
-        Validate.isTrue(user.getSsn().equals(proof.getSsn()), "Ssn mismatch.");
-
-        user.setConfirmed(true);
-        userRepository.save(user);
+        prover.setConfirmed(true);
+        userRepository.save(prover);
 
         return true;
     }

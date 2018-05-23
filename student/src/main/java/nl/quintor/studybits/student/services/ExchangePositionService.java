@@ -71,9 +71,6 @@ public class ExchangePositionService {
 
     private void saveExchangePositionIfNew(ExchangePositionRecord positionRecord) {
         if (!positionRepository.existsByProofRecordIdAndUniversityNameIgnoreCase(positionRecord.getProofRecordId(), positionRecord.getUniversity().getName())) {
-            SchemaDefinitionRecord schemaDefinitionRecord = schemaDefinitionService.getOrSave(positionRecord.getSchemaDefinitionRecord());
-            positionRecord.setSchemaDefinitionRecord(schemaDefinitionRecord);
-
             positionRepository.save(positionRecord);
         }
     }
@@ -101,10 +98,10 @@ public class ExchangePositionService {
         ExchangePositionRecord exchangePosition = mapper.map(model, ExchangePositionRecord.class);
 
         University university = universityService.getByName(model.getUniversityName());
-        SchemaDefinitionRecord schemaDefinition = schemaDefinitionService.getOrSave(model.getSchemaDefinitionRecord());
+        SchemaDefinitionRecord schemaDefinitionRecord = schemaDefinitionService.fromModel(model.getSchemaDefinitionModel());
 
         exchangePosition.setUniversity(university);
-        exchangePosition.setSchemaDefinitionRecord(schemaDefinition);
+        exchangePosition.setSchemaDefinitionRecord(schemaDefinitionRecord);
 
         return exchangePosition;
     }

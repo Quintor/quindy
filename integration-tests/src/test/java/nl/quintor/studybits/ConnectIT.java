@@ -9,11 +9,6 @@ public class ConnectIT extends BaseIT {
         String CONNECTING_UNI_NAME = "gent";
         String STUDENT_NAME = "johan";
 
-        registerUniversity(UNIVERSITY_NAME);
-        registerUniversity(CONNECTING_UNI_NAME);
-        registerStudent(STUDENT_NAME, UNIVERSITY_NAME);
-        getNewClaims(STUDENT_NAME);
-
-        connectStudent(STUDENT_NAME, CONNECTING_UNI_NAME);
+        setupStudentUniversityTriangle(STUDENT_NAME, UNIVERSITY_NAME, CONNECTING_UNI_NAME);
     }
 }
