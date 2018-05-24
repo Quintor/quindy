@@ -20,5 +20,4 @@ public class TranscriptProof implements Proof {
             @VersionInfo(name = "Transcript", version="0.1")
     })
     private String average;
-
 }

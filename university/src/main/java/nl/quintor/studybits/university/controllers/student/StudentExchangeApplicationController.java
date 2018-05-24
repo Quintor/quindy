@@ -5,6 +5,7 @@ import nl.quintor.studybits.university.UserContext;
 import nl.quintor.studybits.university.entities.ExchangeApplicationRecord;
 import nl.quintor.studybits.university.models.ExchangeApplicationModel;
 import nl.quintor.studybits.university.services.ExchangeApplicationService;
+import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,9 +21,10 @@ public class StudentExchangeApplicationController {
 
     private final ExchangeApplicationService exchangeApplicationService;
     private final UserContext userContext;
+    private final Mapper mapper;
 
-    private ExchangeApplicationModel toModel(ExchangeApplicationRecord exchangeApplicationRecord) {
-        return exchangeApplicationService.toModel(exchangeApplicationRecord);
+    private ExchangeApplicationModel toModel(ExchangeApplicationRecord record) {
+        return mapper.map(record, ExchangeApplicationModel.class);
     }
 
     @GetMapping

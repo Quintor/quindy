@@ -7,7 +7,6 @@ import nl.quintor.studybits.student.entities.ExchangePositionRecord;
 import nl.quintor.studybits.student.entities.Student;
 import nl.quintor.studybits.student.entities.University;
 import nl.quintor.studybits.student.models.ExchangeApplicationModel;
-import nl.quintor.studybits.student.models.ExchangePositionModel;
 import nl.quintor.studybits.student.repositories.ExchangeApplicationRepository;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +38,7 @@ public class ExchangeApplicationService {
         universities
                 .stream()
                 .flatMap(university -> getExchangeApplicationFromUniversity(student, university))
-                .forEach(this::saveExchangeApplicationIfNew);
+                .forEach(this::saveOrUpdateExchangeApplication);
     }
 
     private Stream<ExchangeApplicationRecord> getExchangeApplicationFromUniversity(Student student, University university) {
@@ -50,10 +49,21 @@ public class ExchangeApplicationService {
                 .map(this::fromModel);
     }
 
-    private void saveExchangeApplicationIfNew(ExchangeApplicationRecord applicationRecord) {
-        if (!applicationRepository.existsByUniversityAndStudentAndExchangePositionRecord(applicationRecord.getUniversity(), applicationRecord.getStudent(), applicationRecord.getExchangePositionRecord())) {
-            applicationRepository.save(applicationRecord);
-        }
+    private void saveOrUpdateExchangeApplication(ExchangeApplicationRecord record) {
+        if (applicationRepository.existsByUniversityAndStudentAndExchangePositionRecord(record.getUniversity(), record.getStudent(), record.getExchangePositionRecord()))
+            this.updateRecord(record);
+        else
+            applicationRepository.save(record);
+    }
+
+    private void updateRecord(ExchangeApplicationRecord record) {
+        Long id = applicationRepository
+                .findByUniversityAndStudentAndExchangePositionRecord(record.getUniversity(), record.getStudent(), record.getExchangePositionRecord())
+                .orElseThrow(() -> new IllegalArgumentException("Could not find ExchangeApplication in database."))
+                .getId();
+
+        record.setId(id);
+        applicationRepository.save(record);
     }
 
     @Transactional
@@ -66,18 +76,13 @@ public class ExchangeApplicationService {
 
         University university = universityService.getByName(model.getUniversityName());
         Student student = studentService.getByUserName(model.getUserName());
-        ExchangePositionRecord positionRecord = exchangePositionService.fromModel(model.getExchangePositionModel());
+        ExchangePositionRecord positionRecord = exchangePositionService.getByProofRecordId(model.getExchangePositionModel().getProofRecordId());
 
         record.setUniversity(university);
         record.setStudent(student);
         record.setExchangePositionRecord(positionRecord);
+        record.getProof().setExchangeApplicationRecord(record);
 
         return record;
-    }
-
-    public ExchangeApplicationModel toModel(ExchangeApplicationRecord record) {
-        ExchangeApplicationModel model = mapper.map(record, ExchangeApplicationModel.class);
-        model.setExchangePositionModel(mapper.map(record.getExchangePositionRecord(), ExchangePositionModel.class));
-        return model;
     }
 }

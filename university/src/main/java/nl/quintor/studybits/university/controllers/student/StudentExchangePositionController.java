@@ -3,7 +3,6 @@ package nl.quintor.studybits.university.controllers.student;
 import lombok.AllArgsConstructor;
 import nl.quintor.studybits.university.entities.ExchangePositionRecord;
 import nl.quintor.studybits.university.models.ExchangePositionModel;
-import nl.quintor.studybits.university.models.SchemaDefinitionModel;
 import nl.quintor.studybits.university.services.ExchangePositionService;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +22,7 @@ public class StudentExchangePositionController {
     private final Mapper mapper;
 
     private ExchangePositionModel toModel(ExchangePositionRecord record) {
-        ExchangePositionModel model = mapper.map(record, ExchangePositionModel.class);
-        model.setSchemaDefinitionModel(mapper.map(record.getSchemaDefinitionRecord(), SchemaDefinitionModel.class));
-        return model;
+        return mapper.map(record, ExchangePositionModel.class);
     }
 
     @GetMapping

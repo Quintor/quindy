@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import nl.quintor.studybits.student.dto.TranscriptProof;
 import nl.quintor.studybits.student.enums.ExchangeApplicationState;
 
 import javax.persistence.*;
@@ -28,13 +27,13 @@ public class ExchangeApplicationRecord {
     @JoinColumn(name = "user_id")
     private Student student;
 
-    @ManyToOne(optional = false, cascade = CascadeType.MERGE)
+    @ManyToOne(optional = false, cascade = CascadeType.ALL)
     @JoinColumn(name = "exchange_position_record_id")
     private ExchangePositionRecord exchangePositionRecord;
 
     @Column(nullable = false)
     private ExchangeApplicationState state;
 
-    @Lob
-    private TranscriptProof proof;
+    @OneToOne(mappedBy = "exchangeApplicationRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    private TranscriptProofRecord proof;
 }

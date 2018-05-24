@@ -214,12 +214,17 @@ public class UniversityService {
     }
 
     public List<SchemaDefinitionRecord> getSchemaDefinitions(String universityName) {
+        if (schemaDefinitionRepository.count() == 0)
+            fetchSchemaDefinitionsFromLedger(universityName);
+
+        return schemaDefinitionRepository.findAll();
+    }
+
+    private void fetchSchemaDefinitionsFromLedger(String universityName) {
         Issuer issuer = getIssuer(universityName);
-        return getUniversity(universityName)
+        getUniversity(universityName)
                 .getClaimSchemas()
-                .stream()
-                .map(claimSchema -> getSchemaDefinition(issuer, claimSchema))
-                .collect(Collectors.toList());
+                .forEach(claimSchema -> getSchemaDefinition(issuer, claimSchema));
     }
 
     private SchemaDefinitionRecord getSchemaDefinition(Issuer issuer, ClaimSchema claimSchema) {

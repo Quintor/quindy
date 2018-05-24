@@ -15,5 +15,9 @@
             <a>student.userName</a>
             <b>userName</b>
         </field>
+        <field>
+            <a>exchangePositionRecord</a>
+            <b>exchangePositionModel</b>
+        </field>
     </mapping>
 </mappings>
