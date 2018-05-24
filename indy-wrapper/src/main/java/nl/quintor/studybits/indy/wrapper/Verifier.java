@@ -1,17 +1,14 @@
 package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.exception.IndyWrapperException;
 import nl.quintor.studybits.indy.wrapper.util.IntegerEncodingUtil;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
-import org.apache.commons.lang3.Validate;
 import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.anoncreds.Anoncreds;
 
-import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -47,9 +44,9 @@ public class Verifier extends WalletOwner {
         String proofRequestJson = proofRequest.toJSON();
         String proofJson = proof.toJSON();
         String schemaJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getSchemas());
-        String claimDefsJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getClaimDefs());
+        String credentialDefsJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getCredentialDefs());
         return Anoncreds
-                .verifierVerifyProof(proofRequestJson, proofJson, schemaJson, claimDefsJson, "{}", "{}")
+                .verifierVerifyProof(proofRequestJson, proofJson, schemaJson, credentialDefsJson, "{}", "{}")
                 .thenAccept(result -> ValidateResult(result, "Invalid proof: verifierVerifyProof failed."));
     }
 

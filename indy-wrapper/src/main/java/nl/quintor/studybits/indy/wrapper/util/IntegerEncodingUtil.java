@@ -42,7 +42,7 @@ public class IntegerEncodingUtil {
         return plainValue.equals(decode(new BigInteger(encoding)));
     }
 
-    public static JsonNode claimValuesFromMap(Map<String, Object> valueMap) throws UnsupportedEncodingException {
+    public static JsonNode credentialValuesFromMap(Map<String, Object> valueMap) throws UnsupportedEncodingException {
         ObjectNode result = JSONUtil.mapper.createObjectNode();
 
         for (Map.Entry<String, Object> entry : valueMap.entrySet()) {

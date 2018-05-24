@@ -48,45 +48,43 @@ public class Main {
                 "first_name", "last_name", "degree", "status", "year", "average", "ssn").get();
 
 
-        // Create claim definitions
+        // Create credential definitions
         String transcriptCredentialDefId = faber.defineCredential(transcriptSchemaId).get();
 
         String jobCertificateCredentialDefId = acme.defineCredential(jobCertificateSchemaId).get();
 
 
 
-        AuthcryptedMessage transcriptClaimOffer = faber.createCredentialOffer(transcriptCredentialDefId, aliceFaberDid)
+        AuthcryptedMessage transcriptCredentialOffer = faber.createCredentialOffer(transcriptCredentialDefId, aliceFaberDid)
                 .thenCompose(AsyncUtil.wrapException(faber::authEncrypt)).get();
 
 
-        AuthcryptedMessage transcriptClaimRequest = alice.authDecrypt(transcriptClaimOffer, CredentialOffer.class)
+        AuthcryptedMessage transcriptCredentialRequest = alice.authDecrypt(transcriptCredentialOffer, CredentialOffer.class)
                 .thenCompose(AsyncUtil.wrapException(alice::createCredentialRequest))
                 .thenCompose(AsyncUtil.wrapException(alice::authEncrypt)).get();
 
 
-        Map<String, Object> claimValues  = new HashMap<>();
-        claimValues.put("first_name", "Alice");
-        claimValues.put("last_name", "Garcia");
-        claimValues.put("degree", "Bachelor of Science, Marketing");
-        claimValues.put("status", "graduated");
-        claimValues.put("ssn", "123-45-6789");
-        claimValues.put("year", 2015);
-        claimValues.put("average", 5);
+        Map<String, Object> credentialValues  = new HashMap<>();
+        credentialValues.put("first_name", "Alice");
+        credentialValues.put("last_name", "Garcia");
+        credentialValues.put("degree", "Bachelor of Science, Marketing");
+        credentialValues.put("status", "graduated");
+        credentialValues.put("ssn", "123-45-6789");
+        credentialValues.put("year", 2015);
+        credentialValues.put("average", 5);
 
-        AuthcryptedMessage claim = faber.authDecrypt(transcriptClaimRequest, CredentialRequest.class)
-                .thenCompose(AsyncUtil.wrapException(claimRequest -> faber.createCredential(claimRequest, claimValues)))
+        AuthcryptedMessage credential = faber.authDecrypt(transcriptCredentialRequest, CredentialRequest.class)
+                .thenCompose(AsyncUtil.wrapException(credentialRequest -> faber.createCredential(credentialRequest, credentialValues)))
                 .thenCompose(AsyncUtil.wrapException(faber::authEncrypt)).get();
 
 
-        alice.authDecrypt(claim, CredentialWithRequest.class)
-                .thenCompose(AsyncUtil.wrapException(credentialWithRequest -> {
-                    return alice.storeCredential(credentialWithRequest);
-                })).get();
+        alice.authDecrypt(credential, CredentialWithRequest.class)
+                .thenCompose(AsyncUtil.wrapException(alice::storeCredential)).get();
 
-        List<CredentialInfo> claims = alice.findAllClaims()
+        List<CredentialInfo> credentialInfos = alice.findAllCredentials()
                                       .get();
 
-        System.out.println(claims);
+        System.out.println(credentialInfos);
 
 
         List<Filter> transcriptFilter = Collections.singletonList(new Filter(transcriptCredentialDefId));

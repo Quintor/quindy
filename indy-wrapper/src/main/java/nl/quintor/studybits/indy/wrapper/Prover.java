@@ -33,50 +33,50 @@ public class Prover extends WalletOwner {
     }
 
 
-    public CompletableFuture<CredentialRequest> createCredentialRequest(String theirDid, CredentialOffer claimOffer) throws IndyException, JsonProcessingException {
+    public CompletableFuture<CredentialRequest> createCredentialRequest(String theirDid, CredentialOffer credentialOffer) throws IndyException, JsonProcessingException {
         return getPairwiseByTheirDid(theirDid)
-                .thenCompose(wrapException(pairwiseResult -> getSchema(pairwiseResult.getMyDid(), claimOffer.getSchemaId())
-                        .thenCompose(wrapException(schema -> getClaimDef(pairwiseResult.getMyDid(), claimOffer.getCredDefId())))
-                        .thenCompose(wrapException(claimDefJson -> {
-                            log.debug("{} creating claim request with claimDefJson {}", name, claimDefJson);
+                .thenCompose(wrapException(pairwiseResult -> getSchema(pairwiseResult.getMyDid(), credentialOffer.getSchemaId())
+                        .thenCompose(wrapException(schema -> getCredentialDef(pairwiseResult.getMyDid(), credentialOffer.getCredDefId())))
+                        .thenCompose(wrapException(credentialDefJson -> {
+                            log.debug("{} creating credential request with credentialDefJson {}", name, credentialDefJson);
                             return Anoncreds.proverCreateCredentialReq(wallet.getWallet(), pairwiseResult.getMyDid(),
-                                    claimOffer.toJSON(), claimDefJson.toJSON(), this.masterSecretName);
+                                    credentialOffer.toJSON(), credentialDefJson.toJSON(), this.masterSecretName);
                         }))
                         .thenApply(proverCreateCredentialRequestResult -> {
                            log.debug("{} created credential request. Json: {}, metadata {} ", name, proverCreateCredentialRequestResult.getCredentialRequestJson(), proverCreateCredentialRequestResult.getCredentialRequestMetadataJson());
-                           return new CredentialRequest(proverCreateCredentialRequestResult.getCredentialRequestJson(), proverCreateCredentialRequestResult.getCredentialRequestMetadataJson(), claimOffer, theirDid);
+                           return new CredentialRequest(proverCreateCredentialRequestResult.getCredentialRequestJson(), proverCreateCredentialRequestResult.getCredentialRequestMetadataJson(), credentialOffer, theirDid);
                         })
                 ));
     }
 
-    public CompletableFuture<CredentialRequest> createCredentialRequest(CredentialOffer claimOffer) throws IndyException, JsonProcessingException {
-        return createCredentialRequest(claimOffer.getTheirDid(), claimOffer);
+    public CompletableFuture<CredentialRequest> createCredentialRequest(CredentialOffer credentialOffer) throws IndyException, JsonProcessingException {
+        return createCredentialRequest(credentialOffer.getTheirDid(), credentialOffer);
     }
 
     /**
-     * Proves the proofRequest using the stored claims
+     * Proves the proofRequest using the stored credentials
      *
      * @param proofRequest
-     * @param attributes   This map is used to get the correct claim, if multiple referents are present, or to provide self-attested attributes
+     * @param attributes   This map is used to get the correct credentials, if multiple referents are present, or to provide self-attested attributes
      * @return
      */
     public CompletableFuture<Proof> fulfillProofRequest(ProofRequest proofRequest, Map<String, String> attributes) throws JsonProcessingException, IndyException {
         log.debug("{} Proving proof request: {}", name, proofRequest.toJSON());
 
         return Anoncreds.proverGetCredentialsForProofReq(wallet.getWallet(), proofRequest.toJSON())
-                .thenApply(wrapException(claimsForProofRequestJson -> {
-                    log.debug("{}: Obtained claims for proof request {}", name, claimsForProofRequestJson);
-                    return JSONUtil.mapper.readValue(claimsForProofRequestJson, ClaimsForRequest.class);
+                .thenApply(wrapException(credentialsForProofReqJson -> {
+                    log.debug("{}: Obtained credentials for proof request {}", name, credentialsForProofReqJson);
+                    return JSONUtil.mapper.readValue(credentialsForProofReqJson, CredentialsForRequest.class);
                 }))
-                .thenCompose(wrapException(claimsForRequest -> createProofFromClaims(proofRequest, claimsForRequest, attributes, proofRequest.getTheirDid())))
+                .thenCompose(wrapException(credentialsForRequest -> createProofFromCredentials(proofRequest, credentialsForRequest, attributes, proofRequest.getTheirDid())))
                 .thenApply(wrapException(proof -> {
                     log.debug("{}: Created proof {}", name, proof.toJSON());
                     return proof;
                 }));
     }
 
-    CompletableFuture<Proof> createProofFromClaims(ProofRequest proofRequest, ClaimsForRequest claimsForRequest, Map<String, String> attributes, String theirDid) throws JsonProcessingException {
-        log.debug("{} Creating proof using claims: {}", name, claimsForRequest.toJSON());
+    CompletableFuture<Proof> createProofFromCredentials(ProofRequest proofRequest, CredentialsForRequest credentialsForRequest, Map<String, String> attributes, String theirDid) throws JsonProcessingException {
+        log.debug("{} Creating proof using credentials: {}", name, credentialsForRequest.toJSON());
 
         // Collect the names and values of all self-attested attributes. Throw an exception if one is not specified.
         Map<String, String> selfAttestedAttributes = proofRequest.getRequestedAttributes()
@@ -93,28 +93,28 @@ public class Prover extends WalletOwner {
                     return value;
                 }));
 
-        // Collect all claim referents needed for the proof
-        Map<String, CredentialReferent> claimsByReferentKey = findNeededClaimReferents(proofRequest, claimsForRequest, attributes);
+        // Collect all credential referents needed for the proof
+        Map<String, CredentialReferent> credentialReferentMap = findNeededCredentialReferents(proofRequest, credentialsForRequest, attributes);
 
-        // Store the claim referents in a way that enables us to fetch the needed entities from the ledger.
-        Map<String, CredentialIdentifier> claimsForProof = claimsByReferentKey.values()
+        // Store the credential referents in a way that enables us to fetch the needed entities from the ledger.
+        Map<String, CredentialIdentifier> credentialsForProof = credentialReferentMap.values()
                 .stream()
                 .distinct()
                 .collect(Collectors.toMap(referent -> referent.getCredentialInfo().getReferent(), CredentialIdentifier::new));
 
         // Create the json needed for creating the proof
-        JsonNode requestedCredentials = createRequestedClaimsJson(proofRequest, selfAttestedAttributes, claimsByReferentKey);
+        JsonNode requestedCredentials = createRequestedCredentialsJson(proofRequest, selfAttestedAttributes, credentialReferentMap);
 
         log.debug("{} gathered requestedCredentials: {}", name, requestedCredentials);
 
-        // Fetch the required schema's and claim definitions, then create, the proof, deserialize and return it.
-        return getEntitiesFromLedger(claimsForProof).thenCompose(wrapException(entities -> {
+        // Fetch the required schema's and credential definitions, then create, the proof, deserialize and return it.
+        return getEntitiesFromLedger(credentialsForProof).thenCompose(wrapException(entities -> {
             log.debug("{} Creating proof with entities {}", name, entities);
             log.debug("{} Using schema's {}", name, JSONUtil.mapper
                     .writeValueAsString(entities.getSchemas()));
             return Anoncreds.proverCreateProof(wallet.getWallet(), proofRequest.toJSON(), JSONUtil.mapper.writeValueAsString(requestedCredentials), masterSecretName, JSONUtil.mapper
                     .writeValueAsString(entities.getSchemas()), JSONUtil.mapper.writeValueAsString(entities
-                    .getClaimDefs()), "{}");
+                    .getCredentialDefs()), "{}");
         }))
                 .thenApply(wrapException(proofJson -> {
                     log.debug("{} Obtained proof: {}", name, proofJson);
@@ -124,17 +124,17 @@ public class Prover extends WalletOwner {
                 }));
     }
 
-    private Map<String, CredentialReferent> findNeededClaimReferents(ProofRequest proofRequest, ClaimsForRequest claimsForRequest, Map<String, String> attributes) {
-        // We find all the ClaimReferents that we are going to use. The cases:
+    private Map<String, CredentialReferent> findNeededCredentialReferents(ProofRequest proofRequest, CredentialsForRequest credentialsForRequest, Map<String, String> attributes) {
+        // We find all the CredentialReferents that we are going to use. The cases:
         // 1. The referent is for an attribute and a value is provided -> Find any that matches the provided value
         // 2. The referent is for an attribute and no value is provided -> Find any
         // 3. The referent is for a predicate -> Find any
 
-        return Stream.<Optional<AbstractMap.SimpleEntry<String, CredentialReferent>>>concat(claimsForRequest.getAttrs()
+        return Stream.<Optional<AbstractMap.SimpleEntry<String, CredentialReferent>>>concat(credentialsForRequest.getAttrs()
                 .entrySet()
                 .stream()
-                .map((claimReferentEntry) -> {
-                    return claimReferentEntry.getValue()
+                .map((credentialReferentEntry) -> {
+                    return credentialReferentEntry.getValue()
                             .stream()
                             .filter(credentialReferent -> credentialReferent.getCredentialInfo().getAttrs()
                                     .entrySet()
@@ -142,14 +142,14 @@ public class Prover extends WalletOwner {
                                     // Find attribute that matches the one that is requested for this particular referent
                                     .filter(entry -> entry.getKey()
                                             .equals(proofRequest.getRequestedAttributes()
-                                                    .get(claimReferentEntry.getKey())
+                                                    .get(credentialReferentEntry.getKey())
                                                     .getName()))
                                     // Check if it matches the provided value, or the value is not provided
                                     .anyMatch(entry -> entry.getValue()
                                             .equals(attributes.getOrDefault(entry.getKey(), entry.getValue()))))
-                            .map(credentialReferent -> new AbstractMap.SimpleEntry<>(claimReferentEntry.getKey(), credentialReferent))
+                            .map(credentialReferent -> new AbstractMap.SimpleEntry<>(credentialReferentEntry.getKey(), credentialReferent))
                             .findAny();
-                }), claimsForRequest.getPredicates()
+                }), credentialsForRequest.getPredicates()
                 .entrySet()
                 .stream()
                 .map(entry -> entry.getValue()
@@ -159,7 +159,7 @@ public class Prover extends WalletOwner {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private JsonNode createRequestedClaimsJson(ProofRequest proofRequest, Map<String, String> selfAttestedAttributes, Map<String, CredentialReferent> claimsByReferentKey) {
+    private JsonNode createRequestedCredentialsJson(ProofRequest proofRequest, Map<String, String> selfAttestedAttributes, Map<String, CredentialReferent> credentialByReferentKey) {
         Map<String, ProvingCredentialKey> requestedAttributes = proofRequest.getRequestedAttributes()
                 .entrySet()
                 .stream()
@@ -167,26 +167,26 @@ public class Prover extends WalletOwner {
                         .getRestrictions()
                         .isPresent())
                 .collect(Collectors.toMap(Map.Entry::getKey, entry ->
-                        new ProvingCredentialKey(claimsByReferentKey.get(entry.getKey()).getCredentialInfo().getReferent(), Optional.of(true))));
+                        new ProvingCredentialKey(credentialByReferentKey.get(entry.getKey()).getCredentialInfo().getReferent(), Optional.of(true))));
 
         Map<String, ProvingCredentialKey> requestedPredicates = proofRequest.getRequestedPredicates()
                 .entrySet()
                 .stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ProvingCredentialKey(claimsByReferentKey.get(entry.getKey())
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ProvingCredentialKey(credentialByReferentKey.get(entry.getKey())
                         .getCredentialInfo().getReferent(), Optional.empty())));
 
-        ObjectNode requestedClaimsJson = JSONUtil.mapper.createObjectNode();
+        ObjectNode requestedCredentialJson = JSONUtil.mapper.createObjectNode();
 
-        requestedClaimsJson.set("self_attested_attributes", JSONUtil.mapper.valueToTree(selfAttestedAttributes));
-        requestedClaimsJson.set("requested_attributes", JSONUtil.mapper.valueToTree(requestedAttributes));
-        requestedClaimsJson.set("requested_predicates", JSONUtil.mapper.valueToTree(requestedPredicates));
-        return requestedClaimsJson;
+        requestedCredentialJson.set("self_attested_attributes", JSONUtil.mapper.valueToTree(selfAttestedAttributes));
+        requestedCredentialJson.set("requested_attributes", JSONUtil.mapper.valueToTree(requestedAttributes));
+        requestedCredentialJson.set("requested_predicates", JSONUtil.mapper.valueToTree(requestedPredicates));
+        return requestedCredentialJson;
     }
 
 
     public CompletableFuture<String> storeCredential(CredentialWithRequest credentialWithRequest) throws JsonProcessingException, IndyException {
         Credential credential = credentialWithRequest.getCredential();
-        return getClaimDef(wallet.getMainDid(), credential.getCredDefId())
+        return getCredentialDef(wallet.getMainDid(), credential.getCredDefId())
                 .thenCompose(wrapException(
                         credentialDef -> Anoncreds.proverStoreCredential(wallet.getWallet(), null, credentialWithRequest.getCredentialRequest().getMetadata(), credential.toJSON(), credentialDef.toJSON(), null
                         ))
@@ -196,14 +196,14 @@ public class Prover extends WalletOwner {
                 });
     }
 
-    public CompletableFuture<List<CredentialInfo>> findAllClaims() throws IndyException {
+    public CompletableFuture<List<CredentialInfo>> findAllCredentials() throws IndyException {
         String filter = "{}";
         return Anoncreds.proverGetCredentials(wallet.getWallet(), filter)
-                .thenApply(wrapException(this::deserializeClaimInfo));
+                .thenApply(wrapException(this::deserializeCredentialInfo));
     }
 
 
-    private List<CredentialInfo> deserializeClaimInfo(String json) throws IOException {
+    private List<CredentialInfo> deserializeCredentialInfo(String json) throws IOException {
         return JSONUtil.mapper.readValue(json, new TypeReference<List<CredentialInfo>>() {
         });
     }

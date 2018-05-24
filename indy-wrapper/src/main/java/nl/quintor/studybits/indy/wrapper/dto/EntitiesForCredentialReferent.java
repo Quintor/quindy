@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 /**
- * EntitiesForClaimReferent holds the entities (schemas, claim definitions, in the future: revocation registries)
- * needed to verify the proof for that particular claim referent.
- */ public class EntitiesForClaimReferent {
+ * EntitiesForCredentialReferent holds the entities (schemas, credential definitions, in the future: revocation registries)
+ * needed to verify the proof for that particular credential referent.
+ */ public class EntitiesForCredentialReferent {
     private Schema schema;
-    private CredentialDefinition claimDef;
+    private CredentialDefinition credentialDef;
     @JsonIgnore
     private String referent;
     // TODO: Revocation

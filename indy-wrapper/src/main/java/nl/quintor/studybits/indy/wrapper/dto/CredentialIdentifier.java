@@ -17,7 +17,7 @@ public class CredentialIdentifier implements Serializable {
     private Integer revRegId;
     private Long timestamp;
 
-    public CredentialIdentifier(CredentialReferent claimReferent ) {
-        this(claimReferent.getCredentialInfo().getSchemaId(), claimReferent.getCredentialInfo().getCredDefId(), claimReferent.getCredentialInfo().getRevRegId(), null);
+    public CredentialIdentifier(CredentialReferent credentialReferent ) {
+        this(credentialReferent.getCredentialInfo().getSchemaId(), credentialReferent.getCredentialInfo().getCredDefId(), credentialReferent.getCredentialInfo().getRevRegId(), null);
     }
 }

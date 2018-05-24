@@ -23,9 +23,9 @@ public class ProofUtils {
         String proofRequestJson = proofRequest.toJSON();
         String proofJson = proof.toJSON();
         String schemaJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getSchemas());
-        String claimDefsJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getClaimDefs());
+        String credentialDefsJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getCredentialDefs());
         return Anoncreds
-                .verifierVerifyProof(proofRequestJson, proofJson, schemaJson, claimDefsJson, "{}", "{}")
+                .verifierVerifyProof(proofRequestJson, proofJson, schemaJson, credentialDefsJson, "{}", "{}")
                 .thenAccept(result -> ValidateResult(result, "Invalid proof: verifierVerifyProof failed."))
                 .thenApply(_void -> validateProofEncodings(proof))
                 .thenAccept(result -> ValidateResult(result, "Invalid proof: encodings invalid"))

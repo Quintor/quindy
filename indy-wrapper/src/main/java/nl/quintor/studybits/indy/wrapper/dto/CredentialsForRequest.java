@@ -10,7 +10,7 @@ import java.util.Map;
 @AllArgsConstructor
 @Data
 @NoArgsConstructor
-public class ClaimsForRequest implements Serializable {
+public class CredentialsForRequest implements Serializable {
     private Map<String, List<CredentialReferent>> attrs;
     private Map<String, List<CredentialReferent>> predicates;
 }

@@ -101,11 +101,11 @@ public class WalletOwner implements AutoCloseable {
                 }));
     }
 
-    CompletableFuture<CredentialDefinition> getClaimDef(String did, String id) throws IndyException {
-        log.debug("{} Getting claim def with did {} schema with id {}", name, did, id);
+    CompletableFuture<CredentialDefinition> getCredentialDef(String did, String id) throws IndyException {
+        log.debug("{} Getting credential def with did {} schema with id {}", name, did, id);
         return Ledger.buildGetCredDefRequest(did, id)
                 .thenCompose(wrapException(request -> {
-                    log.debug("{} Submitting GetClaimDefTxn {}", name, request);
+                    log.debug("{} Submitting GetCredDefRequest {}", name, request);
                     return submitRequest(request);
                 }))
                 .thenCompose(AsyncUtil.wrapException(Ledger::parseGetCredDefResponse))
@@ -114,13 +114,13 @@ public class WalletOwner implements AutoCloseable {
     }
 
     CompletableFuture<EntitiesFromLedger> getEntitiesFromLedger(Map<String, CredentialIdentifier> identifiers) {
-        List<CompletableFuture<EntitiesForClaimReferent>> entityFutures = identifiers.entrySet()
+        List<CompletableFuture<EntitiesForCredentialReferent>> entityFutures = identifiers.entrySet()
                 .stream()
-                .map(wrapException((Map.Entry<String, CredentialIdentifier> stringClaimIdentifierEntry) -> getSchema(wallet.getMainDid(), stringClaimIdentifierEntry
+                .map(wrapException((Map.Entry<String, CredentialIdentifier> stringCredentialIdentifierEntry) -> getSchema(wallet.getMainDid(), stringCredentialIdentifierEntry
                         .getValue()
-                        .getSchemaId()).thenCompose(wrapException((Schema schema) -> getClaimDef(wallet.getMainDid(), stringClaimIdentifierEntry
+                        .getSchemaId()).thenCompose(wrapException((Schema schema) -> getCredentialDef(wallet.getMainDid(), stringCredentialIdentifierEntry
                         .getValue()
-                        .getCredDefId()).thenApply(claimDef -> new EntitiesForClaimReferent(schema, claimDef, stringClaimIdentifierEntry
+                        .getCredDefId()).thenApply(credentialDef -> new EntitiesForCredentialReferent(schema, credentialDef, stringCredentialIdentifierEntry
                         .getKey()))))))
                 .collect(Collectors.toList());
 

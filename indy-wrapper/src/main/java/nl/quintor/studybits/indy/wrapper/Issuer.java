@@ -52,7 +52,7 @@ public class Issuer extends TrustAnchor {
     }
 
     public CompletableFuture<String> defineCredential(String schemaId) throws JsonProcessingException, IndyException {
-        log.debug("{}: Defining claim for schemaId {}", name, schemaId);
+        log.debug("{}: Defining credential for schemaId {}", name, schemaId);
         return getSchema(getIssuerDid(), schemaId)
                 .thenCompose(wrapException(schema ->
                 {
@@ -60,12 +60,12 @@ public class Issuer extends TrustAnchor {
                 }))
                 .thenCompose(wrapException(createAndStoreCredentialDefResult -> {
                     return Ledger.buildCredDefRequest(getIssuerDid(), createAndStoreCredentialDefResult.getCredDefJson())
-                            .thenCompose(wrapException(claimDefTxn -> {
-                                log.debug("{} Signing and sending claimDefTx: {}", name, claimDefTxn);
-                                return Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), getIssuerDid(), claimDefTxn)
+                            .thenCompose(wrapException(credentialDefRequest -> {
+                                log.debug("{} Signing and sending credentialDefRequest: {}", name, credentialDefRequest);
+                                return Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), getIssuerDid(), credentialDefRequest)
                                         ;
                             })).thenApply((response) -> {
-                                        log.debug("{} Got ClaimDefTxn response: {}", name, response);
+                                        log.debug("{} Got credentialDefRequest response: {}", name, response);
                                         return createAndStoreCredentialDefResult.getCredDefId();
                                     }
                             );
@@ -77,9 +77,9 @@ public class Issuer extends TrustAnchor {
         log.debug("{}: Creating credential offer with schema id {}", id);
         return Anoncreds.issuerCreateCredentialOffer(wallet.getWallet(), id)
                 .thenCombine(getPairwiseByTheirDid(targetDid),
-                        wrapBiFunctionException((claimOfferJson, pairwiseResult) -> {
-                            log.debug("{} Created credentialOffer: {}", name, claimOfferJson);
-                            CredentialOffer credentialOffer = JSONUtil.mapper.readValue(claimOfferJson, CredentialOffer.class);
+                        wrapBiFunctionException((credentialOfferJson, pairwiseResult) -> {
+                            log.debug("{} Created credentialOffer: {}", name, credentialOfferJson);
+                            CredentialOffer credentialOffer = JSONUtil.mapper.readValue(credentialOfferJson, CredentialOffer.class);
                             credentialOffer.setTheirDid(targetDid);
                             log.debug("{} Created credentialOffer object (toJSON()): {}", name, credentialOffer.toJSON());
                             return credentialOffer;
@@ -87,12 +87,12 @@ public class Issuer extends TrustAnchor {
     }
 
     public CompletableFuture<CredentialWithRequest> createCredential(CredentialRequest credentialRequest, Map<String, Object> values) throws UnsupportedEncodingException, JsonProcessingException, IndyException {
-        JsonNode claimValueJson = IntegerEncodingUtil.claimValuesFromMap(values);
+        JsonNode credentialValueJson = IntegerEncodingUtil.credentialValuesFromMap(values);
         log.debug("{} Creating credential for: credentialOffer {}, claimRequest {}", name, credentialRequest.getCredentialOffer().toJSON(), credentialRequest.getRequest());
-        return Anoncreds.issuerCreateCredential(wallet.getWallet(), credentialRequest.getCredentialOffer().toJSON(), credentialRequest.getRequest(), claimValueJson.toString(), null, -1)
-                .thenApply(wrapException((issuerCreateClaimResult) -> {
-                    log.debug("{} Created credential json: {}", name, issuerCreateClaimResult.getCredentialJson());
-                    Credential credential = JSONUtil.mapper.readValue(issuerCreateClaimResult.getCredentialJson(), Credential.class);
+        return Anoncreds.issuerCreateCredential(wallet.getWallet(), credentialRequest.getCredentialOffer().toJSON(), credentialRequest.getRequest(), credentialValueJson.toString(), null, -1)
+                .thenApply(wrapException((issuerCreateCredentialResult) -> {
+                    log.debug("{} Created credential json: {}", name, issuerCreateCredentialResult.getCredentialJson());
+                    Credential credential = JSONUtil.mapper.readValue(issuerCreateCredentialResult.getCredentialJson(), Credential.class);
                     credential.setTheirDid(credentialRequest.getTheirDid());
                     return new CredentialWithRequest(credential, credentialRequest, credentialRequest.getTheirDid());
                 }));
