@@ -9,7 +9,6 @@ import nl.quintor.studybits.enums.ExchangeApplicationState;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ExchangeApplicationModel {
-    private Long id;
     private String universityName;
     private String userName;
     private ExchangePositionModel exchangePositionModel;
