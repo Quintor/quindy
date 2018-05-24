@@ -1,7 +1,27 @@
 package nl.quintor.studybits.student.enums;
 
-
 public enum ExchangePositionState {
-    OPEN,
-    CLOSED
+    OPEN(0),
+    CLOSED(1);
+
+    private final int value;
+
+    ExchangePositionState(int value) {
+        this.value = value;
+    }
+
+    public int getValue() {
+        return this.value;
+    }
+
+    public ExchangePositionState getState(int value) {
+        switch (value) {
+            case 0:
+                return OPEN;
+            case 1:
+                return CLOSED;
+            default:
+                return OPEN;
+        }
+    }
 }

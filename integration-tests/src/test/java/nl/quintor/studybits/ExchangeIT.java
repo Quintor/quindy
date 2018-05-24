@@ -2,6 +2,7 @@ package nl.quintor.studybits;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.ResponseBody;
+import nl.quintor.studybits.enums.ExchangeApplicationState;
 import nl.quintor.studybits.enums.ExchangePositionState;
 import nl.quintor.studybits.models.ExchangeApplicationModel;
 import nl.quintor.studybits.models.ExchangePositionModel;
@@ -29,12 +30,14 @@ public class ExchangeIT extends BaseIT {
     @Test
     public void testCreateExchangePosition() {
         createExchangePosition();
+        assert getAllExchangePositionModels().size() > 0;
     }
 
     @Test
     public void testApplyForExchangePosition() {
         createExchangePosition();
         applyForExchangePosition();
+        assert getAllExchangeApplicationModels().size() > 0;
     }
 
     @Test
@@ -42,6 +45,9 @@ public class ExchangeIT extends BaseIT {
         createExchangePosition();
         applyForExchangePosition();
         acceptExchangeApplication();
+
+        ExchangeApplicationState newState = getAllExchangeApplicationModels().get(0).getState();
+        assert newState.equals(ExchangeApplicationState.ACCEPTED);
     }
 
     private void createExchangePosition() {

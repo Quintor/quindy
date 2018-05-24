@@ -107,6 +107,8 @@ public abstract class ProofHandler<T extends Proof> {
     @Transactional
     public Boolean handleProof(Long proverId, Long proofRecordId, AuthcryptedMessage authcryptedMessage) {
         User prover = userRepository.findById(proverId).orElseThrow(() -> new IllegalArgumentException(String.format("User with id: %d not known", proverId)));
+        Validate.notNull(prover.getConnection(), "User onboarding incomplete!");
+
         ProofRecord proofRecord = getProofRecord(proofRecordId);
         Validate.validState(StringUtils.isEmpty(proofRecord.getProofJson()), String.format("UserId %s already provided proof for proofRecordId %s.", proverId, proofRecordId));
         University university = Objects.requireNonNull(prover.getUniversity());
@@ -216,10 +218,6 @@ public abstract class ProofHandler<T extends Proof> {
                 .findById(proofRecordId)
                 .orElseThrow(() -> new IllegalArgumentException("Proof record not found."));
         Objects.requireNonNull(proofRecord.getUser(), "Proof record without user.");
-        // TODO: Decide whether you want to create "Open" or "User-specific" proof records
-//        Validate.validState(user.getId().equals(userId), "Proof record user mismatch.");
-        // TODO: Decide whether this check is necessary, since for "Open" proof records, the user is the issuing party (University), not the proving party (Student)
-//        Validate.notNull(proofRecord.getUser().getConnection(), "User onboarding incomplete!");
 
         Version version = getProofVersion();
         Validate.isTrue(version.getName().equals(proofRecord.getProofName()), "Proof name mismatch.");

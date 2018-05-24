@@ -5,7 +5,6 @@ import nl.quintor.studybits.university.dto.TranscriptProof;
 import nl.quintor.studybits.university.entities.*;
 import nl.quintor.studybits.university.enums.ExchangeApplicationState;
 import nl.quintor.studybits.university.models.ExchangeApplicationModel;
-import nl.quintor.studybits.university.models.ExchangePositionModel;
 import nl.quintor.studybits.university.repositories.ExchangeApplicationRepository;
 import nl.quintor.studybits.university.repositories.ExchangePositionRepository;
 import nl.quintor.studybits.university.repositories.TranscriptProofRepository;
@@ -41,18 +40,14 @@ public class ExchangeApplicationService {
                 .findAllByUniversityNameIgnoreCase(universityName);
     }
 
-    public void update(ExchangeApplicationModel model) {
-        ExchangeApplicationRecord record = fromModel(model);
+    public void updateState(ExchangeApplicationModel model) {
+        ExchangeApplicationRecord record = getByUniversityAndUserAndExchangePosition(model);
+        record.setState(model.getState());
+
         exchangeApplicationRepository.save(record);
     }
 
-    public ExchangeApplicationModel toModel(ExchangeApplicationRecord record) {
-        ExchangeApplicationModel model = mapper.map(record, ExchangeApplicationModel.class);
-        model.setExchangePositionModel(mapper.map(record.getExchangePositionRecord(), ExchangePositionModel.class));
-        return model;
-    }
-
-    private ExchangeApplicationRecord fromModel(ExchangeApplicationModel model) {
+    private ExchangeApplicationRecord getByUniversityAndUserAndExchangePosition(ExchangeApplicationModel model) {
         University university = universityService.getUniversity(model.getUniversityName());
         User user = userService.getByUniversityNameAndUserName(model.getUniversityName(), model.getUserName());
         ExchangePositionRecord position = exchangePositionRepository

@@ -19,8 +19,8 @@ public class AdminExchangePositionController {
     private final ExchangePositionService exchangePositionService;
     private final Mapper mapper;
 
-    private ExchangePositionModel toModel(ExchangePositionRecord exchangePositionRecord) {
-        return mapper.map(exchangePositionRecord, ExchangePositionModel.class);
+    private ExchangePositionModel toModel(ExchangePositionRecord record) {
+        return mapper.map(record, ExchangePositionModel.class);
     }
 
     @GetMapping

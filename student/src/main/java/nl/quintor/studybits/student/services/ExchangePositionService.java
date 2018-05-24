@@ -94,6 +94,12 @@ public class ExchangePositionService {
         });
     }
 
+    public ExchangePositionRecord getByProofRecordId(Long proofRecordId) {
+        return positionRepository
+                .findByProofRecordId(proofRecordId)
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Could not find ExchangePosition with ProofRecordId: {}", proofRecordId)));
+    }
+
     public ExchangePositionRecord fromModel(ExchangePositionModel model) {
         ExchangePositionRecord exchangePosition = mapper.map(model, ExchangePositionRecord.class);
 
