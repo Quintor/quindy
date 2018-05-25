@@ -36,4 +36,17 @@ public class Student {
 
     @OneToOne
     private MetaWallet metaWallet;
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "id=" + id +
+                ", userName='" + userName + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", ssn='" + ssn + '\'' +
+                ", originUniversity=" + originUniversity +
+                ", metaWallet=" + metaWallet +
+                '}';
+    }
 }

@@ -42,13 +42,28 @@ public class ClaimEntity {
     @Column(nullable = false)
     private String signatureCorrectnessProof;
 
-    @Column(nullable = false)
-    private String issuerDid;
+//    @Column(nullable = false)
+//    private String issuerDid;
 
-    private String myDid;
+//    private String myDid;
+//
+//    @Column(nullable = false)
+//    private String theirDid;
 
-    @Column(nullable = false)
-    private String theirDid;
-
-
+    @Override
+    public String toString() {
+        return "ClaimEntity{" +
+                "id=" + id +
+                ", student=" + student +
+                ", schemaId='" + schemaId + '\'' +
+                ", label='" + label + '\'' +
+                ", revReqSeqNo=" + revReqSeqNo +
+                ", values='" + values + '\'' +
+                ", signature='" + signature + '\'' +
+                ", signatureCorrectnessProof='" + signatureCorrectnessProof + '\'' +
+//                ", issuerDid='" + issuerDid + '\'' +
+//                ", myDid='" + myDid + '\'' +
+//                ", theirDid='" + theirDid + '\'' +
+                '}';
+    }
 }

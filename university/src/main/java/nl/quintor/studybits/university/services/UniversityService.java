@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -70,7 +71,7 @@ public class UniversityService {
                 .getClaimSchemas()
                 .stream()
                 .filter(schema -> schema.getCredentialDefId() != null)
-                .map(ClaimSchema::getCredentialDefId)
+                .map(ClaimSchema::getSchemaId)
                 .collect(Collectors.toList());
         Issuer issuer = getIssuer(university.getName());
         return new UniversityIssuer(universityName, issuer.getIssuerDid(), definedSchemaKeys);
@@ -92,6 +93,7 @@ public class UniversityService {
         Issuer issuer = getIssuer(universityName);
         Schema walletClaimSchema = issuer.getSchema(issuer.getIssuerDid(), schemaId).get();
         ClaimSchema claimSchema = new ClaimSchema(schemaId, university, walletClaimSchema.getName(), walletClaimSchema.getVersion(), issuer.getIssuerDid());
+        log.info("Persisting claimSchema {}", claimSchema);
         university.getClaimSchemas().add(claimSchema);
         universityRepository.save(university);
     }
@@ -157,7 +159,8 @@ public class UniversityService {
     public void addClaimIssuerForSchema(String universityName, ClaimIssuerSchema claimIssuerSchema) {
         log.debug("University '{}': Adding claim issuer schema information: {}", universityName, claimIssuerSchema);
         String schemaId = claimIssuerSchema.getSchemaId();
-        ClaimSchema claimSchema = getClaimSchema(schemaId);
+        University university = getUniversity(universityName);
+        ClaimSchema claimSchema = getClaimSchema(university.getId(), schemaId);
         ClaimIssuer claimIssuer = claimIssuerRepository
                 .findByDid(claimIssuerSchema.getClaimIssuerDid())
                 .orElseGet(() -> new ClaimIssuer(claimIssuerSchema.getClaimIssuerName(), claimIssuerSchema.getClaimIssuerDid()));
@@ -200,13 +203,18 @@ public class UniversityService {
     }
 
     private ClaimSchema getClaimSchema(String universityName, String schemaName, String schemaVersion) {
+        log.info("Finding claimSchema by name and version: {}, {}", schemaName, schemaVersion);
+        claimSchemaRepository.findAll().forEach(claimSchema -> System.out.println(claimSchema.toString()));
+
         return claimSchemaRepository
                 .findByUniversityNameIgnoreCaseAndSchemaNameAndSchemaVersion(universityName, schemaName, schemaVersion)
                 .orElseThrow(() -> new IllegalArgumentException("Schema key not found."));
     }
 
-    private ClaimSchema getClaimSchema(String schemaId) {
-        return claimSchemaRepository.findById(schemaId)
+    private ClaimSchema getClaimSchema(Long universityId, String schemaId) {
+        log.info("Finding claimSchema by uniId and schemaId: {}, {}", universityId, schemaId);
+        claimSchemaRepository.findAll().forEach(claimSchema -> System.out.println(claimSchema.toString()));
+        return claimSchemaRepository.findByUniversityIdAndSchemaId(universityId, schemaId)
                 .orElseThrow(() -> new IllegalArgumentException("Schema key not found."));
     }
 

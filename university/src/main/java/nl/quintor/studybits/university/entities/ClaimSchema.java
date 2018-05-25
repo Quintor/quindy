@@ -17,6 +17,10 @@ import java.util.List;
 public class ClaimSchema {
 
     @Id
+    @GeneratedValue
+    private Long id;
+
+    @Column(nullable = false)
     private String schemaId;
 
     @ManyToOne(optional = false, cascade = CascadeType.MERGE)
@@ -50,5 +54,19 @@ public class ClaimSchema {
         this.schemaName = schemaName;
         this.schemaVersion = schemaVersion;
         this.schemaIssuerDid = schemaIssuerDid;
+    }
+
+    @Override
+    public String toString() {
+        return "ClaimSchema{" +
+                "schemaId='" + schemaId + '\'' +
+                ", university=" + university +
+                ", schemaName='" + schemaName + '\'' +
+                ", schemaVersion='" + schemaVersion + '\'' +
+                ", schemaIssuerDid='" + schemaIssuerDid + '\'' +
+                ", credentialDefId='" + credentialDefId + '\'' +
+                ", attrNames=" + attrNames +
+                ", claimIssuers=" + claimIssuers +
+                '}';
     }
 }

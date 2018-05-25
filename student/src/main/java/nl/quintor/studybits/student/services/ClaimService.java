@@ -49,6 +49,7 @@ public class ClaimService {
     @Transactional
     public void getAndSaveNewClaimsForOwnerUserName(String studentUserName) throws Exception {
         Student student = studentService.getByUserName(studentUserName);
+        log.info("Get and saving new claims for student: {}", student);
         studentProverService.withProverForStudent(student, prover -> {
             getAllStudentClaimInfo(student)
                     .filter(this::isNewClaimInfo)
@@ -112,9 +113,11 @@ public class ClaimService {
      */
     private void saveClaimIfNew(Credential claim, Student student, StudentClaimInfoModel claimInfo) {
         ClaimEntity claimEntity = mapper.map(claim, ClaimEntity.class);
+
         claimEntity.setStudent(student);
         claimEntity.setLabel(claimInfo.getLabel());
 
+        log.info("Created claimEntity {} from credential {}", claimEntity, claim);
         if(!claimRepository.existsBySchemaIdAndLabel(claimEntity.getSchemaId(), claimEntity.getLabel()))
             claimRepository.save(claimEntity);
     }

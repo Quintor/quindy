@@ -61,6 +61,9 @@ public class Seeder {
         universityService.defineClaim("rug", transcriptSchemaDefinition);
         universityService.addSchema("gent", transcriptSchemaId);
 
+
+        exchangeUniversityClaimIssuerSchemaInfo("rug", "rug");
+        exchangeUniversityClaimIssuerSchemaInfo("gent", "gent");
         exchangeUniversityClaimIssuerSchemaInfo("gent", "rug");
         exchangeUniversityClaimIssuerSchemaInfo("rug", "gent");
     }
@@ -68,8 +71,8 @@ public class Seeder {
     private void exchangeUniversityClaimIssuerSchemaInfo(String universityName, String universityIssuerName) {
         UniversityIssuer universityIssuer = universityService.getUniversityIssuer(universityIssuerName);
         universityIssuer.getDefinedSchemaIds()
-                .forEach(schemaKey -> universityService
-                        .addClaimIssuerForSchema(universityName, new ClaimIssuerSchema(universityIssuerName, universityIssuer.getUniversityDid(), schemaKey)));
+                .forEach(schemaId -> universityService
+                        .addClaimIssuerForSchema(universityName, new ClaimIssuerSchema(universityIssuerName, universityIssuer.getUniversityDid(), schemaId)));
     }
 
 

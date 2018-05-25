@@ -25,4 +25,12 @@ public class University {
     @OneToMany(mappedBy = "university", cascade = CascadeType.ALL, orphanRemoval = true)
     @Column(nullable = false)
     private List<ClaimSchema> claimSchemas = new ArrayList<>();
+
+    @Override
+    public String toString() {
+        return "University{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }
