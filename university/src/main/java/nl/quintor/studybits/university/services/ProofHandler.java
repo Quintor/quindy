@@ -147,7 +147,7 @@ public abstract class ProofHandler<T extends Proof> {
                 .version(proofRecord.getProofVersion())
                 .nonce(proofRecord.getNonce())
                 .theirDid(theirDid)
-                .requestedAttrs(getRequestedAttributes(university.getId()))
+                .requestedAttributes(getRequestedAttributes(university.getId()))
                 .build();
     }
 
@@ -192,7 +192,7 @@ public abstract class ProofHandler<T extends Proof> {
         return claimSchema
                 .getClaimIssuers()
                 .stream()
-                .map(claimIssuer -> new Filter(claimIssuer.getDid(), schemaKey));
+                .map(claimIssuer -> new Filter(claimSchema.getCredentialDefId()));
     }
 
 

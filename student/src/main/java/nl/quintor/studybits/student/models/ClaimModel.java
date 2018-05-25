@@ -7,7 +7,7 @@ public class ClaimModel {
     private Long id;
     private String studentUserName;
     private String issuingUniversityName;
-    private String schemaKeyName;
+    private String schemaId;
     private String label;
     private Integer revReqSeqNo;
     private String values;

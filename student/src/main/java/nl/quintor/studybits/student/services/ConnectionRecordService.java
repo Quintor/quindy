@@ -1,6 +1,7 @@
 package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.student.entities.ConnectionRecord;
 import nl.quintor.studybits.student.entities.Student;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
+@Slf4j
 public class ConnectionRecordService {
     private ConnectionRecordRepository connectionRecordRepository;
     private Mapper mapper;
@@ -25,6 +27,8 @@ public class ConnectionRecordService {
     }
 
     public void save(ConnectionRequest beginRequest, University university, Student student) {
+        log.info("Creating ConnectionRecord from beginRequest {}", beginRequest);
+
         ConnectionRecord connectionRecord = toModel(beginRequest);
         connectionRecord.setUniversity(university);
         connectionRecord.setStudent(student);

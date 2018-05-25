@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
-import nl.quintor.studybits.indy.wrapper.dto.ClaimOffer;
-import nl.quintor.studybits.indy.wrapper.dto.ClaimRequest;
+import nl.quintor.studybits.indy.wrapper.dto.CredentialOffer;
+import nl.quintor.studybits.indy.wrapper.dto.CredentialRequest;
 import nl.quintor.studybits.university.dto.AuthCryptableResult;
 import nl.quintor.studybits.university.dto.Claim;
 import nl.quintor.studybits.university.entities.AuthEncryptedMessage;
@@ -68,7 +68,7 @@ public abstract class ClaimProvider<T extends Claim> {
         }
         String universityName = claimRecord.getUser().getUniversity().getName();
         Claim claim = getClaimForClaimRecord(claimRecord);
-        AuthCryptableResult<ClaimOffer> result = universityService
+        AuthCryptableResult<CredentialOffer> result = universityService
                 .createClaimOffer(universityName, claimRecord.getUser(), claim.getSchemaDefinition());
         claimRecord.setClaimOfferMessage(result.getAuthEncryptedMessage());
         claimRecordRepository.saveAndFlush(claimRecord);
@@ -88,12 +88,12 @@ public abstract class ClaimProvider<T extends Claim> {
     public AuthcryptedMessage getClaim(Long userId, Long claimRecordId, AuthcryptedMessage authcryptedMessage) {
         ClaimRecord claimRecord = getClaimRecord(userId, claimRecordId);
         String universityName = claimRecord.getUser().getUniversity().getName();
-        ClaimRequest claimRequest = universityService.authDecrypt(universityName, authcryptedMessage, ClaimRequest.class);
+        CredentialRequest claimRequest = universityService.authDecrypt(universityName, authcryptedMessage, CredentialRequest.class);
         if (claimRecord.getClaimMessage() != null) {
             return toDto(claimRecord.getClaimMessage());
         }
         T claim = getClaimForClaimRecord(claimRecord);
-        AuthCryptableResult<nl.quintor.studybits.indy.wrapper.dto.Claim> result = universityService
+        AuthCryptableResult<nl.quintor.studybits.indy.wrapper.dto.CredentialWithRequest> result = universityService
                 .createClaim(universityName, claimRequest, claim);
         claimRecord.setClaimOfferMessage(result.getAuthEncryptedMessage());
         claimRecordRepository.saveAndFlush(claimRecord);

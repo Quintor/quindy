@@ -74,7 +74,7 @@ public class Issuer extends TrustAnchor {
 
 
     public CompletableFuture<CredentialOffer> createCredentialOffer(String id, String targetDid) throws JsonProcessingException, IndyException {
-        log.debug("{}: Creating credential offer with schema id {}", id);
+        log.debug("{}: Creating credential offer with credentialdef id {}", id);
         return Anoncreds.issuerCreateCredentialOffer(wallet.getWallet(), id)
                 .thenCombine(getPairwiseByTheirDid(targetDid),
                         wrapBiFunctionException((credentialOfferJson, pairwiseResult) -> {

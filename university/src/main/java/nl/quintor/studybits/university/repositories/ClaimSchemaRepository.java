@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ClaimSchemaRepository extends JpaRepository<ClaimSchema, Long> {
+public interface ClaimSchemaRepository extends JpaRepository<ClaimSchema, String> {
     Optional<ClaimSchema> findByUniversityNameIgnoreCaseAndSchemaNameAndSchemaVersion(String universityName, String schemaName, String schemaVersion);
 
     Optional<ClaimSchema> findByUniversityIdAndSchemaNameAndSchemaVersion(Long universityId, String schemaName, String schemaVersion);

@@ -4,12 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.Prover;
-import nl.quintor.studybits.indy.wrapper.dto.AuthCryptable;
-import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
-import nl.quintor.studybits.indy.wrapper.dto.Claim;
-import nl.quintor.studybits.indy.wrapper.dto.ClaimOffer;
+import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.student.entities.*;
+import nl.quintor.studybits.student.entities.SchemaKey;
 import nl.quintor.studybits.student.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.student.models.ClaimOfferModel;
 import nl.quintor.studybits.student.models.StudentClaimInfoModel;
@@ -57,10 +55,10 @@ public class ClaimService {
                     .forEach((StudentClaimInfoModel claimInfo) -> {
                         try {
                             ClaimOfferModel claimOffer = getClaimOfferForClaimInfo(claimInfo, prover);
-                            Claim claim = getClaimFromUniversity(claimOffer, prover);
+                            CredentialWithRequest claim = getClaimFromUniversity(claimOffer, prover);
 
-                            prover.storeClaim(claim);
-                            saveClaimIfNew(claim, student, claimInfo);
+                            prover.storeCredential(claim);
+                            saveClaimIfNew(claim.getCredential(), student, claimInfo);
                         } catch (Exception e) {
                             log.error(e.getMessage());
                         }
@@ -69,9 +67,8 @@ public class ClaimService {
     }
 
     private boolean isNewClaimInfo(StudentClaimInfoModel claimInfoModel) {
-        boolean exists = claimRepository.existsBySchemaKeyNameAndSchemaKeyVersionAndLabel(
-                claimInfoModel.getName(),
-                claimInfoModel.getVersion(),
+        boolean exists = claimRepository.existsBySchemaIdAndLabel(
+                claimInfoModel.getSchemaId(),
                 claimInfoModel.getLabel());
         return !exists;
     }
@@ -113,14 +110,12 @@ public class ClaimService {
      * Saves a Claim to the database, if the claim does not yet exist in the database.
      * The hash of the claim values is used to determine whether a claim is stored yet.
      */
-    private void saveClaimIfNew(Claim claim, Student student, StudentClaimInfoModel claimInfo) {
+    private void saveClaimIfNew(Credential claim, Student student, StudentClaimInfoModel claimInfo) {
         ClaimEntity claimEntity = mapper.map(claim, ClaimEntity.class);
-        SchemaKey schemaKey = schemaKeyService.getOrCreate(claimEntity.getSchemaKey());
         claimEntity.setStudent(student);
         claimEntity.setLabel(claimInfo.getLabel());
-        claimEntity.setSchemaKey(schemaKey);
 
-        if(!claimRepository.existsBySchemaKeyNameAndSchemaKeyVersionAndLabel(schemaKey.getName(), schemaKey.getVersion(), claimEntity.getLabel()))
+        if(!claimRepository.existsBySchemaIdAndLabel(claimEntity.getSchemaId(), claimEntity.getLabel()))
             claimRepository.save(claimEntity);
     }
 
@@ -150,12 +145,12 @@ public class ClaimService {
         authEncryptedMessageModel.getLinks().forEach(claimOfferModel::add);
 
         AuthcryptedMessage authcryptedMessage = mapper.map(authEncryptedMessageModel, AuthcryptedMessage.class);
-        ClaimOffer claimOffer = decryptAuthcryptedMessage(authcryptedMessage, prover, ClaimOffer.class).get();
+        CredentialOffer claimOffer = decryptAuthcryptedMessage(authcryptedMessage, prover, CredentialOffer.class).get();
         claimOfferModel.setClaimOffer(claimOffer);
         return claimOfferModel;
     }
 
-    private Claim getClaimFromUniversity(ClaimOfferModel claimOfferModel, Prover prover) throws Exception {
+    private CredentialWithRequest getClaimFromUniversity(ClaimOfferModel claimOfferModel, Prover prover) throws Exception {
         AuthEncryptedMessageModel encryptedClaimRequest = getEncryptedClaimRequestForClaimOffer(claimOfferModel.getClaimOffer(), prover);
 
         log.debug("Retrieving ClaimModel from UniversityModel with claimOffer {} ", claimOfferModel);
@@ -163,12 +158,12 @@ public class ClaimService {
                 .getHref(), encryptedClaimRequest, AuthEncryptedMessageModel.class);
 
         AuthcryptedMessage authcryptedMessage = mapper.map(response, AuthcryptedMessage.class);
-        return decryptAuthcryptedMessage(authcryptedMessage, prover, Claim.class).get();
+        return decryptAuthcryptedMessage(authcryptedMessage, prover, CredentialWithRequest.class).get();
     }
 
-    private AuthEncryptedMessageModel getEncryptedClaimRequestForClaimOffer(ClaimOffer claimOffer, Prover prover) throws Exception {
+    private AuthEncryptedMessageModel getEncryptedClaimRequestForClaimOffer(CredentialOffer claimOffer, Prover prover) throws Exception {
         log.debug("Creating ClaimRequest with claimOffer {}", claimOffer);
-        return prover.storeClaimOfferAndCreateClaimRequest(claimOffer)
+        return prover.createCredentialRequest(claimOffer)
                 .thenCompose(
                         AsyncUtil.wrapException(claimRequest -> {
                             log.debug("AuthEncrypting ClaimRequest {} with Prover.", claimRequest);
@@ -203,7 +198,7 @@ public class ClaimService {
         return schemaKeys
                 .stream()
                 .flatMap(schemaKey -> claimRepository
-                        .findAllBySchemaKey(schemaKey)
+                        .findAllBySchemaId(schemaKey.getSchemaId())
                         .stream()
                         .filter(claimEntity -> claimEntity.getStudent().equals(student))
                 ).collect(Collectors.toList());

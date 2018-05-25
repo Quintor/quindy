@@ -15,8 +15,7 @@ import javax.persistence.*;
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"name", "version", "did"}))
 public class SchemaKey {
     @Id
-    @GeneratedValue
-    private Long id;
+    private String schemaId;
 
     @Column(nullable = false)
     private String name;

@@ -66,11 +66,11 @@ public class UniversityService {
     @Transactional
     public UniversityIssuer getUniversityIssuer(String universityName) {
         University university = getUniversity(universityName);
-        List<SchemaKey> definedSchemaKeys = university
+        List<String> definedSchemaKeys = university
                 .getClaimSchemas()
                 .stream()
-                .filter(ClaimSchema::getClaimDefined)
-                .map(ServiceUtils::convertToSchemaKey)
+                .filter(schema -> schema.getCredentialDefId() != null)
+                .map(ClaimSchema::getCredentialDefId)
                 .collect(Collectors.toList());
         Issuer issuer = getIssuer(university.getName());
         return new UniversityIssuer(universityName, issuer.getIssuerDid(), definedSchemaKeys);
@@ -78,18 +78,20 @@ public class UniversityService {
 
     @SneakyThrows
     @Transactional
-    public SchemaKey defineSchema(String universityName, SchemaDefinition schemaDefinition) {
+    public String defineSchema(String universityName, SchemaDefinition schemaDefinition) {
         Issuer issuer = getIssuer(universityName);
-        SchemaKey schemaKey = issuer.createAndSendSchema(schemaDefinition).get();
-        addSchema(universityName, schemaKey);
-        return schemaKey;
+        String schemaId = issuer.createAndSendSchema(schemaDefinition.getName(), schemaDefinition.getVersion(), schemaDefinition.getAttrNames().toArray(new String[]{})).get();
+        addSchema(universityName, schemaId);
+        return schemaId;
     }
 
     @SneakyThrows
     @Transactional
-    public void addSchema(String universityName, SchemaKey schemaKey) {
+    public void addSchema(String universityName, String schemaId) {
         University university = getUniversity(universityName);
-        ClaimSchema claimSchema = new ClaimSchema(university, schemaKey.getName(), schemaKey.getVersion(), schemaKey.getDid());
+        Issuer issuer = getIssuer(universityName);
+        Schema walletClaimSchema = issuer.getSchema(issuer.getIssuerDid(), schemaId).get();
+        ClaimSchema claimSchema = new ClaimSchema(schemaId, university, walletClaimSchema.getName(), walletClaimSchema.getVersion(), issuer.getIssuerDid());
         university.getClaimSchemas().add(claimSchema);
         universityRepository.save(university);
     }
@@ -98,11 +100,11 @@ public class UniversityService {
     @Transactional
     public void defineClaim(String universityName, SchemaDefinition schemaDefinition) {
         ClaimSchema claimSchema = getClaimSchema(universityName, schemaDefinition);
-        Validate.isTrue(!claimSchema.getClaimDefined(), "Claim already defined.");
-        SchemaKey schemaKey = ServiceUtils.convertToSchemaKey(claimSchema);
+        Validate.isTrue(claimSchema.getCredentialDefId() == null, "Claim already defined.");
+
         Issuer issuer = getIssuer(universityName);
-        issuer.defineClaim(schemaKey).get();
-        claimSchema.setClaimDefined(true);
+        String credentialDefId = issuer.defineCredential(claimSchema.getSchemaId()).get();
+        claimSchema.setCredentialDefId(credentialDefId);
         claimSchemaRepository.save(claimSchema);
     }
 
@@ -129,24 +131,24 @@ public class UniversityService {
 
 
     @SneakyThrows
-    public AuthCryptableResult<ClaimOffer> createClaimOffer(String universityName, User user, SchemaDefinition schemaDefinition) {
+    public AuthCryptableResult<CredentialOffer> createClaimOffer(String universityName, User user, SchemaDefinition schemaDefinition) {
         IndyConnection indyConnection = Objects.requireNonNull(user.getConnection(), "User onboarding incomplete!");
         Issuer issuer = getIssuer(universityName);
         ClaimSchema claimSchema = getClaimSchema(universityName, schemaDefinition);
-        SchemaKey schemaKey = ServiceUtils.convertToSchemaKey(claimSchema);
-        log.info("Creating claim offer with schemaKey: {}, and did: {}", schemaKey, indyConnection.getDid());
-        ClaimOffer claimOffer = issuer.createClaimOffer(schemaKey, indyConnection.getDid()).get();
+
+        log.info("Creating claim offer with credDefId: {}, and did: {}", claimSchema.getCredentialDefId(), indyConnection.getDid());
+        CredentialOffer claimOffer = issuer.createCredentialOffer(claimSchema.getCredentialDefId(), indyConnection.getDid()).get();
         AuthcryptedMessage authcryptedMessage = issuer.authEncrypt(claimOffer).get();
         return new AuthCryptableResult<>(claimOffer, authcryptedMessage);
     }
 
     @SneakyThrows
-    public <T extends Claim> AuthCryptableResult<nl.quintor.studybits.indy.wrapper.dto.Claim> createClaim(
+    public <T extends Claim> AuthCryptableResult<nl.quintor.studybits.indy.wrapper.dto.CredentialWithRequest> createClaim(
             String universityName,
-            ClaimRequest claimRequest,
+            CredentialRequest claimRequest,
             T claim) {
         Issuer issuer = getIssuer(universityName);
-        nl.quintor.studybits.indy.wrapper.dto.Claim indyClaim = issuer.createClaim(claimRequest, claim.toMap()).get();
+        nl.quintor.studybits.indy.wrapper.dto.CredentialWithRequest indyClaim = issuer.createCredential(claimRequest, claim.toMap()).get();
         AuthcryptedMessage authcryptedMessage = issuer.authEncrypt(indyClaim).get();
         return new AuthCryptableResult<>(indyClaim, authcryptedMessage);
     }
@@ -154,8 +156,8 @@ public class UniversityService {
     @Transactional
     public void addClaimIssuerForSchema(String universityName, ClaimIssuerSchema claimIssuerSchema) {
         log.debug("University '{}': Adding claim issuer schema information: {}", universityName, claimIssuerSchema);
-        SchemaKey schemaKey = claimIssuerSchema.getSchemaKey();
-        ClaimSchema claimSchema = getClaimSchema(universityName, schemaKey.getName(), schemaKey.getVersion());
+        String schemaId = claimIssuerSchema.getSchemaId();
+        ClaimSchema claimSchema = getClaimSchema(schemaId);
         ClaimIssuer claimIssuer = claimIssuerRepository
                 .findByDid(claimIssuerSchema.getClaimIssuerDid())
                 .orElseGet(() -> new ClaimIssuer(claimIssuerSchema.getClaimIssuerName(), claimIssuerSchema.getClaimIssuerDid()));
@@ -203,21 +205,27 @@ public class UniversityService {
                 .orElseThrow(() -> new IllegalArgumentException("Schema key not found."));
     }
 
+    private ClaimSchema getClaimSchema(String schemaId) {
+        return claimSchemaRepository.findById(schemaId)
+                .orElseThrow(() -> new IllegalArgumentException("Schema key not found."));
+    }
+
     public List<SchemaDefinition> getSchemaDefinitions(String universityName) {
         Issuer issuer = getIssuer(universityName);
         return getUniversityIssuer(universityName)
-                .getDefinedSchemaKeys()
+                .getDefinedSchemaIds()
                 .stream()
-                .map(schemaKey -> getSchemaDefinitionFromSchemaKey(issuer, schemaKey))
+                .map(schemaKey -> getSchemaDefinitionFromSchemaId(issuer, schemaKey))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
-    private SchemaDefinition getSchemaDefinitionFromSchemaKey(Issuer issuer, SchemaKey schemaKey) {
+    public static SchemaDefinition getSchemaDefinitionFromSchemaId(Issuer issuer, String schemaId) {
         try {
-            return issuer.getSchema(schemaKey.getDid(), schemaKey).get().getData();
+            Schema schema = issuer.getSchema(issuer.getIssuerDid(), schemaId).get();
+            return new SchemaDefinition(schema.getName(), schema.getVersion(), schema.getAttrNames());
         } catch (Exception e) {
-            log.error("{}, Could not get SchemaDefinition for SchemaKey {}", e, schemaKey);
+            log.error("{}, Could not get SchemaDefinition for SchemaKey {}", e, schemaId);
             return null;
         }
     }

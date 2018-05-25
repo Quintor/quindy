@@ -16,8 +16,8 @@
             <b>issuingUniversityName</b>
         </field>
         <field type="one-way">
-            <a>schemaKey.name</a>
-            <b>schemaKeyName</b>
+            <a>schemaId</a>
+            <b>schemaId</b>
         </field>
     </mapping>
 </mappings>

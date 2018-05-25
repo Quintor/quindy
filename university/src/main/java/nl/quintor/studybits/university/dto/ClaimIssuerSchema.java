@@ -14,5 +14,5 @@ public class ClaimIssuerSchema {
 
     private String claimIssuerDid;
 
-    private SchemaKey schemaKey;
+    private String schemaId;
 }

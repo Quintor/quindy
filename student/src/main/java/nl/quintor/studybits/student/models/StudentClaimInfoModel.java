@@ -12,7 +12,6 @@ import org.springframework.hateoas.ResourceSupport;
 @EqualsAndHashCode(callSuper = true)
 public class StudentClaimInfoModel extends ResourceSupport {
     private Long claimId;
-    private String name;
-    private String version;
+    private String schemaId;
     private String label;
 }

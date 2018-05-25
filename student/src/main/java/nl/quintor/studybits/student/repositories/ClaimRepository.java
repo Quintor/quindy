@@ -10,6 +10,6 @@ import java.util.List;
 @Repository
 public interface ClaimRepository extends JpaRepository<ClaimEntity, Long> {
     List<ClaimEntity> findAllByStudentId(Long studentId);
-    List<ClaimEntity> findAllBySchemaKey(SchemaKey schemaKey);
-    boolean existsBySchemaKeyNameAndSchemaKeyVersionAndLabel(String schemaKeyName, String schemaKeyVersion, String label);
+    List<ClaimEntity> findAllBySchemaId(String schemaId);
+    boolean existsBySchemaIdAndLabel(String schemaId, String label);
 }

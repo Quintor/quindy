@@ -6,10 +6,10 @@ RUN apt-get update \
                 openjdk-8-jre \
                 apt-transport-https curl \
     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
-    && add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master"
+    && add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial stable"
 
 # Set the default Libindy version. Will be overwritten when argument is supplied from console
-ARG LIBINDY_VERSION=1.3.1~406
+ARG LIBINDY_VERSION=1.4.0
 
 # Split off libindy command for fast builds on version bump
 RUN apt-get update && apt-get install -y libindy=$LIBINDY_VERSION
