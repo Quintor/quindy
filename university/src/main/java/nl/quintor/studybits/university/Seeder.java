@@ -92,11 +92,8 @@ public class Seeder {
         enrolmentService.addEnrolment(rugStudent3.getId(), "2017/18");
         transcriptService.addTranscript(rugStudent3.getId(), new TranscriptModel("Bachelor of Science, Computer Science", "graduated", "1980", "10"));
 
-        userService.createStudent("gent", "admin2-gent", "Pim", "Otte", "222-22-0002", true);
-        userService.createStudent("gent", "student1-gent", "Axelle", "Wanders", "1111-22-0001", true);
-        userService.createStudent("gent", "student2-gent", "Laure", "de Vadder", "1111-22-0002", true);
-        userService.createStudent("gent", "student3-gent", "Senne", "de Waal", "1111-22-0003", true);
-        userService.createStudent("gent", "student4-gent", "Jan", "Jansen", "7777-88-0001", false);
+        userService.createStudent("gent", "pim", "Pim", "Otte", "222-22-0002", true);
+        userService.createStudent("gent", "axelle", "Axelle", "Wanders", "1111-22-0001", true);
 
         universityService.getSchemaDefinitions("rug");
     }

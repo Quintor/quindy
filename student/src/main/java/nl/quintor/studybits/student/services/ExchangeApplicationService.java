@@ -2,12 +2,10 @@ package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nl.quintor.studybits.student.entities.ExchangeApplicationRecord;
-import nl.quintor.studybits.student.entities.ExchangePositionRecord;
-import nl.quintor.studybits.student.entities.Student;
-import nl.quintor.studybits.student.entities.University;
+import nl.quintor.studybits.student.entities.*;
 import nl.quintor.studybits.student.models.ExchangeApplicationModel;
 import nl.quintor.studybits.student.repositories.ExchangeApplicationRepository;
+import nl.quintor.studybits.student.repositories.TranscriptProofRepository;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -29,6 +27,7 @@ public class ExchangeApplicationService {
     private final StudentService studentService;
     private final UniversityService universityService;
     private final ExchangePositionService exchangePositionService;
+    private final TranscriptProofRepository transcriptProofRepository;
     private final Mapper mapper;
 
     @Transactional
@@ -56,14 +55,22 @@ public class ExchangeApplicationService {
             applicationRepository.save(record);
     }
 
-    private void updateRecord(ExchangeApplicationRecord record) {
-        Long id = applicationRepository
-                .findByUniversityAndStudentAndExchangePositionRecord(record.getUniversity(), record.getStudent(), record.getExchangePositionRecord())
-                .orElseThrow(() -> new IllegalArgumentException("Could not find ExchangeApplication in database."))
-                .getId();
+    private void updateRecord(ExchangeApplicationRecord recordNew) {
+        ExchangeApplicationRecord recordOld = applicationRepository
+                .findByUniversityAndStudentAndExchangePositionRecord(recordNew.getUniversity(), recordNew.getStudent(), recordNew.getExchangePositionRecord())
+                .orElseThrow(() -> new IllegalArgumentException("Could not find ExchangeApplication in database."));
 
-        record.setId(id);
-        applicationRepository.save(record);
+        TranscriptProofRecord proofRecordOld = transcriptProofRepository
+                .findByExchangeApplicationRecord(recordOld)
+                .orElseThrow(() -> new IllegalArgumentException("Could not find TranscriptProof for ExchangeApplication"));
+
+        TranscriptProofRecord proofRecordNew = recordNew.getProof();
+        proofRecordNew.setId(proofRecordOld.getId());
+
+        recordNew.setProof(proofRecordNew);
+        recordNew.setId(recordOld.getId());
+
+        applicationRepository.save(recordNew);
     }
 
     @Transactional
