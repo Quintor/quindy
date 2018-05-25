@@ -73,10 +73,13 @@ public class ExchangeIT extends BaseIT {
 
     private void acceptExchangeApplication() {
         List<ExchangeApplicationModel> applications = getAllExchangeApplicationModels();
+        ExchangeApplicationModel application = applications.get(0);
+        application.setState(ExchangeApplicationState.ACCEPTED);
+
         givenCorrectHeaders(UNIVERSITY_URL)
                 .pathParam("universityName", EXCHANGE_UNIVERSITY_NAME)
                 .pathParam("userName", ADMIN_NAME)
-                .body(applications.get(0))
+                .body(application)
                 .post("/{universityName}/admin/{userName}/applications")
                 .then()
                 .assertThat().statusCode(200);
