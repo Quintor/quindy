@@ -7,6 +7,7 @@ import nl.quintor.studybits.enums.ExchangePositionState;
 import nl.quintor.studybits.models.ExchangeApplicationModel;
 import nl.quintor.studybits.models.ExchangePositionModel;
 import nl.quintor.studybits.models.SchemaDefinitionModel;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,14 +31,14 @@ public class ExchangeIT extends BaseIT {
     @Test
     public void testCreateExchangePosition() {
         createExchangePosition();
-        assert getAllExchangePositionModels().size() > 0;
+        Assert.assertEquals(1, getAllExchangePositionModels().size());
     }
 
     @Test
     public void testApplyForExchangePosition() {
         createExchangePosition();
         applyForExchangePosition();
-        assert getAllExchangeApplicationModels().size() > 0;
+        Assert.assertEquals(1, getAllExchangeApplicationModels().size());
     }
 
     @Test
@@ -47,7 +48,7 @@ public class ExchangeIT extends BaseIT {
         acceptExchangeApplication();
 
         ExchangeApplicationState newState = getAllExchangeApplicationModels().get(0).getState();
-        assert newState.equals(ExchangeApplicationState.ACCEPTED);
+        Assert.assertEquals(ExchangeApplicationState.ACCEPTED, newState);
     }
 
     private void createExchangePosition() {
