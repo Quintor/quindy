@@ -3,6 +3,8 @@ package nl.quintor.studybits.student.services;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import nl.quintor.studybits.indy.wrapper.IndyPool;
+import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
@@ -34,6 +36,8 @@ public class ClaimService {
 
     private ClaimRepository claimRepository;
     private ConnectionRecordService connectionRecordService;
+    private IndyPool indyPool;
+    private MetaWalletService metaWalletService;
     private SchemaKeyService schemaKeyService;
     private StudentService studentService;
     private StudentProverService studentProverService;
@@ -197,7 +201,13 @@ public class ClaimService {
     public List<ClaimEntity> findByOwnerUserNameAndSchemaKeyName(String studentUserName, String schemaName) {
         Student student = studentService.getByUserName(studentUserName);
         List<SchemaKey> schemaKeys = schemaKeyService.getAllByName(schemaName);
-
+        return claimRepository.findAllByStudentId(student.getId())
+                .stream()
+                .filter(claimEntity -> {
+                    try (IndyWallet wallet = metaWalletService.openIndyWalletFromMetaWallet(student.getMetaWallet())) {
+                        try (Prover prover = new Prover(student.getUserName(), indyPool, wallet, student.getUserName())) {
+                        }
+                    }
         return schemaKeys
                 .stream()
                 .flatMap(schemaKey -> claimRepository
