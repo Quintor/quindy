@@ -30,20 +30,20 @@ public class ExchangeIT extends BaseIT {
 
     @Test
     public void testCreateExchangePosition() {
-        createExchangePosition();
+        createExchangePosition(false);
         Assert.assertEquals(1, getAllExchangePositionModels().size());
     }
 
     @Test
     public void testApplyForExchangePosition() {
-        createExchangePosition();
+        createExchangePosition(false);
         applyForExchangePosition();
         Assert.assertEquals(1, getAllExchangeApplicationModels().size());
     }
 
     @Test
-    public void testAcceptNewExchangeApplication() {
-        createExchangePosition();
+    public void testAcceptNewExchangeApplicationWithMinimalRequirements() {
+        createExchangePosition(false);
         applyForExchangePosition();
         acceptExchangeApplication();
 
@@ -51,8 +51,18 @@ public class ExchangeIT extends BaseIT {
         Assert.assertEquals(ExchangeApplicationState.ACCEPTED, newState);
     }
 
-    private void createExchangePosition() {
-        ExchangePositionModel model = getTranscriptPositionModel(EXCHANGE_UNIVERSITY_NAME);
+    @Test
+    public void testAcceptNewExchangeApplicationWithFullRequirements() {
+        createExchangePosition(true);
+        applyForExchangePosition();
+        acceptExchangeApplication();
+
+        ExchangeApplicationState newState = getAllExchangeApplicationModels().get(0).getState();
+        Assert.assertEquals(ExchangeApplicationState.ACCEPTED, newState);
+    }
+
+    private void createExchangePosition(Boolean withFullRequirements) {
+        ExchangePositionModel model = getTranscriptPositionModel(EXCHANGE_UNIVERSITY_NAME, withFullRequirements);
         givenCorrectHeaders(UNIVERSITY_URL)
                 .pathParam("universityName", EXCHANGE_UNIVERSITY_NAME)
                 .pathParam("userName", ADMIN_NAME)
@@ -114,10 +124,13 @@ public class ExchangeIT extends BaseIT {
         return Arrays.asList(body.as(ExchangePositionModel[].class));
     }
 
-    private ExchangePositionModel getTranscriptPositionModel(String exchangeUniversityName) {
+    private ExchangePositionModel getTranscriptPositionModel(String exchangeUniversityName, Boolean withFullRequirements) {
         HashMap<String, String> attributes = new HashMap<>();
         attributes.put("degree", "Bachelor of Science, Marketing");
         attributes.put("status", "graduated");
+
+        if (withFullRequirements)
+            attributes.put("average", "7");
 
         return new ExchangePositionModel(
                 exchangeUniversityName,

@@ -38,9 +38,14 @@ public class TranscriptProofService extends ProofHandler<TranscriptProof> {
         Validate.isTrue(attributes.get("degree").equalsIgnoreCase(proof.getDegree()), "Degree mismatch.");
         Validate.isTrue(attributes.get("status").equalsIgnoreCase(proof.getStatus()), "Status mismatch.");
 
-        if (proofRecord.getExchangePositionRecord() != null) {
-            exchangeApplicationService.create(prover, proofRecord, proof);
+        if (attributes.containsKey("average")) {
+            Float expectedAverage = Float.parseFloat(attributes.get("average"));
+            Float receivedAverage = Float.parseFloat(proof.getAverage());
+            Validate.isTrue(receivedAverage >= expectedAverage, "Average mismatch");
         }
+
+        if (proofRecord.getExchangePositionRecord() != null)
+            exchangeApplicationService.create(prover, proofRecord, proof);
 
         return true;
     }
