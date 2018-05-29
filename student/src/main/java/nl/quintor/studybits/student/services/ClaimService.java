@@ -38,7 +38,6 @@ public class ClaimService {
     private ConnectionRecordService connectionRecordService;
     private IndyPool indyPool;
     private MetaWalletService metaWalletService;
-    private SchemaKeyService schemaKeyService;
     private StudentService studentService;
     private StudentProverService studentProverService;
     private Mapper mapper;
@@ -200,20 +199,16 @@ public class ClaimService {
 
     public List<ClaimEntity> findByOwnerUserNameAndSchemaKeyName(String studentUserName, String schemaName) {
         Student student = studentService.getByUserName(studentUserName);
-        List<SchemaKey> schemaKeys = schemaKeyService.getAllByName(schemaName);
         return claimRepository.findAllByStudentId(student.getId())
                 .stream()
-                .filter(claimEntity -> {
+                .filter(AsyncUtil.wrapPredicateException(claimEntity -> {
                     try (IndyWallet wallet = metaWalletService.openIndyWalletFromMetaWallet(student.getMetaWallet())) {
                         try (Prover prover = new Prover(student.getUserName(), indyPool, wallet, student.getUserName())) {
+                            Schema schema = prover.getSchema(prover.getWallet().getMainDid(), claimEntity.getSchemaId()).get();
+                            return schema.getName().equals(schemaName);
                         }
                     }
-        return schemaKeys
-                .stream()
-                .flatMap(schemaKey -> claimRepository
-                        .findAllBySchemaId(schemaKey.getSchemaId())
-                        .stream()
-                        .filter(claimEntity -> claimEntity.getStudent().equals(student))
-                ).collect(Collectors.toList());
+                }))
+                .collect(Collectors.toList());
     }
 }

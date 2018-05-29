@@ -19,7 +19,6 @@ public class TestController {
     private final MetaWalletService metaWalletService;
     private final MetaWalletRepository metaWalletRepository;
     private final ProofRequestRecordRepository proofRequestRecordRepository;
-    private final SchemaKeyRepository schemaKeyRepository;
     private final StudentRepository studentRepository;
     private final UniversityRepository universityRepository;
 
@@ -31,8 +30,6 @@ public class TestController {
         connectionRecordRepository.deleteAll();
         log.info("Deleting proof request records");
         proofRequestRecordRepository.deleteAll();
-        log.info("Deleting Schema Keys");
-        schemaKeyRepository.deleteAll();
         log.info("Deleting meta wallets");
         metaWalletService.deleteAll();
         log.info("Deleting students");
