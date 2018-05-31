@@ -36,8 +36,9 @@ public class ExchangePositionController {
     }
 
     @PostMapping
-    void acceptExchangePosition(@PathVariable String studentUserName, @RequestBody ExchangePositionModel exchangePositionModel) throws Exception {
-        exchangePositionService.acceptExchangePosition(studentUserName, exchangePositionModel);
+    void applyForExchangePosition(@PathVariable String studentUserName, @RequestBody ExchangePositionModel exchangePositionModel) throws Exception {
+        // TODO: This needs to return a boolean from applyForExchangePosition
+        exchangePositionService.applyForExchangePosition(studentUserName, exchangePositionModel);
     }
 }
 

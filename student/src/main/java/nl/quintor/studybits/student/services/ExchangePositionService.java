@@ -75,7 +75,7 @@ public class ExchangePositionService {
         }
     }
 
-    public void acceptExchangePosition(String studentUserName, ExchangePositionModel positionModel) throws Exception {
+    public void applyForExchangePosition(String studentUserName, ExchangePositionModel positionModel) throws Exception {
         log.info("Student {} - Accepting ExchangePositionModel: {}", studentUserName, positionModel);
         Student student = studentService.getByUserName(studentUserName);
         ExchangePositionRecord record = fromModel(positionModel);
@@ -88,6 +88,8 @@ public class ExchangePositionService {
                 if (!result) {
                     log.error("Could not accept ExchangePosition. Fail upon sending to University.");
                 }
+                // TODO: Here, we have to return the result and show an error message to the user if the proof fails.
+                // However, I have no clue how to change the withProverForStudent function so that it returns a value.
             } catch (Exception e) {
                 e.printStackTrace();
             }

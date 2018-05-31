@@ -75,7 +75,7 @@ public class UniversityService {
         List<SchemaKey> definedSchemaKeys = university
                 .getClaimSchemas()
                 .stream()
-//                .filter(ClaimSchema::getClaimDefined)
+                .filter(ClaimSchema::getClaimDefined)
                 .map(ServiceUtils::convertToSchemaKey)
                 .collect(Collectors.toList());
         Issuer issuer = getIssuer(university.getName());
