@@ -11,6 +11,6 @@ import java.util.Optional;
 
 @Repository
 public interface ConnectionRecordRepository extends JpaRepository<ConnectionRecord, Long> {
-    List<ConnectionRecord> findAllByStudentUserName(String userName);
+    List<ConnectionRecord> findAllByStudentUserNameIgnoreCase(String userName);
     Optional<ConnectionRecord> findByStudentAndUniversity(Student student, University university);
 }

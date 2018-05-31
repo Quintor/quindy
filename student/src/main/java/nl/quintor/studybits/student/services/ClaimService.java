@@ -9,7 +9,6 @@ import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.student.entities.*;
-import nl.quintor.studybits.student.entities.SchemaKey;
 import nl.quintor.studybits.student.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.student.models.ClaimOfferModel;
 import nl.quintor.studybits.student.models.StudentClaimInfoModel;
@@ -20,7 +19,6 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.transaction.Transactional;
 import java.net.URI;
@@ -35,10 +33,11 @@ import java.util.stream.Stream;
 public class ClaimService {
 
     private ClaimRepository claimRepository;
-    private ConnectionRecordService connectionRecordService;
+    private ConnectionService connectionService;
     private IndyPool indyPool;
     private MetaWalletService metaWalletService;
     private StudentService studentService;
+    private UniversityService universityService;
     private StudentProverService studentProverService;
     private Mapper mapper;
 
@@ -84,7 +83,7 @@ public class ClaimService {
      * @return All StudentClaimInfoModels as a stream.
      */
     private Stream<StudentClaimInfoModel> getAllStudentClaimInfo(Student student) {
-        return connectionRecordService.findAllByStudentUserName(student.getUserName())
+        return connectionService.findAllByStudentUserName(student.getUserName())
                 .stream()
                 .map(ConnectionRecord::getUniversity)
                 .flatMap(university -> getAllStudentClaimInfoFromUniversity(university, student));
@@ -133,13 +132,7 @@ public class ClaimService {
      * @return All claimInfo as a stream.
      */
     private Stream<StudentClaimInfoModel> getAllStudentClaimInfoFromUniversity(University university, Student student) {
-        URI path = UriComponentsBuilder
-                .fromHttpUrl(university.getEndpoint())
-                .path(university.getName())
-                .path("/student/")
-                .path(student.getUserName())
-                .path("/claims")
-                .build().toUri();
+        URI path = universityService.buildStudentClaimUri(university, student);
 
         return new RestTemplate().exchange(path, HttpMethod.GET, null, new ParameterizedTypeReference<List<StudentClaimInfoModel>>() {})
                 .getBody()

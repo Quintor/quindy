@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
-public class ConnectionRecordService {
+public class ConnectionService {
     private ConnectionRecordRepository connectionRecordRepository;
     private Mapper mapper;
 
@@ -52,7 +52,7 @@ public class ConnectionRecordService {
 
     public List<ConnectionRecord> findAllByStudentUserName(String studentUserName) {
         return connectionRecordRepository
-                .findAllByStudentUserName(studentUserName)
+                .findAllByStudentUserNameIgnoreCase(studentUserName)
                 .stream()
                 .map(this::toModel)
                 .collect(Collectors.toList());

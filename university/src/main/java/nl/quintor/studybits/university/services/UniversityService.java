@@ -12,9 +12,7 @@ import nl.quintor.studybits.university.dto.Claim;
 import nl.quintor.studybits.university.dto.ClaimIssuerSchema;
 import nl.quintor.studybits.university.dto.UniversityIssuer;
 import nl.quintor.studybits.university.entities.*;
-import nl.quintor.studybits.university.repositories.ClaimIssuerRepository;
-import nl.quintor.studybits.university.repositories.ClaimSchemaRepository;
-import nl.quintor.studybits.university.repositories.UniversityRepository;
+import nl.quintor.studybits.university.repositories.*;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,11 +31,12 @@ import java.util.stream.Collectors;
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class UniversityService {
 
-    private static final boolean LAZY_ISSUER_CREATION = true;
+    private static final boolean LAZY_ISSUER_CREATION = false;
 
     private final UniversityRepository universityRepository;
     private final ClaimSchemaRepository claimSchemaRepository;
     private final IssuerService issuerService;
+    private final UserRepository userRepository;
     private final ClaimIssuerRepository claimIssuerRepository;
     private final Mapper mapper;
 
@@ -47,7 +46,13 @@ public class UniversityService {
     }
 
     public University create(String universityName) {
-        University university = universityRepository.save(new University(null, universityName, new ArrayList<>()));
+        University university = universityRepository.save(new University(null, null, universityName, new ArrayList<>(), new ArrayList<>()));
+        User user = new User(university);
+        userRepository.saveAndFlush(user);
+
+        university.setUser(user);
+        universityRepository.save(university);
+
         if (!LAZY_ISSUER_CREATION) {
             issuerService.ensureIssuer(universityName);
         }
@@ -158,14 +163,22 @@ public class UniversityService {
     @Transactional
     public void addClaimIssuerForSchema(String universityName, ClaimIssuerSchema claimIssuerSchema) {
         log.debug("University '{}': Adding claim issuer schema information: {}", universityName, claimIssuerSchema);
+
         String schemaId = claimIssuerSchema.getSchemaId();
         University university = getUniversity(universityName);
         ClaimSchema claimSchema = getClaimSchema(university.getId(), schemaId);
         ClaimIssuer claimIssuer = claimIssuerRepository
                 .findByDid(claimIssuerSchema.getClaimIssuerDid())
                 .orElseGet(() -> new ClaimIssuer(claimIssuerSchema.getClaimIssuerName(), claimIssuerSchema.getClaimIssuerDid()));
+
         claimSchema.getClaimIssuers().add(claimIssuer);
         claimSchemaRepository.save(claimSchema);
+    }
+
+    private ClaimIssuer getClaimIssuer(ClaimIssuerSchema claimIssuerSchema) {
+        return claimIssuerRepository
+                .findByDid(claimIssuerSchema.getClaimIssuerDid())
+                .orElseGet(() -> new ClaimIssuer(claimIssuerSchema.getClaimIssuerName(), claimIssuerSchema.getClaimIssuerDid()));
     }
 
     @SneakyThrows
@@ -235,7 +248,7 @@ public class UniversityService {
         } catch (Exception e) {
             log.error("{}, Could not get SchemaDefinition for SchemaKey {}", e, schemaId);
             return null;
+
         }
     }
-
 }

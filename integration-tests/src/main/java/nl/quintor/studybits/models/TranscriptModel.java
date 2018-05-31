@@ -1,4 +1,4 @@
-package nl.quintor.studybits;
+package nl.quintor.studybits.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

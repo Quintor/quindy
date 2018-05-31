@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"university_id", "schemaName", "schemaVersion"}))
 public class ClaimSchema {
 
     @Id
@@ -24,6 +25,7 @@ public class ClaimSchema {
     private String schemaId;
 
     @ManyToOne(optional = false, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "university_id")
     private University university;
 
     @Column(nullable = false)

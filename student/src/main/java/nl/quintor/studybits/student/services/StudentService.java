@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.AnoncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
+import nl.quintor.studybits.student.entities.ConnectionRecord;
 import nl.quintor.studybits.student.entities.MetaWallet;
 import nl.quintor.studybits.student.entities.Student;
 import nl.quintor.studybits.student.entities.University;
@@ -21,6 +22,7 @@ import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -33,7 +35,7 @@ public class StudentService {
     private MetaWalletService metaWalletService;
     private ProofRequestService proofRequestService;
     private StudentProverService studentProverService;
-    private ConnectionRecordService connectionRecordService;
+    private ConnectionService connectionService;
     private Mapper mapper;
 
     private StudentModel toModel(Object student) {
@@ -42,7 +44,7 @@ public class StudentService {
 
     @Transactional
     public Student createAndOnboard(String userName, String universityName) throws Exception {
-        if (studentRepository.existsByUserName(userName))
+        if (studentRepository.existsByUserNameIgnoreCase(userName))
             throw new IllegalArgumentException("StudentModel with userName exists already.");
 
         University university = universityService.getByName(universityName);
@@ -72,7 +74,15 @@ public class StudentService {
     }
 
     public Optional<Student> findByUserName(String name) {
-        return studentRepository.findByUserName(name);
+        return studentRepository.findByUserNameIgnoreCase(name);
+    }
+
+    public List<University> findAllConnectedUniversities(String userName) {
+        return connectionService
+                .findAllByStudentUserName(userName)
+                .stream()
+                .map(ConnectionRecord::getUniversity)
+                .collect(Collectors.toList());
     }
 
     public Student getByUserName(String name) {
@@ -118,7 +128,7 @@ public class StudentService {
 
         RestTemplate restTemplate = new RestTemplate();
         ConnectionRequest beginRequest = restTemplate.getForObject(uriBegin, ConnectionRequest.class);
-        connectionRecordService.save(beginRequest, university, student);
+        connectionService.save(beginRequest, university, student);
 
         AnoncryptedMessage beginResponse = acceptConnectionRequest(student, beginRequest);
         ResponseEntity<Void> finalizeResponse = restTemplate.postForEntity(uriFinalize, beginResponse, Void.class);

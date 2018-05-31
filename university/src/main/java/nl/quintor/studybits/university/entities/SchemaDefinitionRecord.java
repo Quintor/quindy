@@ -13,19 +13,18 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
-public class PositionRecord {
-
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"name", "version"}))
+public class SchemaDefinitionRecord {
     @Id
     @GeneratedValue
     private Long id;
 
-    @ManyToOne()
-    @JoinColumn(name = "university_id", nullable = false)
-    private University university;
+    @Column(nullable = false)
+    private String name;
 
     @Column(nullable = false)
-    private Boolean isOpen;
+    private String version;
 
     @ElementCollection
-    private List<String> attributes;
+    private List<String> attrNames;
 }
