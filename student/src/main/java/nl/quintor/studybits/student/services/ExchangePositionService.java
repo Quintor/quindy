@@ -81,19 +81,20 @@ public class ExchangePositionService {
         ExchangePositionRecord record = fromModel(positionModel);
 
         ProofRequestInfo proofRequestInfo = proofRequestService.getProofRequestForExchangePosition(student, record);
-        studentProverService.withProverForStudent(student, prover -> {
+        boolean result = false;
+
+        result = studentProverService.withProverForStudent(student, prover -> {
             try {
                 AuthEncryptedMessageModel messageModel = proofRequestService.getProofForProofRequest(student, prover, proofRequestInfo);
-                boolean result = proofRequestService.sendProofToUniversity(messageModel);
-                if (!result) {
-                    log.error("Could not accept ExchangePosition. Fail upon sending to University.");
-                }
-                // TODO: Here, we have to return the result and show an error message to the user if the proof fails.
-                // However, I have no clue how to change the withProverForStudent function so that it returns a value.
+                return proofRequestService.sendProofToUniversity(messageModel);
             } catch (Exception e) {
-                e.printStackTrace();
+                return false;
             }
         });
+
+        if (!result) {
+            throw new IllegalStateException("Could not accept ExchangePosition. Fail upon sending to University.");
+        }
     }
 
     public ExchangePositionRecord getByProofRecordId(Long proofRecordId) {

@@ -34,14 +34,13 @@ public class TranscriptProofService extends ProofHandler<TranscriptProof> {
     protected boolean handleProof(User prover, ProofRecord proofRecord, TranscriptProof proof) {
         Map<String, String> attributes = proofRecord.getExchangePositionRecord().getAttributes();
 
-        boolean success = false;
-        success = attributes.get("degree").equalsIgnoreCase(proof.getDegree());
-        success = attributes.get("status").equalsIgnoreCase(proof.getStatus());
+        boolean success = attributes.get("degree").equalsIgnoreCase(proof.getDegree());
+        success &= attributes.get("status").equalsIgnoreCase(proof.getStatus());
 
         if (attributes.containsKey("average")) {
             Float expectedAverage = Float.parseFloat(attributes.get("average"));
             Float receivedAverage = Float.parseFloat(proof.getAverage());
-            success = receivedAverage >= expectedAverage;
+            success &= receivedAverage >= expectedAverage;
         }
 
         if (success && proofRecord.getExchangePositionRecord() != null)
