@@ -7,14 +7,13 @@ import nl.quintor.studybits.university.entities.User;
 import nl.quintor.studybits.university.repositories.ClaimSchemaRepository;
 import nl.quintor.studybits.university.repositories.ProofRecordRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
-import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class UserProofService extends ProofHandler<UserProof>  {
+public class UserProofService extends ProofHandler<UserProof> {
 
     @Autowired
     public UserProofService(UniversityService universityService, ProofRecordRepository proofRecordRepository, ClaimSchemaRepository claimSchemaRepository, UserRepository userRepository, Mapper mapper) {
@@ -28,14 +27,16 @@ public class UserProofService extends ProofHandler<UserProof>  {
 
     @Override
     protected boolean handleProof(User prover, ProofRecord proofRecord, UserProof proof) {
-        Validate.isTrue(prover.getFirstName().equals(proof.getFirstName()), "Firstname mismatch." );
-        Validate.isTrue(prover.getLastName().equals(proof.getLastName()), "Lastname mismatch.");
-        Validate.isTrue(prover.getSsn().equals(proof.getSsn()), "Ssn mismatch.");
+        boolean success = prover.getFirstName().equals(proof.getFirstName());
+        success &= prover.getLastName().equals(proof.getLastName());
+        success &= prover.getSsn().equals(proof.getSsn());
 
-        prover.setConfirmed(true);
-        userRepository.save(prover);
+        if (success) {
+            prover.setConfirmed(true);
+            userRepository.save(prover);
+        }
 
-        return true;
+        return success;
     }
 
 }

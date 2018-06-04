@@ -72,14 +72,14 @@ public class UniversityService {
     @Transactional
     public UniversityIssuer getUniversityIssuer(String universityName) {
         University university = getUniversity(universityName);
-        List<String> definedSchemaKeys = university
+        List<String> definedSchemaIds = university
                 .getClaimSchemas()
                 .stream()
                 .filter(schema -> schema.getCredentialDefId() != null)
                 .map(ClaimSchema::getSchemaId)
                 .collect(Collectors.toList());
         Issuer issuer = getIssuer(university.getName());
-        return new UniversityIssuer(universityName, issuer.getIssuerDid(), definedSchemaKeys);
+        return new UniversityIssuer(universityName, issuer.getIssuerDid(), definedSchemaIds);
     }
 
     @SneakyThrows

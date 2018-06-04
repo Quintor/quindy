@@ -7,7 +7,6 @@ import nl.quintor.studybits.university.entities.User;
 import nl.quintor.studybits.university.repositories.ClaimSchemaRepository;
 import nl.quintor.studybits.university.repositories.ProofRecordRepository;
 import nl.quintor.studybits.university.repositories.UserRepository;
-import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,19 +34,19 @@ public class TranscriptProofService extends ProofHandler<TranscriptProof> {
     protected boolean handleProof(User prover, ProofRecord proofRecord, TranscriptProof proof) {
         Map<String, String> attributes = proofRecord.getExchangePositionRecord().getAttributes();
 
-        Validate.isTrue(attributes.get("degree").equalsIgnoreCase(proof.getDegree()), "Degree mismatch.");
-        Validate.isTrue(attributes.get("status").equalsIgnoreCase(proof.getStatus()), "Status mismatch.");
+        boolean success = attributes.get("degree").equalsIgnoreCase(proof.getDegree());
+        success &= attributes.get("status").equalsIgnoreCase(proof.getStatus());
 
         if (attributes.containsKey("average")) {
             Float expectedAverage = Float.parseFloat(attributes.get("average"));
             Float receivedAverage = Float.parseFloat(proof.getAverage());
-            Validate.isTrue(receivedAverage >= expectedAverage, "Average mismatch");
+            success &= receivedAverage >= expectedAverage;
         }
 
-        if (proofRecord.getExchangePositionRecord() != null)
+        if (success && proofRecord.getExchangePositionRecord() != null)
             exchangeApplicationService.create(prover, proofRecord, proof);
 
-        return true;
+        return success;
     }
 
 }

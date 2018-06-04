@@ -75,23 +75,26 @@ public class ExchangePositionService {
         }
     }
 
-    public void acceptExchangePosition(String studentUserName, ExchangePositionModel positionModel) throws Exception {
+    public void applyForExchangePosition(String studentUserName, ExchangePositionModel positionModel) throws Exception {
         log.info("Student {} - Accepting ExchangePositionModel: {}", studentUserName, positionModel);
         Student student = studentService.getByUserName(studentUserName);
         ExchangePositionRecord record = fromModel(positionModel);
 
         ProofRequestInfo proofRequestInfo = proofRequestService.getProofRequestForExchangePosition(student, record);
-        studentProverService.withProverForStudent(student, prover -> {
+        boolean result = false;
+
+        result = studentProverService.withProverForStudent(student, prover -> {
             try {
                 AuthEncryptedMessageModel messageModel = proofRequestService.getProofForProofRequest(student, prover, proofRequestInfo);
-                boolean result = proofRequestService.sendProofToUniversity(messageModel);
-                if (!result) {
-                    log.error("Could not accept ExchangePosition. Fail upon sending to University.");
-                }
+                return proofRequestService.sendProofToUniversity(messageModel);
             } catch (Exception e) {
-                e.printStackTrace();
+                return false;
             }
         });
+
+        if (!result) {
+            throw new IllegalStateException("Could not accept ExchangePosition. Fail upon sending to University.");
+        }
     }
 
     public ExchangePositionRecord getByProofRecordId(Long proofRecordId) {
