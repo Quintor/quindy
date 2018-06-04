@@ -20,9 +20,5 @@
             <b>attributes</b>
             <b-hint>java.util.HashMap</b-hint>
         </field>
-        <field>
-            <a>schemaDefinitionRecord</a>
-            <b>schemaDefinitionModel</b>
-        </field>
     </mapping>
 </mappings>

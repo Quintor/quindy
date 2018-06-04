@@ -12,7 +12,7 @@ import java.util.HashMap;
 @NoArgsConstructor
 public class ExchangePositionModel {
     private String universityName;
-    private SchemaDefinitionModel schemaDefinitionModel;
+    private String schemaId;
     private Long proofRecordId;
     private ExchangePositionState state;
     private HashMap<String, String> attributes;

@@ -233,9 +233,11 @@ public class UniversityService {
 
     public List<SchemaDefinition> getSchemaDefinitions(String universityName) {
         Issuer issuer = getIssuer(universityName);
+        log.info("Getting schema definitions");
         return getUniversityIssuer(universityName)
                 .getDefinedSchemaIds()
                 .stream()
+                .peek(log::info)
                 .map(schemaKey -> getSchemaDefinitionFromSchemaId(issuer, schemaKey))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
