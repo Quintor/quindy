@@ -7,10 +7,10 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class PositionModel {
-    private String universityName;
-    private Boolean isOpen;
-    private List<String> attributes;
+@AllArgsConstructor
+public class SchemaDefinitionModel {
+    private String name;
+    private String version;
+    private List<String> attrNames;
 }

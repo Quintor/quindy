@@ -12,10 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
-@AllArgsConstructor(onConstructor=@__(@Autowired))
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class UserService {
 
     private final UserRepository userRepository;
@@ -36,9 +35,10 @@ public class UserService {
         return userRepository.getOne(userId);
     }
 
-    public Optional<User> findByUniversityAndUserName(String universityName, String userName) {
+    public User getByUniversityNameAndUserName(String universityName, String userName) {
         return userRepository
-                .findByUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName);
+                .findByUniversityNameIgnoreCaseAndUserNameIgnoreCase(universityName, userName)
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Could not find user with University name: %s and userName: %s", universityName, userName)));
     }
 
     public User createStudent(String universityName, String userName, String firstName, String lastName, String ssn, boolean confirmed) {
@@ -52,6 +52,7 @@ public class UserService {
         User user = new User(userName, firstName, lastName, ssn, confirmed, university, new AdminUser());
         return save(user, confirmed);
     }
+
 
     private User save(User user, boolean confirmed) {
         User result = userRepository.save(user);
@@ -67,4 +68,9 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Unknown university."));
     }
 
+    public User getByFirstNameAndLastNameAndSsn(String firstName, String lastName, String ssn) {
+        return userRepository
+                .findByFirstNameAndLastNameAndSsn(firstName, lastName, ssn)
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Could not find user with firstName: %s, lastName: %s, and SSN: %s", firstName, lastName, ssn)));
+    }
 }

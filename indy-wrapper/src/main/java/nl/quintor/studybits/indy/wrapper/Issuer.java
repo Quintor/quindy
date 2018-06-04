@@ -76,8 +76,7 @@ public class Issuer extends TrustAnchor {
                     return Ledger.buildClaimDefTxn(issuerDid, claimDefinition.getRef(), claimDefinition.getSignatureType(), claimDefinition.getData().toString());
                 })).thenCompose(wrapException(claimDefTxn -> {
                     log.debug("{} Signing and sending claimDefTx: {}", name, claimDefTxn);
-                    return Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), issuerDid, claimDefTxn)
-                            ;
+                    return Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), issuerDid, claimDefTxn);
                 })).thenApply((response) -> {
                             log.debug("{} Got ClaimDefTxn response: {}", name, response);
                             return response;

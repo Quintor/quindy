@@ -39,6 +39,7 @@ public class User {
     private Boolean confirmed;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "university_id")
     private University university;
 
     @OneToOne(cascade = CascadeType.ALL)
@@ -70,6 +71,10 @@ public class User {
         this(userName, firstName, lastName, ssn, confirmed, university);
         this.adminUser = adminUser;
         this.adminUser.setUser(this);
+    }
+
+    public User(University university) {
+        this(university.getName(), university.getName(), university.getName(), university.getName(), true, university);
     }
 
     private User(String userName, String firstName, String lastName, String ssn, boolean confirmed, University university) {

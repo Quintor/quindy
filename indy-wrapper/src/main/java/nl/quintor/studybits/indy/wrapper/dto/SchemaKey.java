@@ -15,4 +15,5 @@ public class SchemaKey {
     public static SchemaKey fromSchema(SchemaDefinition schemaDefinition, String did) {
         return new SchemaKey(schemaDefinition.getName(), schemaDefinition.getVersion(), did);
     }
+
 }

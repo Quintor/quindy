@@ -68,8 +68,7 @@ public abstract class ClaimProvider<T extends Claim> {
         }
         String universityName = claimRecord.getUser().getUniversity().getName();
         Claim claim = getClaimForClaimRecord(claimRecord);
-        AuthCryptableResult<ClaimOffer> result = universityService
-                .createClaimOffer(universityName, claimRecord.getUser(), claim.getSchemaDefinition());
+        AuthCryptableResult<ClaimOffer> result = universityService.createClaimOffer(universityName, claimRecord.getUser(), claim.getSchemaDefinition());
         claimRecord.setClaimOfferMessage(result.getAuthEncryptedMessage());
         claimRecordRepository.saveAndFlush(claimRecord);
         return result.getAuthcryptedMessage();

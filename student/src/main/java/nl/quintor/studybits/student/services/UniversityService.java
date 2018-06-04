@@ -2,6 +2,7 @@ package nl.quintor.studybits.student.services;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nl.quintor.studybits.student.entities.ExchangePositionRecord;
 import nl.quintor.studybits.student.entities.Student;
 import nl.quintor.studybits.student.entities.University;
 import nl.quintor.studybits.student.repositories.UniversityRepository;
@@ -13,7 +14,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,21 +28,17 @@ public class UniversityService {
     }
 
     public University createAndSave(String name, String endpoint) {
-        if (universityRepository.existsByName(name))
+        if (universityRepository.existsByNameIgnoreCase(name))
             throw new IllegalArgumentException("UniversityModel with name exists already.");
 
         University university = new University(null, name, endpoint);
         return universityRepository.save(university);
     }
 
-    public Optional<University> findByName(String name) {
-        return universityRepository
-                .findByName(name);
-    }
-
     public University getByName(String name) {
-        return findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("UniversityModel with name not found."));
+        return universityRepository
+                .findByNameIgnoreCase(name)
+                .orElseThrow(() -> new IllegalArgumentException("UniversityModel not found with name: " + name));
     }
 
     public List<University> findAll() {
@@ -62,6 +58,11 @@ public class UniversityService {
     public void deleteByName(String universityName) {
         University university = getByName(universityName);
         universityRepository.deleteById(university.getId());
+    }
+
+    private URI buildStudentUri(String universityName, Student student, String endpoint) {
+        University university = getByName(universityName);
+        return buildStudentUri(university, student.getUserName(), endpoint);
     }
 
     private URI buildStudentUri(University university, Student student, String endpoint) {
@@ -94,5 +95,21 @@ public class UniversityService {
 
     public URI buildGetStudentInfoUri(University university, String userName) {
         return buildStudentUri(university, userName, "students");
+    }
+
+    public URI buildAllExchangePositionsUri(University university, Student student) {
+        return buildStudentUri(university, student, "positions");
+    }
+
+    public URI buildAllExchangeApplicationUri(University university, Student student) {
+        return buildStudentUri(university, student, "applications");
+    }
+
+    public URI buildStudentClaimUri(University university, Student student) {
+        return buildStudentUri(university, student, "claims");
+    }
+
+    public URI buildExchangePositionProofRequestUri(University university, Student student, ExchangePositionRecord record) {
+        return buildStudentUri(university, student, String.format("proofrequests/%s/%d", record.getSchemaDefinitionRecord().getName().toLowerCase() + "proof", record.getProofRecordId()));
     }
 }

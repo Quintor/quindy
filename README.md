@@ -13,8 +13,8 @@ Running tests: `docker build -t studybits:latest . && docker-compose up --build 
 
 Running the backend: `docker build -t studybits:latest . && docker-compose up --build --force-recreate pool backend-university backend-student`
 
-Running frontend and backend `docker build -t studybits:latest . && docker-compose up --build --force-recreate pool backend-university backend-student frontend`
-For this, the frontend repo needs to be checked out in the same directory as the backend (i.e. StudyBits and StudyBits frontend are in the same directory).
+Running frontend and backend `docker build -t studybits:latest . && docker-compose -f docker-compose-frontend.yml up --build --force-recreate pool backend-university backend-student frontend-student frontend-university`
+For this, the frontend repo needs to be checked out in the same directory as the backend (i.e. StudyBits and StudyBits-Frontend are in the same directory).
 
 
 

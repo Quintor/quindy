@@ -5,10 +5,7 @@ import nl.quintor.studybits.indy.wrapper.Prover;
 import nl.quintor.studybits.indy.wrapper.dto.AuthcryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.ProofRequest;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
-import nl.quintor.studybits.student.entities.ConnectionRecord;
-import nl.quintor.studybits.student.entities.ProofRequestRecord;
-import nl.quintor.studybits.student.entities.Student;
-import nl.quintor.studybits.student.entities.University;
+import nl.quintor.studybits.student.entities.*;
 import nl.quintor.studybits.student.models.AuthEncryptedMessageModel;
 import nl.quintor.studybits.student.models.ProofRequestInfo;
 import nl.quintor.studybits.student.models.ProofRequestModel;
@@ -34,15 +31,16 @@ public class ProofRequestService {
     private ProofRequestRecordRepository proofRequestRecordRepository;
     private StudentRepository studentRepository;
     private UniversityService universityService;
-    private ConnectionRecordService connectionRecordService;
+    private ConnectionService connectionService;
     private StudentProverService studentProverService;
     private Mapper mapper;
 
     public void getAndSaveNewProofRequests(String studentUserName) {
-        Student student = studentRepository.findByUserName(studentUserName)
+        // We need to use the Repository here, since we can't autowire StudentService to avoid circular imports.
+        Student student = studentRepository.findByUserNameIgnoreCase(studentUserName)
                 .orElseThrow(() -> new IllegalArgumentException("Could not find student with userName."));
 
-        connectionRecordService
+        connectionService
                 .findAllByStudentUserName(studentUserName)
                 .stream()
                 .map(ConnectionRecord::getUniversity)
@@ -66,7 +64,7 @@ public class ProofRequestService {
 
                 if (result) {
                     proofRequestRecord.setIsReviewed(true);
-                    connectionRecordService.setConfirmed(proofRequestRecord.getStudent(), proofRequestRecord.getUniversity(), true);
+                    connectionService.setConfirmed(proofRequestRecord.getStudent(), proofRequestRecord.getUniversity(), true);
                     this.proofRequestRecordRepository.save(proofRequestRecord);
                 } else {
                     throw new IllegalStateException("Could not fulfill proof request. University returned failure.");
@@ -85,7 +83,7 @@ public class ProofRequestService {
                 .stream();
     }
 
-    private AuthEncryptedMessageModel getProofForProofRequest(Student student, Prover prover, ProofRequestInfo requestInfo) throws Exception {
+    public AuthEncryptedMessageModel getProofForProofRequest(Student student, Prover prover, ProofRequestInfo requestInfo) throws Exception {
         AuthEncryptedMessageModel response = new RestTemplate()
                 .getForObject(requestInfo.getLink("self").getHref(), AuthEncryptedMessageModel.class);
 
@@ -99,12 +97,12 @@ public class ProofRequestService {
         return model;
     }
 
-    private Boolean sendProofToUniversity(AuthEncryptedMessageModel proofModel) {
+    public Boolean sendProofToUniversity(AuthEncryptedMessageModel proofModel) {
         return new RestTemplate().postForObject(proofModel.getLink("self").getHref(), proofModel, Boolean.class);
     }
 
     public List<ProofRequestRecord> findAllByStudentUserName(String studentUserName) {
-        return proofRequestRecordRepository.findAllByStudentUserName(studentUserName);
+        return proofRequestRecordRepository.findAllByStudentUserNameIgnoreCase(studentUserName);
     }
 
     private boolean notExisting(ProofRequestRecord proofRequestRecord) {
@@ -114,7 +112,7 @@ public class ProofRequestService {
 
     public ProofRequestRecord getRecordFromModel(ProofRequestModel proofRequestModel) {
         return proofRequestRecordRepository
-                .findByStudentUserNameAndNameAndVersion(proofRequestModel.getStudentUserName(), proofRequestModel.getName(), proofRequestModel
+                .findByStudentUserNameIgnoreCaseAndNameIgnoreCaseAndVersion(proofRequestModel.getStudentUserName(), proofRequestModel.getName(), proofRequestModel
                         .getVersion())
                 .orElseThrow(() -> new IllegalArgumentException("Could not " + "find ProofRequestRecord for ProofRequestModel."));
     }
@@ -138,5 +136,10 @@ public class ProofRequestService {
         ProofRequestInfo proofRequestInfo = mapper.map(proofRequestRecord, ProofRequestInfo.class);
         proofRequestInfo.add(new Link(proofRequestRecord.getLink(), "self"));
         return proofRequestInfo;
+    }
+
+    public ProofRequestInfo getProofRequestForExchangePosition(Student student, ExchangePositionRecord record) {
+        URI uri = universityService.buildExchangePositionProofRequestUri(record.getUniversity(), student, record);
+        return new RestTemplate().getForObject(uri, ProofRequestInfo.class);
     }
 }

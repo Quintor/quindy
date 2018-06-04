@@ -10,7 +10,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SchemaDefinitionModel {
-    private Long id;
     private String name;
     private String version;
     private List<String> attrNames;

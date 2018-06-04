@@ -1,7 +1,6 @@
 package nl.quintor.studybits.university.controllers.admin;
 
 import lombok.AllArgsConstructor;
-import nl.quintor.studybits.indy.wrapper.dto.SchemaDefinition;
 import nl.quintor.studybits.university.UserContext;
 import nl.quintor.studybits.university.entities.University;
 import nl.quintor.studybits.university.models.UniversityModel;

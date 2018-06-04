@@ -12,9 +12,7 @@ import nl.quintor.studybits.university.dto.Claim;
 import nl.quintor.studybits.university.dto.ClaimIssuerSchema;
 import nl.quintor.studybits.university.dto.UniversityIssuer;
 import nl.quintor.studybits.university.entities.*;
-import nl.quintor.studybits.university.repositories.ClaimIssuerRepository;
-import nl.quintor.studybits.university.repositories.ClaimSchemaRepository;
-import nl.quintor.studybits.university.repositories.UniversityRepository;
+import nl.quintor.studybits.university.repositories.*;
 import org.apache.commons.lang3.Validate;
 import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,11 +30,13 @@ import java.util.stream.Collectors;
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class UniversityService {
 
-    private static final boolean LAZY_ISSUER_CREATION = true;
+    private static final boolean LAZY_ISSUER_CREATION = false;
 
     private final UniversityRepository universityRepository;
     private final ClaimSchemaRepository claimSchemaRepository;
+    private final SchemaDefinitionRepository schemaDefinitionRepository;
     private final IssuerService issuerService;
+    private final UserRepository userRepository;
     private final ClaimIssuerRepository claimIssuerRepository;
     private final Mapper mapper;
 
@@ -46,7 +46,13 @@ public class UniversityService {
     }
 
     public University create(String universityName) {
-        University university = universityRepository.save(new University(null, universityName, new ArrayList<>()));
+        University university = universityRepository.save(new University(null, null, universityName, new ArrayList<>(), new ArrayList<>()));
+        User user = new User(university);
+        userRepository.saveAndFlush(user);
+
+        university.setUser(user);
+        universityRepository.save(university);
+
         if (!LAZY_ISSUER_CREATION) {
             issuerService.ensureIssuer(universityName);
         }
@@ -156,11 +162,15 @@ public class UniversityService {
         log.debug("University '{}': Adding claim issuer schema information: {}", universityName, claimIssuerSchema);
         SchemaKey schemaKey = claimIssuerSchema.getSchemaKey();
         ClaimSchema claimSchema = getClaimSchema(universityName, schemaKey.getName(), schemaKey.getVersion());
-        ClaimIssuer claimIssuer = claimIssuerRepository
-                .findByDid(claimIssuerSchema.getClaimIssuerDid())
-                .orElseGet(() -> new ClaimIssuer(claimIssuerSchema.getClaimIssuerName(), claimIssuerSchema.getClaimIssuerDid()));
+        ClaimIssuer claimIssuer = getClaimIssuer(claimIssuerSchema);
         claimSchema.getClaimIssuers().add(claimIssuer);
         claimSchemaRepository.save(claimSchema);
+    }
+
+    private ClaimIssuer getClaimIssuer(ClaimIssuerSchema claimIssuerSchema) {
+        return claimIssuerRepository
+                .findByDid(claimIssuerSchema.getClaimIssuerDid())
+                .orElseGet(() -> new ClaimIssuer(claimIssuerSchema.getClaimIssuerName(), claimIssuerSchema.getClaimIssuerDid()));
     }
 
     @SneakyThrows
@@ -203,23 +213,34 @@ public class UniversityService {
                 .orElseThrow(() -> new IllegalArgumentException("Schema key not found."));
     }
 
-    public List<SchemaDefinition> getSchemaDefinitions(String universityName) {
-        Issuer issuer = getIssuer(universityName);
-        return getUniversityIssuer(universityName)
-                .getDefinedSchemaKeys()
-                .stream()
-                .map(schemaKey -> getSchemaDefinitionFromSchemaKey(issuer, schemaKey))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+    public List<SchemaDefinitionRecord> getSchemaDefinitions(String universityName) {
+        if (schemaDefinitionRepository.count() == 0)
+            fetchSchemaDefinitionsFromLedger(universityName);
+
+        return schemaDefinitionRepository.findAll();
     }
 
-    private SchemaDefinition getSchemaDefinitionFromSchemaKey(Issuer issuer, SchemaKey schemaKey) {
+    private void fetchSchemaDefinitionsFromLedger(String universityName) {
+        Issuer issuer = getIssuer(universityName);
+        getUniversity(universityName)
+                .getClaimSchemas()
+                .forEach(claimSchema -> getSchemaDefinition(issuer, claimSchema));
+    }
+
+    private SchemaDefinitionRecord getSchemaDefinition(Issuer issuer, ClaimSchema claimSchema) {
+        return schemaDefinitionRepository
+                .findByNameIgnoreCaseAndVersion(claimSchema.getSchemaName(), claimSchema.getSchemaVersion())
+                .orElseGet(() -> getSchemaDefinitionFromSchemaKey(issuer, claimSchema));
+    }
+
+    private SchemaDefinitionRecord getSchemaDefinitionFromSchemaKey(Issuer issuer, ClaimSchema claimSchema) {
         try {
-            return issuer.getSchema(schemaKey.getDid(), schemaKey).get().getData();
+            SchemaKey schemaKey = new SchemaKey(claimSchema.getSchemaName(), claimSchema.getSchemaVersion(), claimSchema.getSchemaIssuerDid());
+            SchemaDefinitionRecord record = mapper.map(issuer.getSchema(schemaKey.getDid(), schemaKey).get().getData(), SchemaDefinitionRecord.class);
+            return schemaDefinitionRepository.saveAndFlush(record);
         } catch (Exception e) {
-            log.error("{}, Could not get SchemaDefinition for SchemaKey {}", e, schemaKey);
-            return null;
+            log.error("{}, Could not get SchemaDefinition for SchemaKey {}", e, claimSchema);
+            throw new IllegalArgumentException(String.format("Could not find SchemaDefinition for name: %s and version: %s", claimSchema.getSchemaName(), claimSchema.getSchemaVersion()));
         }
     }
-
 }

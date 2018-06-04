@@ -8,7 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface UniversityRepository extends JpaRepository<University, Long> {
-    boolean existsByName( String name );
-
-    Optional<University> findByName( String name );
+    boolean existsByNameIgnoreCase(String name );
+    Optional<University> findByNameIgnoreCase(String name );
 }

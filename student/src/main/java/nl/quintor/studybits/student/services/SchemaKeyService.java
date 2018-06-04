@@ -16,13 +16,13 @@ public class SchemaKeyService {
 
     public List<SchemaKey> getAllByName(String name) {
         return schemaKeyRepository
-                .findByName(name);
+                .findByNameIgnoreCase(name);
     }
 
     @Transactional
     public SchemaKey getOrCreate(SchemaKey schemaKey) {
         return schemaKeyRepository
-                .findByNameAndVersion(schemaKey.getName(), schemaKey.getVersion())
+                .findByNameIgnoreCaseAndVersion(schemaKey.getName(), schemaKey.getVersion())
                 .orElseGet(() -> schemaKeyRepository.save(schemaKey));
     }
 }

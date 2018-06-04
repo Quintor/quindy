@@ -9,6 +9,7 @@ services:
     # Host networking is used, because we need to know the pool IP at build time, which is kind-of tricky
     network_mode: "host"
 
+# Backend Components
   backend-student:
     depends_on:
       backend-university:
@@ -40,6 +41,22 @@ services:
       interval: 5s
       timeout: 2s
       retries: 35
+
+# Frontend Components
+  frontend-student:
+    build:
+      context: ../StudyBits-Frontend/student
+    network_mode: "host"
+    ports:
+    - "4200:4200"
+  frontend-university:
+    build:
+      context: ../StudyBits-Frontend/university
+    network_mode: "host"
+    ports:
+    - "4300:4300"
+
+# Backend Integration Tests
   tests:
     build:
       context: integration-tests
@@ -49,11 +66,5 @@ services:
         condition: service_healthy
       backend-university:
         condition: service_healthy
-  frontend:
-    build:
-      context: ../StudyBits-Frontend/student
-    network_mode: "host"
-    ports:
-    - "4200:4200"
 
 

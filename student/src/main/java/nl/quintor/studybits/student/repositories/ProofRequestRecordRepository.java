@@ -11,6 +11,6 @@ import java.util.Optional;
 @Repository
 public interface ProofRequestRecordRepository extends JpaRepository<ProofRequestRecord, Long> {
     boolean existsByStudentAndNameAndVersion(Student student, String name, String version);
-    List<ProofRequestRecord> findAllByStudentUserName(String studentUserName);
-    Optional<ProofRequestRecord> findByStudentUserNameAndNameAndVersion(String studentUserName, String name, String version);
+    List<ProofRequestRecord> findAllByStudentUserNameIgnoreCase(String studentUserName);
+    Optional<ProofRequestRecord> findByStudentUserNameIgnoreCaseAndNameIgnoreCaseAndVersion(String studentUserName, String name, String version);
 }
