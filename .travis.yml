@@ -1,5 +1,4 @@
 sudo: enabled
-install: docker build -t studybits:latest .
 script: ./.travis.sh 
 notifications:
   webhooks:
