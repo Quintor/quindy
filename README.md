@@ -9,7 +9,7 @@ needs low level control over the communication, or a procedural API is more suit
 [Java wrapper](https://github.com/hyperledger/indy-sdk/tree/master/wrappers/java) that indy-sdk provides
 
 ## Running in docker
-In order to test, run: `docker-compose up --build --force-recreate --exit-code-from wrapper pool wrapper`
+In order to test, run: `TEST_POOL_IP=127.0.0.1 docker-compose up --build --force-recreate --exit-code-from wrapper pool wrapper`
 
 ## Running locally
 In order to run locally, install libindy with the version matching the indy-sdk in the `pom.xml` 

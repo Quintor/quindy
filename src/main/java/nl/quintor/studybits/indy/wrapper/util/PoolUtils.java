@@ -14,9 +14,11 @@ public class PoolUtils {
 	private static final String DEFAULT_POOL_NAME = "default_pool";
 
 
-	private static File createGenesisTxnFile(String filename) throws IOException {
+	private static File createGenesisTxnFile(String filename, String testPoolIp) throws IOException {
 		String path = EnvironmentUtils.getTmpPath(filename);
-		String testPoolIp = EnvironmentUtils.getTestPoolIP();
+		if (testPoolIp == null) {
+			testPoolIp = EnvironmentUtils.getTestPoolIP();
+		}
 
 		String[] defaultTxns = new String[]{
 				String.format("{\"data\":{\"alias\":\"Node1\",\"blskey\":\"4N8aUNHSgjQVgkpm8nhNEfDf6txHznoYREg9kirmJrkivgL4oSEimFF6nsQ6M41QvhM2Z33nves5vfSn9n1UwNFJBYtWVnHYMATn76vLuL3zU88KyeAYcHfsih3He6UHcXDxcaecHVz6jhCYz1P2UZn2bDVruL5wXpehgBfBaLKm3Ba\",\"client_ip\":\"%s\",\"client_port\":9702,\"node_ip\":\"%s\",\"node_port\":9701,\"services\":[\"VALIDATOR\"]},\"dest\":\"Gw6pDLhcBcoQesN72qfotTgFa7cbuqZpkX3Xo6pLhPhv\",\"identifier\":\"Th7MpTaRZVRYnPiabds81Y\",\"txnId\":\"fea82e10e894419fe2bea7d96296a6d46f50f93f9eeda954ec461b2ed2950b62\",\"type\":\"0\"}", testPoolIp, testPoolIp),
@@ -29,6 +31,8 @@ public class PoolUtils {
 
 		FileUtils.forceMkdirParent(file);
 
+
+
 		FileWriter fw = new FileWriter(file);
 		for (String defaultTxn : defaultTxns) {
 			fw.write(defaultTxn);
@@ -40,8 +44,8 @@ public class PoolUtils {
 		return file;
 	}
 
-	public static String createPoolLedgerConfig() throws IOException, InterruptedException, java.util.concurrent.ExecutionException, IndyException {
-		File genesisTxnFile = createGenesisTxnFile("temp.txn");
+	public static String createPoolLedgerConfig(String testPoolIP) throws IOException, InterruptedException, java.util.concurrent.ExecutionException, IndyException {
+		File genesisTxnFile = createGenesisTxnFile("temp.txn", testPoolIP);
 		PoolJSONParameters.CreatePoolLedgerConfigJSONParameter createPoolLedgerConfigJSONParameter
 				= new PoolJSONParameters.CreatePoolLedgerConfigJSONParameter(genesisTxnFile.getAbsolutePath());
 		Pool.createPoolLedgerConfig(DEFAULT_POOL_NAME, createPoolLedgerConfigJSONParameter.toJson()).get();
