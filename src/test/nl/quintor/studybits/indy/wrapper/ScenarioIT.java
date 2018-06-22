@@ -1,11 +1,14 @@
 package nl.quintor.studybits.indy.wrapper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
 import org.apache.commons.io.FileUtils;
 import org.hyperledger.indy.sdk.IndyException;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,8 +16,12 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-public class Main {
-    public static void main(String[] args) throws Exception {
+import static nl.quintor.studybits.indy.wrapper.TestUtil.removeIndyClientDirectory;
+
+public class ScenarioIT {
+
+    @Test
+    public void onboardIssuerTest() throws Exception {
         removeIndyClientDirectory();
 
         String poolName = PoolUtils.createPoolLedgerConfig(null);
@@ -84,29 +91,29 @@ public class Main {
                 .thenCompose(AsyncUtil.wrapException(alice::storeCredential)).get();
 
         List<CredentialInfo> credentialInfos = alice.findAllCredentials()
-                                      .get();
+                .get();
 
         System.out.println(credentialInfos);
 
 
         List<Filter> transcriptFilter = Collections.singletonList(new Filter(transcriptCredentialDefId));
         ProofRequest jobApplicationProofRequest = ProofRequest.builder()
-                                                              .name("Job-Application")
-                                                              .nonce("1432422343242122312411212")
-                                                              .version("0.1")
-                                                              .requestedAttribute("attr1_referent", new AttributeInfo("first_name", Optional.empty()))
-                                                              .requestedAttribute("attr2_referent", new AttributeInfo("last_name", Optional.empty()))
-                                                              .requestedAttribute("attr3_referent", new AttributeInfo("degree", Optional.of(transcriptFilter)))
-                                                              .requestedAttribute("attr4_referent", new AttributeInfo("status", Optional.of(transcriptFilter)))
-                                                              .requestedAttribute("attr5_referent", new AttributeInfo("ssn", Optional.of(transcriptFilter)))
-                                                              .requestedAttribute("attr6_referent", new AttributeInfo("phone_number", Optional.empty()))
-                                                              .requestedPredicate("predicate1_referent", new PredicateInfo("average", ">=", 4, Optional.of(transcriptFilter)))
-                                                              .build();
+                .name("Job-Application")
+                .nonce("1432422343242122312411212")
+                .version("0.1")
+                .requestedAttribute("attr1_referent", new AttributeInfo("first_name", Optional.empty()))
+                .requestedAttribute("attr2_referent", new AttributeInfo("last_name", Optional.empty()))
+                .requestedAttribute("attr3_referent", new AttributeInfo("degree", Optional.of(transcriptFilter)))
+                .requestedAttribute("attr4_referent", new AttributeInfo("status", Optional.of(transcriptFilter)))
+                .requestedAttribute("attr5_referent", new AttributeInfo("ssn", Optional.of(transcriptFilter)))
+                .requestedAttribute("attr6_referent", new AttributeInfo("phone_number", Optional.empty()))
+                .requestedPredicate("predicate1_referent", new PredicateInfo("average", ">=", 4, Optional.of(transcriptFilter)))
+                .build();
 
         jobApplicationProofRequest.setTheirDid(aliceAcmeDid);
 
         AuthcryptedMessage authcryptedJobApplicationProofRequest = acme.authEncrypt(jobApplicationProofRequest)
-                                                                       .get();
+                .get();
 
 
         Map<String, String> selfAttestedAttributes = new HashMap<>();
@@ -115,9 +122,9 @@ public class Main {
         selfAttestedAttributes.put("phone_number", "123phonenumber");
 
         AuthcryptedMessage authcryptedProof = alice.authDecrypt(authcryptedJobApplicationProofRequest, ProofRequest.class)
-                                                   .thenCompose(AsyncUtil.wrapException(proofRequest -> alice.fulfillProofRequest(proofRequest, selfAttestedAttributes)))
+                .thenCompose(AsyncUtil.wrapException(proofRequest -> alice.fulfillProofRequest(proofRequest, selfAttestedAttributes)))
                 .thenCompose(AsyncUtil.wrapException(alice::authEncrypt))
-                                                   .get();
+                .get();
 
         List<ProofAttribute> attributes = acme
                 .authDecrypt(authcryptedProof, Proof.class)
@@ -139,8 +146,8 @@ public class Main {
                 .thenCompose(AsyncUtil.wrapException(steward::acceptConnectionResponse)).get();
 
         AuthcryptedMessage verinym = newcomer.authEncrypt(newcomer.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class)
-                                                                                                     .getDid()))
-                                             .get();
+                .getDid()))
+                .get();
 
         steward.authDecrypt(verinym, Verinym.class)
                 .thenCompose(AsyncUtil.wrapException(steward::acceptVerinymRequest)).get();
@@ -156,12 +163,5 @@ public class Main {
                 .thenCompose(AsyncUtil.wrapException(trustAnchor::acceptConnectionResponse)).get();
 
         return newcomerDid;
-    }
-
-    private static void removeIndyClientDirectory() throws Exception {
-        String homeDir = System.getProperty("user.home");
-        File indyClientDir = Paths.get(homeDir, ".indy_client")
-                                  .toFile();
-        FileUtils.deleteDirectory(indyClientDir);
     }
 }
