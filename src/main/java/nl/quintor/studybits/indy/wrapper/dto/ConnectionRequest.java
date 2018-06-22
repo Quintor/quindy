@@ -2,6 +2,7 @@ package nl.quintor.studybits.indy.wrapper.dto;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ConnectionRequest implements Serializable {
     private String did;
-    private String nonce;
+    @JsonProperty("request_nonce")
+    private String requestNonce;
     @JsonIgnore
     private String role;
     @JsonIgnore

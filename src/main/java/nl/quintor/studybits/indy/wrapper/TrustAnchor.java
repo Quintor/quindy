@@ -10,7 +10,6 @@ import org.hyperledger.indy.sdk.IndyException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 import static org.hyperledger.indy.sdk.did.Did.createAndStoreMyDid;
@@ -33,11 +32,11 @@ public class TrustAnchor extends IndyWallet {
                         (didResult) ->
                                 sendNym(didResult.getDid(), didResult.getVerkey(), role)
                                         .thenApply(
-                                        // TODO: Generate nonce properly
+                                        // TODO: Generate requestNonce properly
                                         (nymResponse) -> {
                                             ConnectionRequest connectionRequest = new ConnectionRequest(didResult.getDid(), Long.toString(System.currentTimeMillis()), role, newcomerName, didResult.getVerkey());
                                             log.debug("Returning ConnectionRequest: {}", connectionRequest);
-                                            openConnectionRequests.put(connectionRequest.getNonce(), connectionRequest);
+                                            openConnectionRequests.put(connectionRequest.getRequestNonce(), connectionRequest);
                                             return connectionRequest;
                                         }
                                 )
@@ -57,20 +56,20 @@ public class TrustAnchor extends IndyWallet {
     }
 
     public CompletableFuture<String> acceptConnectionResponse(ConnectionResponse connectionResponse) throws IndyException {
-        if (!openConnectionRequests.containsKey(connectionResponse.getNonce())) {
-            log.info("No open connection request for nonce {}", connectionResponse.getNonce());
+        if (!openConnectionRequests.containsKey(connectionResponse.getRequestNonce())) {
+            log.info("No open connection request for requestNonce {}", connectionResponse.getRequestNonce());
             throw new IndyWrapperException("Nonce not found");
         }
 
-        ConnectionRequest connectionRequest = openConnectionRequests.get(connectionResponse.getNonce());
+        ConnectionRequest connectionRequest = openConnectionRequests.get(connectionResponse.getRequestNonce());
 
         return sendNym(connectionResponse.getDid(), connectionResponse.getVerkey(), connectionRequest.getRole())
                 .thenCompose(wrapException((nymResponse) ->
                         storeDidAndPairwise(connectionRequest.getDid(), connectionResponse.getDid(), connectionResponse.getVerkey())))
                 .thenApply((void_) -> {
-                    log.debug("Removing connectionRequest with nonce {}", connectionRequest.getNonce());
+                    log.debug("Removing connectionRequest with requestNonce {}", connectionRequest.getRequestNonce());
                     rolesByDid.put(connectionResponse.getDid(), connectionRequest.getRole());
-                    openConnectionRequests.remove(connectionRequest.getNonce());
+                    openConnectionRequests.remove(connectionRequest.getRequestNonce());
                     return connectionResponse.getDid();
                 });
     }
