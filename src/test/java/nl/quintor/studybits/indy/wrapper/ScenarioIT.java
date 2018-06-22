@@ -128,8 +128,9 @@ public class ScenarioIT {
                 .thenCompose(proof -> new Verifier(acmeWallet).getVerifiedProofAttributes(jobApplicationProofRequest, proof))
                 .get();
 
+        System.out.println(attributes);
         assertThat(attributes, containsInAnyOrder(
-                new ProofAttribute("attr1_referent", "first_name", "Alicia"),
+                new ProofAttribute("attr1_referent", "first_name", "Alice"),
                 new ProofAttribute("attr2_referent", "last_name", "Garcia"),
                 new ProofAttribute("attr3_referent", "degree", "Bachelor of Science, Marketing"),
                 new ProofAttribute("attr4_referent", "status", "graduated"),
