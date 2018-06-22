@@ -12,11 +12,13 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static nl.quintor.studybits.indy.wrapper.TestUtil.removeIndyClientDirectory;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 public class ScenarioIT {
 
     @Test
-    public void onboardIssuerTest() throws Exception {
+    public void fullScenarioTest() throws Exception {
         removeIndyClientDirectory();
 
         String poolName = PoolUtils.createPoolLedgerConfig(null);
@@ -126,7 +128,14 @@ public class ScenarioIT {
                 .thenCompose(proof -> new Verifier(acmeWallet).getVerifiedProofAttributes(jobApplicationProofRequest, proof))
                 .get();
 
-        System.out.println(attributes);
+        assertThat(attributes, containsInAnyOrder(
+                new ProofAttribute("attr1_referent", "first_name", "Alicia"),
+                new ProofAttribute("attr2_referent", "last_name", "Garcia"),
+                new ProofAttribute("attr3_referent", "degree", "Bachelor of Science, Marketing"),
+                new ProofAttribute("attr4_referent", "status", "graduated"),
+                new ProofAttribute("attr5_referent", "ssn", "123-45-6789"),
+                new ProofAttribute("attr6_referent", "phone_number", "123phonenumber")
+                ));
     }
 
     public static void onboardIssuer(TrustAnchor steward, Issuer newcomer) throws InterruptedException, java.util.concurrent.ExecutionException, IndyException, java.io.IOException {
