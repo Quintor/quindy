@@ -19,22 +19,22 @@ public class Main {
 
         String poolName = PoolUtils.createPoolLedgerConfig(null);
         IndyPool indyPool = new IndyPool(poolName);
-        TrustAnchor steward = new TrustAnchor("Steward", indyPool, IndyWallet.create(indyPool, "steward_wallet", "000000000000000000000000Steward1"));
+        TrustAnchorWallet steward = new TrustAnchorWallet(IndyWallet.create(indyPool, "steward_wallet", "000000000000000000000000Steward1"));
 
         // Onboard the issuers (onboard -> verinym -> issuerDids)
-        Issuer government = new Issuer("Government", indyPool, IndyWallet.create(indyPool, "government_wallet",null));
+        IssuerWallet government = new IssuerWallet(IndyWallet.create(indyPool, "government_wallet",null));
         onboardIssuer(steward, government);
 
-        Issuer faber = new Issuer("Faber", indyPool, IndyWallet.create(indyPool, "faber_wallet", null));
+        IssuerWallet faber = new IssuerWallet(IndyWallet.create(indyPool, "faber_wallet", null));
         onboardIssuer(steward, faber);
 
-        Issuer acme = new Issuer("Acme", indyPool, IndyWallet.create(indyPool, "acme_wallet", null));
+        IssuerWallet acme = new IssuerWallet(IndyWallet.create(indyPool, "acme_wallet", null));
         onboardIssuer(steward, acme);
 
-        Issuer thrift = new Issuer("Thrift", indyPool, IndyWallet.create(indyPool, "thrift_wallet", null));
+        IssuerWallet thrift = new IssuerWallet(IndyWallet.create(indyPool, "thrift_wallet", null));
         onboardIssuer(steward, thrift);
 
-        Prover alice = new Prover("Alice", indyPool, IndyWallet.create(indyPool, "alice_wallet", null), "alice_master_secret");
+        ProverWallet alice = new ProverWallet(IndyWallet.create(indyPool, "alice_wallet", null), "alice_master_secret");
         String aliceFaberDid = onboardWalletOwner(faber, alice);
         alice.init();
 
@@ -125,7 +125,7 @@ public class Main {
         System.out.println(attributes);
     }
 
-    public static void onboardIssuer(TrustAnchor steward, Issuer newcomer) throws InterruptedException, java.util.concurrent.ExecutionException, IndyException, java.io.IOException {
+    public static void onboardIssuer(TrustAnchorWallet steward, IssuerWallet newcomer) throws InterruptedException, java.util.concurrent.ExecutionException, IndyException, java.io.IOException {
         // Connecting newcomer with Steward
         String governmentConnectionRequest = steward.createConnectionRequest(newcomer.getName(), "TRUST_ANCHOR").get().toJSON();
 
@@ -144,14 +144,14 @@ public class Main {
                 .thenCompose(AsyncUtil.wrapException(steward::acceptVerinymRequest)).get();
     }
 
-    private static String onboardWalletOwner(TrustAnchor trustAnchor, WalletOwner newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {
-        String governmentConnectionRequest = trustAnchor.createConnectionRequest(newcomer.getName(), null).get().toJSON();
+    private static String onboardWalletOwner(TrustAnchorWallet trustAnchorWallet, IndyWallet newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {
+        String governmentConnectionRequest = trustAnchorWallet.createConnectionRequest(newcomer.getName(), null).get().toJSON();
 
         AnoncryptedMessage newcomerConnectionResponse = newcomer.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class))
                 .thenCompose(AsyncUtil.wrapException(newcomer::anonEncrypt)).get();
 
-        String newcomerDid = trustAnchor.anonDecrypt(newcomerConnectionResponse, ConnectionResponse.class)
-                .thenCompose(AsyncUtil.wrapException(trustAnchor::acceptConnectionResponse)).get();
+        String newcomerDid = trustAnchorWallet.anonDecrypt(newcomerConnectionResponse, ConnectionResponse.class)
+                .thenCompose(AsyncUtil.wrapException(trustAnchorWallet::acceptConnectionResponse)).get();
 
         return newcomerDid;
     }

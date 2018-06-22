@@ -10,24 +10,25 @@ import org.hyperledger.indy.sdk.IndyException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 import static org.hyperledger.indy.sdk.did.Did.createAndStoreMyDid;
 import static org.hyperledger.indy.sdk.ledger.Ledger.buildNymRequest;
 
 @Slf4j
-public class TrustAnchor extends WalletOwner {
+public class TrustAnchorWallet extends IndyWallet {
     private Map<String, ConnectionRequest> openConnectionRequests = new HashMap<>();
     private Map<String, String> rolesByDid = new HashMap<>();
 
-    public TrustAnchor(String name, IndyPool pool, IndyWallet wallet) {
-        super(name, pool, wallet);
-        log.info("{}: Instantiated TrustAnchor: {}", name, name);
+    public TrustAnchorWallet(IndyWallet wallet) {
+        super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
+        log.info("{}: Instantiated TrustAnchorWallet: {}", name, name);
     }
 
     public CompletableFuture<ConnectionRequest> createConnectionRequest(String newcomerName, String role) throws IndyException {
         log.info("'{}' -> Create and store in Wallet '{} {}'", name, name, newcomerName);
-        return createAndStoreMyDid(wallet.getWallet(), "{}")
+        return createAndStoreMyDid(getWallet(), "{}")
                 .thenCompose(wrapException(
                         (didResult) ->
                                 sendNym(didResult.getDid(), didResult.getVerkey(), role)
@@ -47,7 +48,7 @@ public class TrustAnchor extends WalletOwner {
     public Verinym createVerinymRequest( String targetDid ) {
         log.info("{} Creating verinym request for targetDid: {}", name, targetDid);
 
-        return new Verinym(wallet.getMainDid(), wallet.getMainKey(), targetDid);
+        return new Verinym(getMainDid(), getMainKey(), targetDid);
     }
 
     public CompletableFuture<String> acceptVerinymRequest(Verinym verinym) throws IndyException {
@@ -76,8 +77,8 @@ public class TrustAnchor extends WalletOwner {
 
     CompletableFuture<String> sendNym(String newDid, String newKey, String role) throws IndyException {
         log.debug("{} Called sendNym with newDid: {}, newKey {}, role {}", name, newDid, newKey, role);
-        log.debug("{} Calling buildNymRequest with mainDid: {}", name, wallet.getMainDid());
-        return buildNymRequest(wallet.getMainDid(), newDid, newKey, null, role)
+        log.debug("{} Calling buildNymRequest with mainDid: {}", name, getMainDid());
+        return buildNymRequest(getMainDid(), newDid, newKey, null, role)
                 .thenCompose(wrapException(this::signAndSubmitRequest));
     }
 }

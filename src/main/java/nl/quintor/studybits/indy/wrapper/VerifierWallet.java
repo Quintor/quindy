@@ -19,9 +19,9 @@ import java.util.stream.Stream;
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
 @Slf4j
-public class Verifier extends WalletOwner {
-    public Verifier(String name, IndyPool pool, IndyWallet wallet) {
-        super(name, pool, wallet);
+public class VerifierWallet extends IndyWallet {
+    public VerifierWallet(IndyWallet wallet) {
+        super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
     }
 
     public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof) {
