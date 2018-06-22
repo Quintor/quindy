@@ -17,13 +17,13 @@ import static org.hyperledger.indy.sdk.did.Did.createAndStoreMyDid;
 import static org.hyperledger.indy.sdk.ledger.Ledger.buildNymRequest;
 
 @Slf4j
-public class TrustAnchorWallet extends IndyWallet {
+public class TrustAnchor extends IndyWallet {
     private Map<String, ConnectionRequest> openConnectionRequests = new HashMap<>();
     private Map<String, String> rolesByDid = new HashMap<>();
 
-    public TrustAnchorWallet(IndyWallet wallet) {
+    public TrustAnchor(IndyWallet wallet) {
         super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
-        log.info("{}: Instantiated TrustAnchorWallet: {}", name, name);
+        log.info("{}: Instantiated TrustAnchor: {}", name, name);
     }
 
     public CompletableFuture<ConnectionRequest> createConnectionRequest(String newcomerName, String role) throws IndyException {

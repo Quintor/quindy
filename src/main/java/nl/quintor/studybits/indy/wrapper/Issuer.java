@@ -22,8 +22,8 @@ import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 import static org.hyperledger.indy.sdk.anoncreds.Anoncreds.issuerCreateSchema;
 
 @Slf4j
-public class IssuerWallet extends TrustAnchorWallet {
-    public IssuerWallet(IndyWallet wallet) {
+public class Issuer extends TrustAnchor {
+    public Issuer(IndyWallet wallet) {
         super(wallet);
     }
 

@@ -20,10 +20,10 @@ import java.util.stream.Stream;
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
 @Slf4j
-public class ProverWallet extends IndyWallet {
+public class Prover extends IndyWallet {
     private String masterSecretName;
 
-    public ProverWallet(IndyWallet wallet, String masterSecretName) {
+    public Prover(IndyWallet wallet, String masterSecretName) {
         super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
         this.masterSecretName = masterSecretName;
     }
