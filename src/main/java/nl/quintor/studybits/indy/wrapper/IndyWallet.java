@@ -154,18 +154,6 @@ public class IndyWallet implements AutoCloseable {
                 .thenApply(AsyncUtil.wrapException(object -> JSONUtil.mapper.readValue(object, CredentialDefinition.class)));
     }
 
-    CompletableFuture<CredentialDefinition> getCredentialDefByNameAndKey(String did, String id) throws IndyException {
-        log.debug("{} Getting credential def with did {} schema with id {}", name, did, id);
-        return Ledger.buildGetCredDefRequest(did, id)
-                .thenCompose(wrapException(request -> {
-                    log.debug("{} Submitting GetCredDefRequest {}", name, request);
-                    return submitRequest(request);
-                }))
-                .thenCompose(AsyncUtil.wrapException(Ledger::parseGetCredDefResponse))
-                .thenApply(LedgerResults.ParseResponseResult::getObjectJson)
-                .thenApply(AsyncUtil.wrapException(object -> JSONUtil.mapper.readValue(object, CredentialDefinition.class)));
-    }
-
     CompletableFuture<EntitiesFromLedger> getEntitiesFromLedger(Map<String, CredentialIdentifier> identifiers) {
         List<CompletableFuture<EntitiesForCredentialReferent>> entityFutures = identifiers.entrySet()
                 .stream()
