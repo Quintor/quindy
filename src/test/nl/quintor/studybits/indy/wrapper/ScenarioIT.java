@@ -1,18 +1,13 @@
 package nl.quintor.studybits.indy.wrapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
-import org.apache.commons.io.FileUtils;
 import org.hyperledger.indy.sdk.IndyException;
-import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
