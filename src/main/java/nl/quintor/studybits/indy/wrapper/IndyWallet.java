@@ -217,14 +217,6 @@ public class IndyWallet implements AutoCloseable {
                 ;
     }
 
-    public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof) {
-        Map<String, CredentialIdentifier> identifierMap = proof.getIdentifiers()
-                .stream()
-                .collect(Collectors.toMap(CredentialIdentifier::getCredDefId, Function.identity()));
-        return getEntitiesFromLedger(identifierMap)
-                .thenCompose(wrapException(entitiesFromLedger -> ProofUtils.extractVerifiedProofAttributes(proofRequest, proof, entitiesFromLedger)));
-    }
-
     @Override
     public void close() throws Exception {
         wallet.closeWallet();

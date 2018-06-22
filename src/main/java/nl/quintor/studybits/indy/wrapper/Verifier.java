@@ -6,6 +6,7 @@ import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.exception.IndyWrapperException;
 import nl.quintor.studybits.indy.wrapper.util.IntegerEncodingUtil;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
+import nl.quintor.studybits.indy.wrapper.util.ProofUtils;
 import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.anoncreds.Anoncreds;
 
@@ -33,6 +34,7 @@ public class Verifier extends IndyWallet {
                 .thenRun(() -> validateProofEncodings(proof))
                 .thenApply(v -> extractProofAttributes(proofRequest, proof));
     }
+
 
     private void ValidateResult(boolean valid, String message) throws IndyWrapperException {
         if (!valid) {

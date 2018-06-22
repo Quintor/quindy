@@ -28,7 +28,9 @@ public class Main {
         Issuer faber = new Issuer(IndyWallet.create(indyPool, "faber_wallet", null));
         onboardIssuer(steward, faber);
 
-        Issuer acme = new Issuer(IndyWallet.create(indyPool, "acme_wallet", null));
+
+        IndyWallet acmeWallet = IndyWallet.create(indyPool, "acme_wallet", null);
+        Issuer acme = new Issuer(acmeWallet);
         onboardIssuer(steward, acme);
 
         Issuer thrift = new Issuer(IndyWallet.create(indyPool, "thrift_wallet", null));
@@ -119,7 +121,7 @@ public class Main {
 
         List<ProofAttribute> attributes = acme
                 .authDecrypt(authcryptedProof, Proof.class)
-                .thenCompose(proof -> acme.getVerifiedProofAttributes(jobApplicationProofRequest, proof))
+                .thenCompose(proof -> new Verifier(acmeWallet).getVerifiedProofAttributes(jobApplicationProofRequest, proof))
                 .get();
 
         System.out.println(attributes);
