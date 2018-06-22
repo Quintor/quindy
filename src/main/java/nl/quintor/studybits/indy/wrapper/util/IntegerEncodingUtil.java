@@ -8,30 +8,44 @@ import nl.quintor.studybits.indy.wrapper.dto.Proof;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 public class IntegerEncodingUtil {
-    private static final BigInteger STRING_RANGE_START = BigInteger.valueOf(0xffffffffL);
+    private static final byte INT_MARKER = (byte) 0x01;
+    private static final byte STRING_MARKER = (byte) 0x02;
+
+
     public static BigInteger encode(Object o) throws UnsupportedEncodingException {
         if (o instanceof Integer) {
-            return BigInteger.valueOf((Integer) o);
+            byte[] intBytes = BigInteger.valueOf((Integer) o).toByteArray();
+            byte[] encoding = prepended(INT_MARKER, intBytes);
+            return new BigInteger(encoding);
         }
 
         if (o instanceof String) {
-            BigInteger bigInteger = new BigInteger(((String) o).getBytes("utf8"));
-            return bigInteger.add(STRING_RANGE_START);
+            byte[] stringBytes = ((String) o).getBytes("utf8");
+
+            byte[] encoding = prepended(STRING_MARKER, stringBytes);
+
+            return new BigInteger(encoding);
         }
 
         throw new IllegalArgumentException("Object must be String or Integer");
     }
 
     public static Object decode(BigInteger encoding) {
-        if (encoding.compareTo(STRING_RANGE_START) < 0) {
-            return encoding.intValue();
-        }
-        else {
-            return new String(encoding.subtract(STRING_RANGE_START).toByteArray(), Charset.forName("utf8"));
+        byte[] bytesEncoding = encoding.toByteArray();
+        byte[] bytesMarkerStripped = new byte[bytesEncoding.length-1];
+        System.arraycopy(bytesEncoding, 1, bytesMarkerStripped, 0, bytesEncoding.length-1);
+
+        switch (bytesEncoding[0]) {
+            case INT_MARKER:
+                return new BigInteger(bytesMarkerStripped).intValue();
+            case STRING_MARKER:
+                return new String(bytesMarkerStripped, Charset.forName("utf8"));
+                default: throw new IllegalArgumentException("Marker byte invalid");
         }
     }
 
@@ -53,6 +67,14 @@ public class IntegerEncodingUtil {
             result.set(entry.getKey(), value);
         }
 
+        return result;
+    }
+
+    private static byte[] prepended(byte prepend, byte[] body) {
+        byte[] result = new byte[body.length+1];
+        System.arraycopy(body, 0, result, 1, body.length);
+
+        result[0] = prepend;
         return result;
     }
 }
