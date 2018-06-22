@@ -20,16 +20,16 @@ import java.util.stream.Stream;
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
 @Slf4j
-public class Prover extends WalletOwner {
+public class Prover extends IndyWallet {
     private String masterSecretName;
 
-    public Prover(String name, IndyPool pool, IndyWallet wallet, String masterSecretName) {
-        super(name, pool, wallet);
+    public Prover(IndyWallet wallet, String masterSecretName) {
+        super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
         this.masterSecretName = masterSecretName;
     }
 
     public void init() throws IndyException, ExecutionException, InterruptedException {
-        Anoncreds.proverCreateMasterSecret(wallet.getWallet(), masterSecretName).get();
+        Anoncreds.proverCreateMasterSecret(getWallet(), masterSecretName).get();
     }
 
 
@@ -39,7 +39,7 @@ public class Prover extends WalletOwner {
                         .thenCompose(wrapException(schema -> getCredentialDef(pairwiseResult.getMyDid(), credentialOffer.getCredDefId())))
                         .thenCompose(wrapException(credentialDefJson -> {
                             log.debug("{} creating credential request with credentialDefJson {}", name, credentialDefJson);
-                            return Anoncreds.proverCreateCredentialReq(wallet.getWallet(), pairwiseResult.getMyDid(),
+                            return Anoncreds.proverCreateCredentialReq(getWallet(), pairwiseResult.getMyDid(),
                                     credentialOffer.toJSON(), credentialDefJson.toJSON(), this.masterSecretName);
                         }))
                         .thenApply(proverCreateCredentialRequestResult -> {
@@ -63,7 +63,7 @@ public class Prover extends WalletOwner {
     public CompletableFuture<Proof> fulfillProofRequest(ProofRequest proofRequest, Map<String, String> attributes) throws JsonProcessingException, IndyException {
         log.debug("{} Proving proof request: {}", name, proofRequest.toJSON());
 
-        return Anoncreds.proverGetCredentialsForProofReq(wallet.getWallet(), proofRequest.toJSON())
+        return Anoncreds.proverGetCredentialsForProofReq(getWallet(), proofRequest.toJSON())
                 .thenApply(wrapException(credentialsForProofReqJson -> {
                     log.debug("{}: Obtained credentials for proof request {}", name, credentialsForProofReqJson);
                     return JSONUtil.mapper.readValue(credentialsForProofReqJson, CredentialsForRequest.class);
@@ -112,7 +112,7 @@ public class Prover extends WalletOwner {
             log.debug("{} Creating proof with entities {}", name, entities);
             log.debug("{} Using schema's {}", name, JSONUtil.mapper
                     .writeValueAsString(entities.getSchemas()));
-            return Anoncreds.proverCreateProof(wallet.getWallet(), proofRequest.toJSON(), JSONUtil.mapper.writeValueAsString(requestedCredentials), masterSecretName, JSONUtil.mapper
+            return Anoncreds.proverCreateProof(getWallet(), proofRequest.toJSON(), JSONUtil.mapper.writeValueAsString(requestedCredentials), masterSecretName, JSONUtil.mapper
                     .writeValueAsString(entities.getSchemas()), JSONUtil.mapper.writeValueAsString(entities
                     .getCredentialDefs()), "{}");
         }))
@@ -186,9 +186,9 @@ public class Prover extends WalletOwner {
 
     public CompletableFuture<String> storeCredential(CredentialWithRequest credentialWithRequest) throws JsonProcessingException, IndyException {
         Credential credential = credentialWithRequest.getCredential();
-        return getCredentialDef(wallet.getMainDid(), credential.getCredDefId())
+        return getCredentialDef(getMainDid(), credential.getCredDefId())
                 .thenCompose(wrapException(
-                        credentialDef -> Anoncreds.proverStoreCredential(wallet.getWallet(), null, credentialWithRequest.getCredentialRequest().getMetadata(), credential.toJSON(), credentialDef.toJSON(), null
+                        credentialDef -> Anoncreds.proverStoreCredential(getWallet(), null, credentialWithRequest.getCredentialRequest().getMetadata(), credential.toJSON(), credentialDef.toJSON(), null
                         ))
                 ).thenApply(returnValue -> {
                     log.debug("{} return from storeCredential: {}", name, returnValue);
@@ -198,7 +198,7 @@ public class Prover extends WalletOwner {
 
     public CompletableFuture<List<CredentialInfo>> findAllCredentials() throws IndyException {
         String filter = "{}";
-        return Anoncreds.proverGetCredentials(wallet.getWallet(), filter)
+        return Anoncreds.proverGetCredentials(getWallet(), filter)
                 .thenApply(wrapException(this::deserializeCredentialInfo));
     }
 

@@ -23,46 +23,38 @@ import static org.hyperledger.indy.sdk.anoncreds.Anoncreds.issuerCreateSchema;
 
 @Slf4j
 public class Issuer extends TrustAnchor {
-    public String getIssuerDid() {
-        return wallet.getMainDid();
-    }
-
-    public String getIssuerKey() {
-        return wallet.getMainKey();
-    }
-
-    public Issuer(String name, IndyPool pool, IndyWallet wallet) {
-        super(name, pool, wallet);
+    public Issuer(IndyWallet wallet) {
+        super(wallet);
     }
 
     public CompletableFuture<String> createAndSendSchema( String schemaName, String schemaVersion, String... schemaAttributes ) throws IndyException, JsonProcessingException, ExecutionException, InterruptedException {
-        AnoncredsResults.IssuerCreateSchemaResult schema = issuerCreateSchema(getIssuerDid(), schemaName, schemaVersion, new JSONArray(schemaAttributes).toString()).get();
+        AnoncredsResults.IssuerCreateSchemaResult schema = issuerCreateSchema(getMainDid(), schemaName, schemaVersion, new JSONArray(schemaAttributes).toString()).get();
         return createAndSendSchema(schema);
     }
 
     public CompletableFuture<String> createAndSendSchema( AnoncredsResults.IssuerCreateSchemaResult createSchemaResult ) throws IndyException, JsonProcessingException {
 
 
-        return Ledger.buildSchemaRequest(getIssuerDid(), createSchemaResult.getSchemaJson())
+        return Ledger.buildSchemaRequest(getMainDid(), createSchemaResult.getSchemaJson())
                      .thenCompose(wrapException(request -> {
                          log.debug("{}: Submitting buildSchema request {}", this.name, request);
-                         return signAndSubmitRequest(request, getIssuerDid());
+                         return signAndSubmitRequest(request, getMainDid());
                      }))
                      .thenApply(requestResponse -> createSchemaResult.getSchemaId());
     }
 
     public CompletableFuture<String> defineCredential(String schemaId) throws JsonProcessingException, IndyException {
         log.debug("{}: Defining credential for schemaId {}", name, schemaId);
-        return getSchema(getIssuerDid(), schemaId)
+        return getSchema(getMainDid(), schemaId)
                 .thenCompose(wrapException(schema ->
                 {
-                    return Anoncreds.issuerCreateAndStoreCredentialDef(wallet.getWallet(), getIssuerDid(), schema.toJSON(), name + "_" + schemaId, "CL", "{\"support_revocation\":false}");
+                    return Anoncreds.issuerCreateAndStoreCredentialDef(getWallet(), getMainDid(), schema.toJSON(), name + "_" + schemaId, "CL", "{\"support_revocation\":false}");
                 }))
                 .thenCompose(wrapException(createAndStoreCredentialDefResult -> {
-                    return Ledger.buildCredDefRequest(getIssuerDid(), createAndStoreCredentialDefResult.getCredDefJson())
+                    return Ledger.buildCredDefRequest(getMainDid(), createAndStoreCredentialDefResult.getCredDefJson())
                             .thenCompose(wrapException(credentialDefRequest -> {
                                 log.debug("{} Signing and sending credentialDefRequest: {}", name, credentialDefRequest);
-                                return Ledger.signAndSubmitRequest(pool.getPool(), wallet.getWallet(), getIssuerDid(), credentialDefRequest)
+                                return Ledger.signAndSubmitRequest(getPool(), getWallet(), getMainDid(), credentialDefRequest)
                                         ;
                             })).thenApply((response) -> {
                                         log.debug("{} Got credentialDefRequest response: {}", name, response);
@@ -75,7 +67,7 @@ public class Issuer extends TrustAnchor {
 
     public CompletableFuture<CredentialOffer> createCredentialOffer(String id, String targetDid) throws JsonProcessingException, IndyException {
         log.debug("{}: Creating credential offer with credentialdef id {}", id);
-        return Anoncreds.issuerCreateCredentialOffer(wallet.getWallet(), id)
+        return Anoncreds.issuerCreateCredentialOffer(getWallet(), id)
                 .thenCombine(getPairwiseByTheirDid(targetDid),
                         wrapBiFunctionException((credentialOfferJson, pairwiseResult) -> {
                             log.debug("{} Created credentialOffer: {}", name, credentialOfferJson);
@@ -89,7 +81,7 @@ public class Issuer extends TrustAnchor {
     public CompletableFuture<CredentialWithRequest> createCredential(CredentialRequest credentialRequest, Map<String, Object> values) throws UnsupportedEncodingException, JsonProcessingException, IndyException {
         JsonNode credentialValueJson = IntegerEncodingUtil.credentialValuesFromMap(values);
         log.debug("{} Creating credential for: credentialOffer {}, claimRequest {}", name, credentialRequest.getCredentialOffer().toJSON(), credentialRequest.getRequest());
-        return Anoncreds.issuerCreateCredential(wallet.getWallet(), credentialRequest.getCredentialOffer().toJSON(), credentialRequest.getRequest(), credentialValueJson.toString(), null, -1)
+        return Anoncreds.issuerCreateCredential(getWallet(), credentialRequest.getCredentialOffer().toJSON(), credentialRequest.getRequest(), credentialValueJson.toString(), null, -1)
                 .thenApply(wrapException((issuerCreateCredentialResult) -> {
                     log.debug("{} Created credential json: {}", name, issuerCreateCredentialResult.getCredentialJson());
                     Credential credential = JSONUtil.mapper.readValue(issuerCreateCredentialResult.getCredentialJson(), Credential.class);

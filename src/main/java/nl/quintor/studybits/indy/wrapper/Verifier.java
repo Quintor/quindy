@@ -6,6 +6,7 @@ import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.exception.IndyWrapperException;
 import nl.quintor.studybits.indy.wrapper.util.IntegerEncodingUtil;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
+import nl.quintor.studybits.indy.wrapper.util.ProofUtils;
 import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.anoncreds.Anoncreds;
 
@@ -19,9 +20,9 @@ import java.util.stream.Stream;
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
 @Slf4j
-public class Verifier extends WalletOwner {
-    public Verifier(String name, IndyPool pool, IndyWallet wallet) {
-        super(name, pool, wallet);
+public class Verifier extends IndyWallet {
+    public Verifier(IndyWallet wallet) {
+        super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
     }
 
     public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof) {
@@ -33,6 +34,7 @@ public class Verifier extends WalletOwner {
                 .thenRun(() -> validateProofEncodings(proof))
                 .thenApply(v -> extractProofAttributes(proofRequest, proof));
     }
+
 
     private void ValidateResult(boolean valid, String message) throws IndyWrapperException {
         if (!valid) {

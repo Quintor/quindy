@@ -19,22 +19,24 @@ public class Main {
 
         String poolName = PoolUtils.createPoolLedgerConfig(null);
         IndyPool indyPool = new IndyPool(poolName);
-        TrustAnchor steward = new TrustAnchor("Steward", indyPool, IndyWallet.create(indyPool, "steward_wallet", "000000000000000000000000Steward1"));
+        TrustAnchor steward = new TrustAnchor(IndyWallet.create(indyPool, "steward_wallet", "000000000000000000000000Steward1"));
 
         // Onboard the issuers (onboard -> verinym -> issuerDids)
-        Issuer government = new Issuer("Government", indyPool, IndyWallet.create(indyPool, "government_wallet",null));
+        Issuer government = new Issuer(IndyWallet.create(indyPool, "government_wallet",null));
         onboardIssuer(steward, government);
 
-        Issuer faber = new Issuer("Faber", indyPool, IndyWallet.create(indyPool, "faber_wallet", null));
+        Issuer faber = new Issuer(IndyWallet.create(indyPool, "faber_wallet", null));
         onboardIssuer(steward, faber);
 
-        Issuer acme = new Issuer("Acme", indyPool, IndyWallet.create(indyPool, "acme_wallet", null));
+
+        IndyWallet acmeWallet = IndyWallet.create(indyPool, "acme_wallet", null);
+        Issuer acme = new Issuer(acmeWallet);
         onboardIssuer(steward, acme);
 
-        Issuer thrift = new Issuer("Thrift", indyPool, IndyWallet.create(indyPool, "thrift_wallet", null));
+        Issuer thrift = new Issuer(IndyWallet.create(indyPool, "thrift_wallet", null));
         onboardIssuer(steward, thrift);
 
-        Prover alice = new Prover("Alice", indyPool, IndyWallet.create(indyPool, "alice_wallet", null), "alice_master_secret");
+        Prover alice = new Prover(IndyWallet.create(indyPool, "alice_wallet", null), "alice_master_secret");
         String aliceFaberDid = onboardWalletOwner(faber, alice);
         alice.init();
 
@@ -119,7 +121,7 @@ public class Main {
 
         List<ProofAttribute> attributes = acme
                 .authDecrypt(authcryptedProof, Proof.class)
-                .thenCompose(proof -> acme.getVerifiedProofAttributes(jobApplicationProofRequest, proof))
+                .thenCompose(proof -> new Verifier(acmeWallet).getVerifiedProofAttributes(jobApplicationProofRequest, proof))
                 .get();
 
         System.out.println(attributes);
@@ -144,7 +146,7 @@ public class Main {
                 .thenCompose(AsyncUtil.wrapException(steward::acceptVerinymRequest)).get();
     }
 
-    private static String onboardWalletOwner(TrustAnchor trustAnchor, WalletOwner newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {
+    private static String onboardWalletOwner(TrustAnchor trustAnchor, IndyWallet newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {
         String governmentConnectionRequest = trustAnchor.createConnectionRequest(newcomer.getName(), null).get().toJSON();
 
         AnoncryptedMessage newcomerConnectionResponse = newcomer.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class))
