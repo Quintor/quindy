@@ -6,6 +6,7 @@ import nl.quintor.studybits.indy.wrapper.dto.ConnectionResponse;
 import nl.quintor.studybits.indy.wrapper.dto.Verinym;
 import nl.quintor.studybits.indy.wrapper.exception.IndyWrapperException;
 import org.hyperledger.indy.sdk.IndyException;
+import org.hyperledger.indy.sdk.did.Did;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,6 +43,10 @@ public class TrustAnchor extends IndyWallet {
                                 )
                         )
                 );
+    }
+
+    public CompletableFuture<Void> setEndpoint(String endpoint) throws IndyException {
+        return Did.setEndpointForDid(getWallet(), getMainDid(), endpoint, getMainKey());
     }
 
     public Verinym createVerinymRequest( String targetDid ) {

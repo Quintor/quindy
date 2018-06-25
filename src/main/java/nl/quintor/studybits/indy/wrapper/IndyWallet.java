@@ -128,6 +128,10 @@ public class IndyWallet implements AutoCloseable {
                 });
     }
 
+    public CompletableFuture<String> getEndpointForDid(String did) throws IndyException {
+        return Did.getEndpointForDid(wallet, pool, did).thenApply(DidResults.EndpointForDidResult::getAddress);
+    }
+
     public CompletableFuture<Schema> getSchema(String did, String schemaId) throws JsonProcessingException, IndyException {
         log.debug("{}: Calling buildGetSchemaRequest with submitter: {} schemaId {}", name, did, schemaId);
         return Ledger.buildGetSchemaRequest(did, schemaId)
