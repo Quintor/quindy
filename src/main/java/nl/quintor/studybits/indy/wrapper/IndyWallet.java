@@ -208,7 +208,6 @@ public class IndyWallet implements AutoCloseable {
                 .thenCompose(wrapException(pairwiseResult -> getKeyForDid(pairwiseResult.getMyDid())
                         .thenCompose(wrapException(key -> Crypto.authDecrypt(wallet, key, message.getMessage())
                                 .thenApply(wrapException((decryptedMessage) -> {
-                                    assert decryptedMessage.getVerkey().equals(key);
                                     T decryptedObject = JSONUtil.mapper.readValue(new String(decryptedMessage.getDecryptedMessage(), Charset
                                             .forName("utf8")), valueType);
                                     decryptedObject.setTheirDid(message.getDid());
