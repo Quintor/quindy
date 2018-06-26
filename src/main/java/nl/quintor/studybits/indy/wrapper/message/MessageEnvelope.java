@@ -5,10 +5,12 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import nl.quintor.studybits.indy.wrapper.dto.Serializable;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class MessageEnvelope implements Serializable {
     public static final String TYPE_PREFIX = "urn:indy:sov:agent:message_type:sovrin.org/connection/1.0/";
 
