@@ -22,7 +22,7 @@ import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 @Slf4j
 public class Verifier extends IndyWallet {
     public Verifier(IndyWallet wallet) {
-        super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
+        super(wallet);
     }
 
     public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof) {

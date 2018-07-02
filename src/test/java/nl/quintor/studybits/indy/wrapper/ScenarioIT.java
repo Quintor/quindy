@@ -23,24 +23,25 @@ public class ScenarioIT {
 
         String poolName = PoolUtils.createPoolLedgerConfig(null);
         IndyPool indyPool = new IndyPool(poolName);
-        TrustAnchor steward = new TrustAnchor(IndyWallet.create(indyPool, "steward_wallet", "000000000000000000000000Steward1"));
+        LookupRepository lookupRepository = new IndyLedger(indyPool.getPool());
+        TrustAnchor steward = new TrustAnchor(IndyWallet.create(lookupRepository, indyPool.getPoolName(), "steward_wallet", "000000000000000000000000Steward1"));
 
         // Onboard the issuers (onboard -> verinym -> issuerDids)
-        Issuer government = new Issuer(IndyWallet.create(indyPool, "government_wallet",null));
+        Issuer government = new Issuer(IndyWallet.create(lookupRepository, indyPool.getPoolName(), "government_wallet",null));
         onboardIssuer(steward, government);
 
-        Issuer faber = new Issuer(IndyWallet.create(indyPool, "faber_wallet", null));
+        Issuer faber = new Issuer(IndyWallet.create(lookupRepository, indyPool.getPoolName(), "faber_wallet", null));
         onboardIssuer(steward, faber);
 
 
-        IndyWallet acmeWallet = IndyWallet.create(indyPool, "acme_wallet", null);
+        IndyWallet acmeWallet = IndyWallet.create(lookupRepository, indyPool.getPoolName(), "acme_wallet", null);
         Issuer acme = new Issuer(acmeWallet);
         onboardIssuer(steward, acme);
 
-        Issuer thrift = new Issuer(IndyWallet.create(indyPool, "thrift_wallet", null));
+        Issuer thrift = new Issuer(IndyWallet.create(lookupRepository, indyPool.getPoolName(), "thrift_wallet", null));
         onboardIssuer(steward, thrift);
 
-        Prover alice = new Prover(IndyWallet.create(indyPool, "alice_wallet", null), "alice_master_secret");
+        Prover alice = new Prover(IndyWallet.create(lookupRepository, indyPool.getPoolName(), "alice_wallet", null), "alice_master_secret");
         String aliceFaberDid = onboardWalletOwner(faber, alice);
         alice.init();
 

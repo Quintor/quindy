@@ -45,10 +45,14 @@ public class PoolUtils {
 	}
 
 	public static String createPoolLedgerConfig(String testPoolIP) throws IOException, InterruptedException, java.util.concurrent.ExecutionException, IndyException {
+		return createPoolLedgerConfig(testPoolIP, DEFAULT_POOL_NAME);
+	}
+
+	public static String createPoolLedgerConfig(String testPoolIP, String poolName) throws IOException, InterruptedException, java.util.concurrent.ExecutionException, IndyException {
 		File genesisTxnFile = createGenesisTxnFile("temp.txn", testPoolIP);
 		PoolJSONParameters.CreatePoolLedgerConfigJSONParameter createPoolLedgerConfigJSONParameter
 				= new PoolJSONParameters.CreatePoolLedgerConfigJSONParameter(genesisTxnFile.getAbsolutePath());
-		Pool.createPoolLedgerConfig(DEFAULT_POOL_NAME, createPoolLedgerConfigJSONParameter.toJson()).get();
-		return DEFAULT_POOL_NAME;
+		Pool.createPoolLedgerConfig(poolName, createPoolLedgerConfigJSONParameter.toJson()).get();
+		return poolName;
 	}
 }

@@ -24,7 +24,7 @@ public class Prover extends IndyWallet {
     private String masterSecretName;
 
     public Prover(IndyWallet wallet, String masterSecretName) {
-        super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
+        super(wallet);
         this.masterSecretName = masterSecretName;
     }
 

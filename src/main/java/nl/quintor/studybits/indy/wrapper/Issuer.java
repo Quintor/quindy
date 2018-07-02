@@ -33,8 +33,6 @@ public class Issuer extends TrustAnchor {
     }
 
     public CompletableFuture<String> createAndSendSchema( AnoncredsResults.IssuerCreateSchemaResult createSchemaResult ) throws IndyException, JsonProcessingException {
-
-
         return Ledger.buildSchemaRequest(getMainDid(), createSchemaResult.getSchemaJson())
                      .thenCompose(wrapException(request -> {
                          log.debug("{}: Submitting buildSchema request {}", this.name, request);
@@ -54,7 +52,7 @@ public class Issuer extends TrustAnchor {
                     return Ledger.buildCredDefRequest(getMainDid(), createAndStoreCredentialDefResult.getCredDefJson())
                             .thenCompose(wrapException(credentialDefRequest -> {
                                 log.debug("{} Signing and sending credentialDefRequest: {}", name, credentialDefRequest);
-                                return Ledger.signAndSubmitRequest(getPool(), getWallet(), getMainDid(), credentialDefRequest)
+                                return getLookupRepository().signAndSubmitRequest(credentialDefRequest, getMainDid(), getWallet())
                                         ;
                             })).thenApply((response) -> {
                                         log.debug("{} Got credentialDefRequest response: {}", name, response);
