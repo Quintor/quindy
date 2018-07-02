@@ -37,31 +37,32 @@ public class IndyWallet implements AutoCloseable {
     @Setter
     private String mainKey;
 
-    private Pool pool;
+    private LookupRepository lookupRepository;
 
-    private IndyWallet(String name, Pool pool) throws IndyException, ExecutionException, InterruptedException {
+
+    private IndyWallet(String name) throws IndyException, ExecutionException, InterruptedException {
         this.wallet = Wallet.openWallet(name, null, null).get();
 
         this.name = name;
-        this.pool = pool;
     }
 
-    protected IndyWallet(String name, String mainDid, String mainKey, Pool pool, Wallet wallet) {
-        this.name = name;
-        this.pool = pool;
-        this.mainDid = mainDid;
-        this.mainKey = mainKey;
-        this.wallet = wallet;
+    protected IndyWallet(IndyWallet wallet) {
+        this.name = wallet.getName();
+        this.mainDid = wallet.getMainDid();
+        this.mainKey = wallet.getMainKey();
+        this.wallet = wallet.getWallet();
+        this.lookupRepository = wallet.getLookupRepository();
     }
 
-    public static IndyWallet create(IndyPool pool, String name, String seed) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
-        Wallet.createWallet(pool.getPoolName(), name, "default", null, null).get();
+    public static IndyWallet create(LookupRepository lookupRepository, String poolName, String name, String seed) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
+        Wallet.createWallet(poolName, name, "default", null, null).get();
 
-        IndyWallet indyWallet = new IndyWallet(name, pool.getPool());
+        IndyWallet indyWallet = new IndyWallet(name);
 
         DidResults.CreateAndStoreMyDidResult result = indyWallet.newDid(seed).get();
         indyWallet.mainDid = result.getDid();
         indyWallet.mainKey = result.getVerkey();
+        indyWallet.lookupRepository = lookupRepository;
 
         return indyWallet;
     }
@@ -77,7 +78,7 @@ public class IndyWallet implements AutoCloseable {
     }
 
     private CompletableFuture<String> submitRequest(String request) throws IndyException {
-        return Ledger.submitRequest(pool, request);
+        return lookupRepository.submitRequest(request);
     }
 
     CompletableFuture<String> signAndSubmitRequest(String request) throws IndyException {
@@ -85,11 +86,11 @@ public class IndyWallet implements AutoCloseable {
     }
 
     CompletableFuture<String> signAndSubmitRequest(String request, String did) throws IndyException {
-        return Ledger.signAndSubmitRequest(pool, wallet, did, request);
+        return lookupRepository.signAndSubmitRequest(request, did, wallet);
     }
 
     public CompletableFuture<ConnectionResponse> acceptConnectionRequest(ConnectionRequest connectionRequest) throws JsonProcessingException, IndyException {
-        log.debug("{} Called acceptConnectionRequest with {}, {}, {}", name, pool, wallet, connectionRequest);
+        log.debug("{} Called acceptConnectionRequest with {}, {}", name, wallet, connectionRequest);
 
         return newDid()
                 .thenApply(
@@ -120,16 +121,7 @@ public class IndyWallet implements AutoCloseable {
 
 
     private CompletableFuture<String> getKeyForDid(String did) throws IndyException {
-        log.debug("{} Called getKeyForDid: {}", name, did);
-        return Did.keyForDid(pool, wallet, did)
-                .thenApply(key -> {
-                    log.debug("{} Got key for did {} key {}", name, did, key);
-                    return key;
-                });
-    }
-
-    public CompletableFuture<String> getEndpointForDid(String did) throws IndyException {
-        return Did.getEndpointForDid(wallet, pool, did).thenApply(DidResults.EndpointForDidResult::getAddress);
+        return lookupRepository.getKeyForDid(did, wallet);
     }
 
     public CompletableFuture<Schema> getSchema(String did, String schemaId) throws JsonProcessingException, IndyException {

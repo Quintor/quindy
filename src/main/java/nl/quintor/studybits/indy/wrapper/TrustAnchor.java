@@ -22,7 +22,7 @@ public class TrustAnchor extends IndyWallet {
     private Map<String, String> rolesByDid = new HashMap<>();
 
     public TrustAnchor(IndyWallet wallet) {
-        super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
+        super(wallet);
         log.info("{}: Instantiated TrustAnchor: {}", name, name);
     }
 
