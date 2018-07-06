@@ -40,7 +40,8 @@ public class IndyWallet implements AutoCloseable {
     private Pool pool;
 
     private IndyWallet(String name, Pool pool) throws IndyException, ExecutionException, InterruptedException {
-        this.wallet = Wallet.openWallet(name, null, null).get();
+        this.wallet = Wallet.openWallet(name, null, "{\"key\":\"" + name + "_key" + "\"}").get();
+
 
         this.name = name;
         this.pool = pool;
@@ -54,8 +55,9 @@ public class IndyWallet implements AutoCloseable {
         this.wallet = wallet;
     }
 
+
     public static IndyWallet create(IndyPool pool, String name, String seed) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
-        Wallet.createWallet(pool.getPoolName(), name, "default", null, null).get();
+        Wallet.createWallet(pool.getPoolName(), name, "default", "{}", "{\"key\":\"" + name + "_key" + "\"}").get();
 
         IndyWallet indyWallet = new IndyWallet(name, pool.getPool());
 
