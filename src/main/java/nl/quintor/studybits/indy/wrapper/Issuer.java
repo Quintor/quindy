@@ -59,7 +59,9 @@ public class Issuer extends TrustAnchor {
                                         return createAndStoreCredentialDefResult.getCredDefId();
                                     }
                             );
-                }));
+                }))
+                .thenCompose(wrapException((String id) -> this.getCredentialDef(getMainDid(), id)))
+                .thenApply(CredentialDefinition::getId);
     }
 
 

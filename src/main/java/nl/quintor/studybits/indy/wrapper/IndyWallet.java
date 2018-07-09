@@ -14,6 +14,7 @@ import org.hyperledger.indy.sdk.did.Did;
 import org.hyperledger.indy.sdk.did.DidResults;
 import org.hyperledger.indy.sdk.ledger.Ledger;
 import org.hyperledger.indy.sdk.ledger.LedgerResults;
+import org.hyperledger.indy.sdk.non_secrets.WalletRecord;
 import org.hyperledger.indy.sdk.pairwise.Pairwise;
 import org.hyperledger.indy.sdk.pool.Pool;
 import org.hyperledger.indy.sdk.wallet.Wallet;
@@ -25,6 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapBiFunctionException;
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
 @Slf4j
@@ -106,18 +108,14 @@ public class IndyWallet implements AutoCloseable {
     CompletableFuture<Void> storeDidAndPairwise(String myDid, String theirDid, String theirKey) throws JsonProcessingException, IndyException {
         log.debug("{} Called storeDidAndPairwise: myDid: {}, theirDid: {}", name, myDid, theirDid);
 
-        return Did.storeTheirDid(wallet, new TheirDidInfo(theirDid, theirKey).toJSON())
-                .thenCompose(wrapException(
-                        (storeDidResponse) -> {
-                            log.debug("{} Creating pairwise theirDid: {}, myDid: {}, metadata: {}", name, theirDid, myDid, "");
-                            return Pairwise.createPairwise(wallet, theirDid, myDid, "");
-                        }));
+        return WalletRecord.add(wallet, "pairwise", theirDid, myDid, "{}");
     }
 
     public CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid(String theirDid) throws IndyException {
         log.debug("{} Called getPairwise by their did: {}", name, theirDid);
-        return Pairwise.getPairwise(wallet, theirDid)
-                .thenApply(wrapException(json -> JSONUtil.mapper.readValue(json, GetPairwiseResult.class)));
+        return WalletRecord.get(wallet, "pairwise", theirDid, "{}")
+                .thenApply(wrapException(result -> JSONUtil.mapper.readValue(result, nl.quintor.studybits.indy.wrapper.dto.WalletRecord.class)))
+                .thenApply(result -> new GetPairwiseResult(result.getValue(), ""));
     }
 
 
