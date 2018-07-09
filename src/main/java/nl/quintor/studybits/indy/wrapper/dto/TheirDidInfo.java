@@ -1,12 +1,10 @@
 package nl.quintor.studybits.indy.wrapper.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 
 @AllArgsConstructor
-@Getter
-@ToString
+@Data
+@NoArgsConstructor
 public class TheirDidInfo implements Serializable {
     private String did;
     private String verkey;

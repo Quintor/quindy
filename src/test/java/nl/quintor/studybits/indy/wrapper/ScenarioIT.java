@@ -5,6 +5,7 @@ import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
 import org.hyperledger.indy.sdk.IndyException;
+import org.hyperledger.indy.sdk.pool.Pool;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ public class ScenarioIT {
     @Test
     public void fullScenarioTest() throws Exception {
         removeIndyClientDirectory();
+        Pool.setProtocolVersion(PoolUtils.PROTOCOL_VERSION).get();
 
         String poolName = PoolUtils.createPoolLedgerConfig(null);
         IndyPool indyPool = new IndyPool(poolName);
