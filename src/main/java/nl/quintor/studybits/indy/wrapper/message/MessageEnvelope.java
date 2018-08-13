@@ -47,33 +47,19 @@ public class MessageEnvelope<T> implements Serializable {
     }
 
     public T getMessage() throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
-        log.debug("TEST 0");
-        log.debug("We have indywallet: {}", indyWallet);
         if (message != null) {
             return message;
         }
 
         if (this.type.getEncryption().equals(MessageType.Encryption.AUTHCRYPTED)) {
-            log.debug("DEBUG 1");
-            log.debug("Message {}", encodedMessage.asText());
-            log.debug("ValueType {}", this.type.getValueType());
             this.message = indyWallet.authDecrypt(Base64.decodeBase64(encodedMessage.asText()), theirDid, this.type.getValueType()).get();
-            log.debug("DEBUG 2");
         }
         else if (this.type.getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
-            log.debug("DEBUG 3");
-            log.debug("Message {}", encodedMessage.asText());
-            log.debug("ValueType {}", this.type.getValueType());
-            log.debug("Base 64 decode: {}", Base64.decodeBase64(encodedMessage.asText()));
-            log.debug("IndyWallet {}", indyWallet);
             this.message = indyWallet.anonDecrypt(Base64.decodeBase64(encodedMessage.asText()), theirDid, this.type.getValueType()).get();
-            log.debug("DEBUG 4");
         }
         else {
-            log.debug("Parsing to {}", this.type.getValueType());
             this.message = JSONUtil.mapper.treeToValue(encodedMessage, this.type.getValueType());
         }
-        log.debug("Reached end");
 
         return this.message;
     }
@@ -89,7 +75,6 @@ public class MessageEnvelope<T> implements Serializable {
 
         @Override
         public void serialize(MessageEnvelope m, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-            System.out.println("SERIALIZING");
             jsonGenerator.writeStartObject();
             jsonGenerator.writeStringField("type", m.type.getURN());
 
@@ -99,15 +84,10 @@ public class MessageEnvelope<T> implements Serializable {
                     jsonGenerator.writeStringField("id", authcryptedMessage.getDid());
                     jsonGenerator.writeStringField("message", Base64.encodeBase64String(authcryptedMessage.getMessage()));
                 } else if (m.type.getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
-                    System.out.println("SERIALIZING ANONCRYPTED");
                     byte[] bytes = JSONUtil.mapper.writeValueAsBytes(m.message);
-                    System.out.println("Wrote as bytes" + m.indyWallet);
                     AnoncryptedMessage anoncryptedMessage = m.indyWallet.anonEncrypt(bytes, m.theirDid).get();
-                    System.out.println("Anoncrypted: " + anoncryptedMessage.getTargetDid());
                     jsonGenerator.writeStringField("id", anoncryptedMessage.getTargetDid());
-                    System.out.println("DEBUG");
                     jsonGenerator.writeStringField("message", Base64.encodeBase64String(anoncryptedMessage.getMessage()));
-                    System.out.println("DONE SERIALIZING ANONCRYPTED");
                 } else {
                     jsonGenerator.writeStringField("id", (String) m.type.getIdProvider().apply(m.message));
                     if (m.message != null) {
@@ -116,13 +96,11 @@ public class MessageEnvelope<T> implements Serializable {
                 }
             }
             catch (IndyException | InterruptedException | ExecutionException e) {
-                System.out.println("EXEPTION");
                 e.printStackTrace();
                 throw new IOException("Exception during encryption", e);
             }
 
             jsonGenerator.writeEndObject();
-            System.out.println("DONE SERIALIZING");
         }
     }
 

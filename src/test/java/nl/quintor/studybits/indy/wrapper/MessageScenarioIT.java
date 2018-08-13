@@ -114,8 +114,7 @@ public class MessageScenarioIT {
 
         jobApplicationProofRequest.setTheirDid(aliceAcmeDid);
 
-        AuthcryptedMessage authcryptedJobApplicationProofRequest = acme.authEncrypt(jobApplicationProofRequest)
-                .get();
+        String jobApplicationProofRequestEnvelope = MessageEnvelope.fromAuthcryptable(jobApplicationProofRequest, IndyMessageTypes.PROOF_REQUEST, acme).toJSON();
 
 
         Map<String, String> selfAttestedAttributes = new HashMap<>();
@@ -123,15 +122,14 @@ public class MessageScenarioIT {
         selfAttestedAttributes.put("last_name", "Garcia");
         selfAttestedAttributes.put("phone_number", "123phonenumber");
 
-        AuthcryptedMessage authcryptedProof = alice.authDecrypt(authcryptedJobApplicationProofRequest, ProofRequest.class)
-                .thenCompose(AsyncUtil.wrapException(proofRequest -> alice.fulfillProofRequest(proofRequest, selfAttestedAttributes)))
-                .thenCompose(AsyncUtil.wrapException(alice::authEncrypt))
-                .get();
+        ProofRequest decryptedProofRequest = MessageEnvelope.<ProofRequest>parseFromString(jobApplicationProofRequestEnvelope, alice).getMessage();
 
-        List<ProofAttribute> attributes = acme
-                .authDecrypt(authcryptedProof, Proof.class)
-                .thenCompose(proof -> new Verifier(acmeWallet).getVerifiedProofAttributes(jobApplicationProofRequest, proof))
-                .get();
+        Proof proof = alice.fulfillProofRequest(decryptedProofRequest, selfAttestedAttributes).get();
+        String proofEnvelope = MessageEnvelope.fromAuthcryptable(proof, IndyMessageTypes.PROOF, alice).toJSON();
+
+        Proof decryptedProof = MessageEnvelope.<Proof>parseFromString(proofEnvelope, acme).getMessage();
+
+        List<ProofAttribute> attributes = new Verifier(acmeWallet).getVerifiedProofAttributes(jobApplicationProofRequest, decryptedProof).get();
 
         System.out.println(attributes);
         assertThat(attributes, containsInAnyOrder(
@@ -145,25 +143,19 @@ public class MessageScenarioIT {
     }
 
     public static void onboardIssuer(TrustAnchor steward, Issuer newcomer) throws InterruptedException, ExecutionException, IndyException, IOException {
-        System.out.println("DEBUG 0");
         // Connecting newcomer with Steward
         String governmentConnectionRequest = steward.createConnectionRequest(newcomer.getName(), "TRUST_ANCHOR")
                 .thenApply(connectionRequest -> new MessageEnvelope<>(IndyMessageTypes.CONNECTION_REQUEST, connectionRequest, null, steward, null)).get().toJSON();
 
         MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(governmentConnectionRequest, newcomer);
-        System.out.println("DEBUG 1");
         ConnectionResponse newcomerConnectionResponse = newcomer.acceptConnectionRequest(connectionRequestMessageEnvelope.getMessage()).get();
-        System.out.println("DEBUG 1.5");
         String newcomerConnectionResponseString =  MessageEnvelope.fromAnoncryptable(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE, newcomer).toJSON();
-        System.out.println("DEBUG 2");
         ConnectionResponse connectionResponse = MessageEnvelope.<ConnectionResponse>parseFromString(newcomerConnectionResponseString, steward).getMessage();
         steward.acceptConnectionResponse(connectionResponse).get();
-        System.out.println("DEBUG 3");
 
         String verinymRequest = MessageEnvelope.fromAuthcryptable(newcomer.createVerinymRequest(MessageEnvelope.<ConnectionRequest>parseFromString(governmentConnectionRequest, newcomer).getMessage()
                 .getDid()), IndyMessageTypes.VERINYM, newcomer).toJSON();
 
-        System.out.println("DEBUG 4");
 
         steward.acceptVerinymRequest(MessageEnvelope.<Verinym>parseFromString(verinymRequest, steward).getMessage()).get();
     }
@@ -174,11 +166,8 @@ public class MessageScenarioIT {
 
 
         MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(governmentConnectionRequest, newcomer);
-        System.out.println("DEBUG 1");
         ConnectionResponse newcomerConnectionResponse = newcomer.acceptConnectionRequest(connectionRequestMessageEnvelope.getMessage()).get();
-        System.out.println("DEBUG 1.5");
         String newcomerConnectionResponseString =  MessageEnvelope.fromAnoncryptable(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE, newcomer).toJSON();
-        System.out.println("DEBUG 2");
 
         ConnectionResponse connectionResponse = MessageEnvelope.<ConnectionResponse>parseFromString(newcomerConnectionResponseString, trustAnchor).getMessage();
         String newcomerDid = trustAnchor.acceptConnectionResponse(connectionResponse).get();
