@@ -70,6 +70,15 @@ public class IndyWallet implements AutoCloseable {
         return indyWallet;
     }
 
+    public static IndyWallet open(IndyPool pool, String name, String did) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
+        IndyWallet indyWallet = new IndyWallet(name, pool.getPool());
+
+        indyWallet.mainDid = did;
+        indyWallet.mainKey = indyWallet.getKeyForDid(did).get();
+
+        return indyWallet;
+    }
+
     CompletableFuture<DidResults.CreateAndStoreMyDidResult> newDid() throws JsonProcessingException, IndyException {
         return newDid(null);
     }
@@ -220,7 +229,7 @@ public class IndyWallet implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        wallet.closeWallet();
+        wallet.closeWallet().get();
     }
 
     public static void delete(String name) throws IndyException {
