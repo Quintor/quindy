@@ -36,7 +36,7 @@ public class MessageEnvelope<T> implements Serializable {
 
     @Setter
     private IndyWallet indyWallet;
-    @JsonIgnore
+    @Getter
     private String theirDid;
 
     @JsonCreator
