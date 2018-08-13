@@ -26,6 +26,8 @@ public class MessageScenarioIT {
         removeIndyClientDirectory();
         Pool.setProtocolVersion(PoolUtils.PROTOCOL_VERSION).get();
 
+        IndyMessageTypes.init();
+
         String poolName = PoolUtils.createPoolLedgerConfig(null);
         IndyPool indyPool = new IndyPool(poolName);
         TrustAnchor steward = new TrustAnchor(IndyWallet.create(indyPool, "steward_wallet", "000000000000000000000000Steward1"));

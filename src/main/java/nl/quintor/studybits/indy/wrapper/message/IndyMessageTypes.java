@@ -1,13 +1,17 @@
 package nl.quintor.studybits.indy.wrapper.message;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.*;
 import org.hyperledger.indy.sdk.anoncreds.ProofRejectedException;
 import sun.net.ConnectionResetException;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
+@Slf4j
 public class IndyMessageTypes {
+    private static final AtomicBoolean initialized = new AtomicBoolean(false);
     private static String SOVRIN_URN_PREFIX = "urn:indy:sov:agent:message_type:sovrin.org/";
 
     public static MessageType<ConnectionRequest> CONNECTION_REQUEST = new StandardMessageType<>(
@@ -37,8 +41,30 @@ public class IndyMessageTypes {
 
     public static MessageType<Proof> PROOF = new StandardMessageType<>(
             SOVRIN_URN_PREFIX + "proof/1.0/proof", MessageType.Encryption.AUTHCRYPTED, null, Proof.class);
+
+    static {
+        init();
+    }
+
+    public static void init() {
+        log.debug("Trying to initialize message types");
+        if (!initialized.get()) {
+            if(initialized.compareAndSet(false, true)) {
+                log.debug("Initializing message types");
+                MessageTypes.registerType(CONNECTION_REQUEST);
+                MessageTypes.registerType(CONNECTION_RESPONSE);
+                MessageTypes.registerType(VERINYM);
+                MessageTypes.registerType(CONNECTION_ACKNOWLEDGEMENT);
+                MessageTypes.registerType(CREDENTIAL_OFFER);
+                MessageTypes.registerType(CREDENTIAL_REQUEST);
+                MessageTypes.registerType(CREDENTIAL);
+                MessageTypes.registerType(PROOF_REQUEST);
+                MessageTypes.registerType(PROOF);
+            }
+        }
+    }
     @Data
-    private static class StandardMessageType<T> implements MessageType<T> {
+    public static class StandardMessageType<T> implements MessageType<T> {
         private final String URN;
         private final Encryption encryption;
         private final Function<T, String> idProvider;
@@ -49,8 +75,6 @@ public class IndyMessageTypes {
             this.encryption = encryption;
             this.idProvider = idProvider;
             this.valueType = valueType;
-
-            MessageTypes.registerType(this);
         }
     }
 }

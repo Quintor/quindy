@@ -10,6 +10,7 @@ public class MessageTypes {
     private static final Map<String, MessageType> messageTypes = new HashMap<>();
 
     public static void registerType(MessageType messageType) {
+        log.debug("Initializing MessageType for URN " + messageType.getURN());
         if (messageTypes.containsKey(messageType.getURN())) {
             throw new IllegalArgumentException("URN already registered: " + messageType.getURN());
         }
@@ -18,6 +19,7 @@ public class MessageTypes {
 
     public static MessageType forURN(String urn) {
         log.debug("Querying for URN {}", urn);
+        log.debug("Message types: " + messageTypes.toString());
         return messageTypes.get(urn);
     }
 }

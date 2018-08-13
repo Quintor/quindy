@@ -113,6 +113,7 @@ public class MessageEnvelope<T> implements Serializable {
     }
 
     public static <S> MessageEnvelope<S> parseFromString(String messageEnvelope, IndyWallet indyWallet) throws IOException {
+        log.debug("Parsing " + messageEnvelope);
         MessageEnvelope<S> messageEnvelopeObject =  JSONUtil.mapper.reader().forType(MessageEnvelope.class).readValue(messageEnvelope);
         messageEnvelopeObject.setIndyWallet(indyWallet);
         return messageEnvelopeObject;
