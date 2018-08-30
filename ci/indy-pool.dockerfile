@@ -45,7 +45,7 @@ RUN echo '[supervisord]\n\
 logfile = /tmp/supervisord.log\n\
 logfile_maxbytes = 50MB\n\
 logfile_backups=10\n\
-logLevel = error\n\
+logLevel = info\n\
 pidfile = /tmp/supervisord.pid\n\
 nodaemon = true\n\
 minfds = 1024\n\

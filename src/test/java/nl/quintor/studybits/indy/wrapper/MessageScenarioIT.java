@@ -1,6 +1,8 @@
 package nl.quintor.studybits.indy.wrapper;
 
 import nl.quintor.studybits.indy.wrapper.dto.*;
+import nl.quintor.studybits.indy.wrapper.message.IndyMessageTypes;
+import nl.quintor.studybits.indy.wrapper.message.MessageEnvelope;
 import nl.quintor.studybits.indy.wrapper.util.AsyncUtil;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
@@ -9,19 +11,22 @@ import org.hyperledger.indy.sdk.pool.Pool;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.sql.SQLOutput;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static nl.quintor.studybits.indy.wrapper.TestUtil.removeIndyClientDirectory;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 
-public class ScenarioIT {
+public class MessageScenarioIT {
 
-    //@Test
+    @Test
     public void fullScenarioTest() throws Exception {
         removeIndyClientDirectory();
         Pool.setProtocolVersion(PoolUtils.PROTOCOL_VERSION).get();
+
+        IndyMessageTypes.init();
 
         String poolName = PoolUtils.createPoolLedgerConfig(null);
         IndyPool indyPool = new IndyPool(poolName);
@@ -63,13 +68,13 @@ public class ScenarioIT {
 
 
 
-        AuthcryptedMessage transcriptCredentialOffer = faber.createCredentialOffer(transcriptCredentialDefId, aliceFaberDid)
-                .thenCompose(AsyncUtil.wrapException(faber::authEncrypt)).get();
+        CredentialOffer transcriptCredentialOffer = faber.createCredentialOffer(transcriptCredentialDefId, aliceFaberDid).get();
+        String credentialOfferMessageEnvelope = MessageEnvelope.fromAuthcryptable(transcriptCredentialOffer, IndyMessageTypes.CREDENTIAL_OFFER, faber).toJSON();
 
 
-        AuthcryptedMessage transcriptCredentialRequest = alice.authDecrypt(transcriptCredentialOffer, CredentialOffer.class)
-                .thenCompose(AsyncUtil.wrapException(alice::createCredentialRequest))
-                .thenCompose(AsyncUtil.wrapException(alice::authEncrypt)).get();
+        CredentialOffer decryptedTranscriptCredentialOffer = MessageEnvelope.<CredentialOffer>parseFromString(credentialOfferMessageEnvelope, alice).getMessage();
+        CredentialRequest transcriptCredentialRequest = alice.createCredentialRequest(decryptedTranscriptCredentialOffer).get();
+        String transcriptCredentialRequestMessageEnvelope = MessageEnvelope.<CredentialRequest>fromAuthcryptable(transcriptCredentialRequest, IndyMessageTypes.CREDENTIAL_REQUEST, alice).toJSON();
 
 
         Map<String, Object> credentialValues  = new HashMap<>();
@@ -81,13 +86,13 @@ public class ScenarioIT {
         credentialValues.put("year", 2015);
         credentialValues.put("average", 5);
 
-        AuthcryptedMessage credential = faber.authDecrypt(transcriptCredentialRequest, CredentialRequest.class)
-                .thenCompose(AsyncUtil.wrapException(credentialRequest -> faber.createCredential(credentialRequest, credentialValues)))
-                .thenCompose(AsyncUtil.wrapException(faber::authEncrypt)).get();
+        CredentialRequest credentialRequest = MessageEnvelope.<CredentialRequest>parseFromString(transcriptCredentialRequestMessageEnvelope, faber).getMessage();
+        CredentialWithRequest credential = faber.createCredential(credentialRequest, credentialValues).get();
+        String credentialMessageEnvelope = MessageEnvelope.fromAuthcryptable(credential, IndyMessageTypes.CREDENTIAL, faber).toJSON();
 
 
-        alice.authDecrypt(credential, CredentialWithRequest.class)
-                .thenCompose(AsyncUtil.wrapException(alice::storeCredential)).get();
+        CredentialWithRequest decryptedCredential = MessageEnvelope.<CredentialWithRequest>parseFromString(credentialMessageEnvelope, alice).getMessage();
+        alice.storeCredential(decryptedCredential).get();
 
         List<CredentialInfo> credentialInfos = alice.findAllCredentials()
                 .get();
@@ -111,8 +116,7 @@ public class ScenarioIT {
 
         jobApplicationProofRequest.setTheirDid(aliceAcmeDid);
 
-        AuthcryptedMessage authcryptedJobApplicationProofRequest = acme.authEncrypt(jobApplicationProofRequest)
-                .get();
+        String jobApplicationProofRequestEnvelope = MessageEnvelope.fromAuthcryptable(jobApplicationProofRequest, IndyMessageTypes.PROOF_REQUEST, acme).toJSON();
 
 
         Map<String, String> selfAttestedAttributes = new HashMap<>();
@@ -120,15 +124,14 @@ public class ScenarioIT {
         selfAttestedAttributes.put("last_name", "Garcia");
         selfAttestedAttributes.put("phone_number", "123phonenumber");
 
-        AuthcryptedMessage authcryptedProof = alice.authDecrypt(authcryptedJobApplicationProofRequest, ProofRequest.class)
-                .thenCompose(AsyncUtil.wrapException(proofRequest -> alice.fulfillProofRequest(proofRequest, selfAttestedAttributes)))
-                .thenCompose(AsyncUtil.wrapException(alice::authEncrypt))
-                .get();
+        ProofRequest decryptedProofRequest = MessageEnvelope.<ProofRequest>parseFromString(jobApplicationProofRequestEnvelope, alice).getMessage();
 
-        List<ProofAttribute> attributes = acme
-                .authDecrypt(authcryptedProof, Proof.class)
-                .thenCompose(proof -> new Verifier(acmeWallet).getVerifiedProofAttributes(jobApplicationProofRequest, proof))
-                .get();
+        Proof proof = alice.fulfillProofRequest(decryptedProofRequest, selfAttestedAttributes).get();
+        String proofEnvelope = MessageEnvelope.fromAuthcryptable(proof, IndyMessageTypes.PROOF, alice).toJSON();
+
+        Proof decryptedProof = MessageEnvelope.<Proof>parseFromString(proofEnvelope, acme).getMessage();
+
+        List<ProofAttribute> attributes = new Verifier(acmeWallet).getVerifiedProofAttributes(jobApplicationProofRequest, decryptedProof).get();
 
         System.out.println(attributes);
         assertThat(attributes, containsInAnyOrder(
@@ -141,33 +144,35 @@ public class ScenarioIT {
                 ));
     }
 
-    public static void onboardIssuer(TrustAnchor steward, Issuer newcomer) throws InterruptedException, java.util.concurrent.ExecutionException, IndyException, java.io.IOException {
+    public static void onboardIssuer(TrustAnchor steward, Issuer newcomer) throws InterruptedException, ExecutionException, IndyException, IOException {
         // Connecting newcomer with Steward
-        String governmentConnectionRequest = steward.createConnectionRequest(newcomer.getName(), "TRUST_ANCHOR").get().toJSON();
+        String governmentConnectionRequest = steward.createConnectionRequest(newcomer.getName(), "TRUST_ANCHOR")
+                .thenApply(connectionRequest -> new MessageEnvelope<>(IndyMessageTypes.CONNECTION_REQUEST, connectionRequest, null, steward, null)).get().toJSON();
 
-        AnoncryptedMessage newcomerConnectionResponse = newcomer.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class))
-                .thenCompose(AsyncUtil.wrapException(newcomer::anonEncrypt))
-                .get();
+        MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(governmentConnectionRequest, newcomer);
+        ConnectionResponse newcomerConnectionResponse = newcomer.acceptConnectionRequest(connectionRequestMessageEnvelope.getMessage()).get();
+        String newcomerConnectionResponseString =  MessageEnvelope.fromAnoncryptable(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE, newcomer).toJSON();
+        ConnectionResponse connectionResponse = MessageEnvelope.<ConnectionResponse>parseFromString(newcomerConnectionResponseString, steward).getMessage();
+        steward.acceptConnectionResponse(connectionResponse).get();
 
-        steward.anonDecrypt(newcomerConnectionResponse, ConnectionResponse.class)
-                .thenCompose(AsyncUtil.wrapException(steward::acceptConnectionResponse)).get();
+        String verinymRequest = MessageEnvelope.fromAuthcryptable(newcomer.createVerinymRequest(MessageEnvelope.<ConnectionRequest>parseFromString(governmentConnectionRequest, newcomer).getMessage()
+                .getDid()), IndyMessageTypes.VERINYM, newcomer).toJSON();
 
-        AuthcryptedMessage verinym = newcomer.authEncrypt(newcomer.createVerinymRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class)
-                .getDid()))
-                .get();
 
-        steward.authDecrypt(verinym, Verinym.class)
-                .thenCompose(AsyncUtil.wrapException(steward::acceptVerinymRequest)).get();
+        steward.acceptVerinymRequest(MessageEnvelope.<Verinym>parseFromString(verinymRequest, steward).getMessage()).get();
     }
 
     private static String onboardWalletOwner(TrustAnchor trustAnchor, IndyWallet newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {
-        String governmentConnectionRequest = trustAnchor.createConnectionRequest(newcomer.getName(), null).get().toJSON();
+        String governmentConnectionRequest = trustAnchor.createConnectionRequest(newcomer.getName(), null)
+                .thenApply(connectionRequest -> new MessageEnvelope<>(IndyMessageTypes.CONNECTION_REQUEST, connectionRequest, null, trustAnchor, null)).get().toJSON();
 
-        AnoncryptedMessage newcomerConnectionResponse = newcomer.acceptConnectionRequest(JSONUtil.mapper.readValue(governmentConnectionRequest, ConnectionRequest.class))
-                .thenCompose(AsyncUtil.wrapException(newcomer::anonEncrypt)).get();
 
-        String newcomerDid = trustAnchor.anonDecrypt(newcomerConnectionResponse, ConnectionResponse.class)
-                .thenCompose(AsyncUtil.wrapException(trustAnchor::acceptConnectionResponse)).get();
+        MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(governmentConnectionRequest, newcomer);
+        ConnectionResponse newcomerConnectionResponse = newcomer.acceptConnectionRequest(connectionRequestMessageEnvelope.getMessage()).get();
+        String newcomerConnectionResponseString =  MessageEnvelope.fromAnoncryptable(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE, newcomer).toJSON();
+
+        ConnectionResponse connectionResponse = MessageEnvelope.<ConnectionResponse>parseFromString(newcomerConnectionResponseString, trustAnchor).getMessage();
+        String newcomerDid = trustAnchor.acceptConnectionResponse(connectionResponse).get();
 
         return newcomerDid;
     }
