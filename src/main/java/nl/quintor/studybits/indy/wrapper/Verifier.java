@@ -13,6 +13,7 @@ import org.hyperledger.indy.sdk.anoncreds.Anoncreds;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -26,11 +27,9 @@ public class Verifier extends IndyWallet {
     }
 
     public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof) {
-        Map<String, CredentialIdentifier> identifierMap = proof.getIdentifiers()
-                .stream()
-                .collect(Collectors.toMap(CredentialIdentifier::getCredDefId, Function.identity()));
-        return getEntitiesFromLedger(identifierMap)
-                .thenCompose(wrapException(entitiesFromLedger -> validateProof(proofRequest, proof, entitiesFromLedger)))
+
+        return  validateProof(proofRequest, proof)
+                .thenAccept(result -> ValidateResult(result, "Invalid proof: verifierVerifyProof failed."))
                 .thenRun(() -> validateProofEncodings(proof))
                 .thenApply(v -> extractProofAttributes(proofRequest, proof));
     }
@@ -42,14 +41,19 @@ public class Verifier extends IndyWallet {
         }
     }
 
-    private CompletableFuture<Void> validateProof(ProofRequest proofRequest, Proof proof, EntitiesFromLedger entitiesFromLedger) throws JsonProcessingException, IndyException {
-        String proofRequestJson = proofRequest.toJSON();
-        String proofJson = proof.toJSON();
-        String schemaJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getSchemas());
-        String credentialDefsJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getCredentialDefs());
-        return Anoncreds
-                .verifierVerifyProof(proofRequestJson, proofJson, schemaJson, credentialDefsJson, "{}", "{}")
-                .thenAccept(result -> ValidateResult(result, "Invalid proof: verifierVerifyProof failed."));
+    public CompletableFuture<Boolean> validateProof(ProofRequest proofRequest, Proof proof) {
+        Map<String, CredentialIdentifier> identifierMap = proof.getIdentifiers()
+                .stream()
+                .collect(Collectors.toMap(CredentialIdentifier::getCredDefId, Function.identity()));
+        return getEntitiesFromLedger(identifierMap).thenCompose(wrapException(entitiesFromLedger -> {
+            String proofRequestJson = proofRequest.toJSON();
+            String proofJson = proof.toJSON();
+            String schemaJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getSchemas());
+            String credentialDefsJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getCredentialDefs());
+
+            return Anoncreds
+                    .verifierVerifyProof(proofRequestJson, proofJson, schemaJson, credentialDefsJson, "{}", "{}");
+        }));
     }
 
     private void validateProofEncodings(Proof proof) {

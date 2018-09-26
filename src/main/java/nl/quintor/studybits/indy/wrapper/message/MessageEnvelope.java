@@ -1,8 +1,6 @@
 package nl.quintor.studybits.indy.wrapper.message;
 
-import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -11,7 +9,6 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -20,9 +17,15 @@ import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.hyperledger.indy.sdk.IndyException;
+import org.hyperledger.indy.sdk.crypto.Crypto;
+import org.hyperledger.indy.sdk.did.Did;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+
+import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
 @AllArgsConstructor
 @JsonSerialize(using = MessageEnvelope.Serializer.class)
@@ -37,12 +40,12 @@ public class MessageEnvelope<T> implements Serializable {
     @Setter
     private IndyWallet indyWallet;
     @Getter
-    private String theirDid;
+    private String did;
 
     @JsonCreator
     public MessageEnvelope(@JsonProperty("id") String id, @JsonProperty("type") String type, @JsonProperty("message") JsonNode message) {
         this.type = MessageTypes.forURN(type);
-        this.theirDid = id;
+        this.did = id;
         this.encodedMessage = message;
     }
 
@@ -52,10 +55,10 @@ public class MessageEnvelope<T> implements Serializable {
         }
 
         if (this.type.getEncryption().equals(MessageType.Encryption.AUTHCRYPTED)) {
-            this.message = indyWallet.authDecrypt(Base64.decodeBase64(encodedMessage.asText()), theirDid, this.type.getValueType()).get();
+            this.message = indyWallet.authDecrypt(Base64.decodeBase64(encodedMessage.asText()), did, this.type.getValueType()).get();
         }
         else if (this.type.getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
-            this.message = indyWallet.anonDecrypt(Base64.decodeBase64(encodedMessage.asText()), theirDid, this.type.getValueType()).get();
+            this.message = indyWallet.anonDecrypt(Base64.decodeBase64(encodedMessage.asText()), did, this.type.getValueType()).get();
         }
         else {
             this.message = JSONUtil.mapper.treeToValue(encodedMessage, this.type.getValueType());
@@ -80,12 +83,12 @@ public class MessageEnvelope<T> implements Serializable {
 
             try {
                 if (m.type.getEncryption().equals(MessageType.Encryption.AUTHCRYPTED)) {
-                    AuthcryptedMessage authcryptedMessage = m.indyWallet.authEncrypt(JSONUtil.mapper.writeValueAsBytes(m.message), m.theirDid).get();
+                    AuthcryptedMessage authcryptedMessage = m.indyWallet.authEncrypt(JSONUtil.mapper.writeValueAsBytes(m.message), m.did).get();
                     jsonGenerator.writeStringField("id", authcryptedMessage.getDid());
                     jsonGenerator.writeStringField("message", Base64.encodeBase64String(authcryptedMessage.getMessage()));
                 } else if (m.type.getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
                     byte[] bytes = JSONUtil.mapper.writeValueAsBytes(m.message);
-                    AnoncryptedMessage anoncryptedMessage = m.indyWallet.anonEncrypt(bytes, m.theirDid).get();
+                    AnoncryptedMessage anoncryptedMessage = m.indyWallet.anonEncrypt(bytes, m.did).get();
                     jsonGenerator.writeStringField("id", anoncryptedMessage.getTargetDid());
                     jsonGenerator.writeStringField("message", Base64.encodeBase64String(anoncryptedMessage.getMessage()));
                 } else {
@@ -118,4 +121,6 @@ public class MessageEnvelope<T> implements Serializable {
         messageEnvelopeObject.setIndyWallet(indyWallet);
         return messageEnvelopeObject;
     }
+
+
 }
