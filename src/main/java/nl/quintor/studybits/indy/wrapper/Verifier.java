@@ -29,13 +29,13 @@ public class Verifier extends IndyWallet {
     public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof) {
 
         return  validateProof(proofRequest, proof)
-                .thenAccept(result -> ValidateResult(result, "Invalid proof: verifierVerifyProof failed."))
+                .thenAccept(result -> validateResult(result, "Invalid proof: verifierVerifyProof failed."))
                 .thenRun(() -> validateProofEncodings(proof))
                 .thenApply(v -> extractProofAttributes(proofRequest, proof));
     }
 
 
-    private void ValidateResult(boolean valid, String message) throws IndyWrapperException {
+    private void validateResult(boolean valid, String message) throws IndyWrapperException {
         if (!valid) {
             throw new IndyWrapperException(message);
         }
@@ -66,7 +66,7 @@ public class Verifier extends IndyWallet {
                 .peek(entry -> log.error("Wallet '{}': Invalid proof received from theirDid '{}', entry '{}'", getName(), proof.getTheirDid(), entry))
                 .count() == 0;
 
-        ValidateResult(valid, "Invalid proof: encodings invalid");
+        validateResult(valid, "Invalid proof: encodings invalid");
     }
 
     private List<ProofAttribute> extractProofAttributes(ProofRequest proofRequest, Proof proof) {
