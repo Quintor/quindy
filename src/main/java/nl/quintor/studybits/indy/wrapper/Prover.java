@@ -62,13 +62,15 @@ public class Prover extends IndyWallet {
      */
     public CompletableFuture<Proof> fulfillProofRequest(ProofRequest proofRequest, Map<String, String> attributes) throws JsonProcessingException, IndyException {
         log.debug("{} Proving proof request: {}", name, proofRequest.toJSON());
-
+        //Get available credentials for this proof request
         return Anoncreds.proverGetCredentialsForProofReq(getWallet(), proofRequest.toJSON())
                 .thenApply(wrapException(credentialsForProofReqJson -> {
                     log.debug("{}: Obtained credentials for proof request {}", name, credentialsForProofReqJson);
                     return JSONUtil.mapper.readValue(credentialsForProofReqJson, CredentialsForRequest.class);
                 }))
+                //Create proof from existing (and available) credentials and self-attested attributes
                 .thenCompose(wrapException(credentialsForRequest -> createProofFromCredentials(proofRequest, credentialsForRequest, attributes, proofRequest.getTheirDid())))
+                //Return the proof object
                 .thenApply(wrapException(proof -> {
                     log.debug("{}: Created proof {}", name, proof.toJSON());
                     return proof;
@@ -77,14 +79,21 @@ public class Prover extends IndyWallet {
 
     CompletableFuture<Proof> createProofFromCredentials(ProofRequest proofRequest, CredentialsForRequest credentialsForRequest, Map<String, String> attributes, String theirDid) throws JsonProcessingException {
         log.debug("{} Creating proof using credentials: {}", name, credentialsForRequest.toJSON());
-
         // Collect the names and values of all self-attested attributes. Throw an exception if one is not specified.
+
         Map<String, String> selfAttestedAttributes = proofRequest.getRequestedAttributes()
                 .entrySet()
                 .stream()
                 .filter(stringAttributeInfoEntry -> !stringAttributeInfoEntry.getValue()
                         .getRestrictions()
                         .isPresent())
+                //Filter attributes that have a credential
+                .filter(attr -> credentialsForRequest.getAttrs()
+                        .entrySet()
+                        .stream()
+                        .filter(credAttr -> credAttr.getValue().isEmpty())
+                        .collect(Collectors.toMap(Map.Entry::getKey,Map.Entry::getValue))
+                        .containsKey(attr.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
                     String value = attributes.get(entry.getValue().getName());
                     if (value == null) {
@@ -104,7 +113,6 @@ public class Prover extends IndyWallet {
 
         // Create the json needed for creating the proof
         JsonNode requestedCredentials = createRequestedCredentialsJson(proofRequest, selfAttestedAttributes, credentialReferentMap);
-
         log.debug("{} gathered requestedCredentials: {}", name, requestedCredentials);
 
         // Fetch the required schema's and credential definitions, then create, the proof, deserialize and return it.
@@ -160,12 +168,11 @@ public class Prover extends IndyWallet {
     }
 
     private JsonNode createRequestedCredentialsJson(ProofRequest proofRequest, Map<String, String> selfAttestedAttributes, Map<String, CredentialReferent> credentialByReferentKey) {
+
         Map<String, ProvingCredentialKey> requestedAttributes = proofRequest.getRequestedAttributes()
                 .entrySet()
                 .stream()
-                .filter(stringAttributeInfoEntry -> stringAttributeInfoEntry.getValue()
-                        .getRestrictions()
-                        .isPresent())
+                .filter(attr -> !selfAttestedAttributes.containsKey(attr.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, entry ->
                         new ProvingCredentialKey(credentialByReferentKey.get(entry.getKey()).getCredentialInfo().getReferent(), Optional.of(true))));
 
@@ -178,8 +185,11 @@ public class Prover extends IndyWallet {
         ObjectNode requestedCredentialJson = JSONUtil.mapper.createObjectNode();
 
         requestedCredentialJson.set("self_attested_attributes", JSONUtil.mapper.valueToTree(selfAttestedAttributes));
+
         requestedCredentialJson.set("requested_attributes", JSONUtil.mapper.valueToTree(requestedAttributes));
+
         requestedCredentialJson.set("requested_predicates", JSONUtil.mapper.valueToTree(requestedPredicates));
+
         return requestedCredentialJson;
     }
 
