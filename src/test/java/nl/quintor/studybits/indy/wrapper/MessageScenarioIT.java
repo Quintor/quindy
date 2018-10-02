@@ -86,7 +86,7 @@ public class MessageScenarioIT {
         // Government creates schemas for Transcript
         String transcriptSchemaId = government.createAndSendSchema("Transcript", "1.2",
                 "first_name", "last_name", "degree", "status", "year", "average", "ssn").get();
-//
+
         // #Step 6.1 & 6.2 & 6.3
         // Faber requests the scheme from the ledger
         // then create a scheme definition
