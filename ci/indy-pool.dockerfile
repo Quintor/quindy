@@ -1,3 +1,5 @@
+# This dockerfile originates from indy-sdk: https://github.com/hyperledger/indy-sdk/blob/v1.6.6/ci/indy-pool.dockerfile
+
 FROM ubuntu:16.04
 
 ARG uid=1000
