@@ -46,7 +46,9 @@ public class Issuer extends TrustAnchor {
         return getSchema(getMainDid(), schemaId)
                 .thenCompose(wrapException(schema ->
                 {
-                    return Anoncreds.issuerCreateAndStoreCredentialDef(getWallet(), getMainDid(), schema.toJSON(), name + "_" + schemaId, "CL", "{\"support_revocation\":false}");
+                    // Remove special characters from the credential definition tag
+                    String credDefTag = name + "_" + schemaId.replaceAll("[\\-\\+\\.\\^:,]","");
+                    return Anoncreds.issuerCreateAndStoreCredentialDef(getWallet(), getMainDid(), schema.toJSON(), credDefTag, "CL", "{\"support_revocation\":false}");
                 }))
                 .thenCompose(wrapException(createAndStoreCredentialDefResult -> {
                     return Ledger.buildCredDefRequest(getMainDid(), createAndStoreCredentialDefResult.getCredDefJson())
