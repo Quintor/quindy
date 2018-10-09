@@ -18,7 +18,7 @@ public class IndyMessageTypes {
             SOVRIN_URN_PREFIX + "connection/1.0/connection_request", MessageType.Encryption.PLAINTEXT, ConnectionRequest::getRequestNonce, ConnectionRequest.class);
 
     public static MessageType<ConnectionResponse> CONNECTION_RESPONSE = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "connection/1.0/connection_response", MessageType.Encryption.ANONCRYPTED, null, ConnectionResponse.class);
+            SOVRIN_URN_PREFIX + "connection/1.0/connection_response", MessageType.Encryption.ANONCRYPTED, ConnectionResponse::getRequestNonce, ConnectionResponse.class);
 
 
     public static MessageType<Verinym> VERINYM = new StandardMessageType<>(
