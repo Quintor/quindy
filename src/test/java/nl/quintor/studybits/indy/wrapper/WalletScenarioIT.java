@@ -18,7 +18,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class WalletScenarioIT {
 
-    private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     /*
         Steps refer to the steps in this document: https://github.com/hyperledger/indy-sdk/blob/rc/doc/getting-started/getting-started.md
      */
@@ -67,9 +66,9 @@ public class WalletScenarioIT {
         System.out.println("Generating base seeds...");
         System.out.println("-------------------------------------");
         String stewardSeed = "000000000000000000000000Steward1";
-        String faberSeed = randomAlphaNumeric(32);
+        String faberSeed = IndyWallet.generateSeed();
         String acmeSeed = "0000000000000000000000StaticSeed";
-        String randomSeed = randomAlphaNumeric(32);
+        String randomSeed = IndyWallet.generateSeed();
         System.out.println("GENERATED SEEDS:");
         System.out.println("stewardSeed: " + stewardSeed);
         System.out.println("faberSeed: " + faberSeed);
@@ -133,14 +132,5 @@ public class WalletScenarioIT {
         assertThat(radomWallet.getMainDid(), is(equalTo(radomWalletNew.getMainDid())));
 
 
-    }
-
-    public static String randomAlphaNumeric(int count) {
-        StringBuilder builder = new StringBuilder();
-        while (count-- != 0) {
-            int character = (int)(Math.random()*ALPHA_NUMERIC_STRING.length());
-            builder.append(ALPHA_NUMERIC_STRING.charAt(character));
-        }
-        return builder.toString();
     }
 }

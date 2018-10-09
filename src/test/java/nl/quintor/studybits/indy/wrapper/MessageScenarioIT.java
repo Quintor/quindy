@@ -23,6 +23,8 @@ public class MessageScenarioIT {
         Steps refer to the steps in this document: https://github.com/hyperledger/indy-sdk/blob/rc/doc/getting-started/getting-started.md
      */
 
+    private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
     @Test
     public void fullScenarioTest() throws Exception {
         // Clear indy_client directory
