@@ -41,9 +41,9 @@ public class IndyWallet implements AutoCloseable {
 
     private Pool pool;
 
-    private IndyWallet(String name, Pool pool) throws IndyException, ExecutionException, InterruptedException {
+    private IndyWallet(String name, String seed, Pool pool) throws IndyException, ExecutionException, InterruptedException {
         String issuerWalletConfig = "{\"id\":\""+name+"Wallet\"}";
-        String issuerWalletCredentials = "{\"key\":\""+name+"_wallet_key\"}";
+        String issuerWalletCredentials = "{\"key\":\""+seed+"_wallet_key\"}";
         this.wallet = Wallet.openWallet(issuerWalletConfig, issuerWalletCredentials).get();
 
         this.name = name;
@@ -58,13 +58,12 @@ public class IndyWallet implements AutoCloseable {
         this.wallet = wallet;
     }
 
-
     public static IndyWallet create(IndyPool pool, String name, String seed) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
         String issuerWalletConfig = "{\"id\":\""+name+"Wallet\"}";
-        String issuerWalletCredentials = "{\"key\":\""+name+"_wallet_key\"}";
+        String issuerWalletCredentials = "{\"key\":\""+seed+"_wallet_key\"}";
         Wallet.createWallet(issuerWalletConfig, issuerWalletCredentials).get();
 
-        IndyWallet indyWallet = new IndyWallet(name, pool.getPool());
+        IndyWallet indyWallet = new IndyWallet(name, seed, pool.getPool());
 
         DidResults.CreateAndStoreMyDidResult result = indyWallet.newDid(seed).get();
         indyWallet.mainDid = result.getDid();
@@ -73,8 +72,8 @@ public class IndyWallet implements AutoCloseable {
         return indyWallet;
     }
 
-    public static IndyWallet open(IndyPool pool, String name, String did) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
-        IndyWallet indyWallet = new IndyWallet(name, pool.getPool());
+    public static IndyWallet open(IndyPool pool, String name, String seed, String did) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
+        IndyWallet indyWallet = new IndyWallet(name, seed, pool.getPool());
 
         indyWallet.mainDid = did;
         indyWallet.mainKey = indyWallet.getKeyForDid(did).get();
