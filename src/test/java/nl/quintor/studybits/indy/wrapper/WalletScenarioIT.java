@@ -5,6 +5,7 @@ import nl.quintor.studybits.indy.wrapper.message.IndyMessageTypes;
 
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
 
+import nl.quintor.studybits.indy.wrapper.util.SeedUtil;
 import org.hyperledger.indy.sdk.pool.Pool;
 import org.junit.Assert;
 import org.junit.Test;
@@ -59,9 +60,9 @@ public class WalletScenarioIT {
         System.out.println("Generating base seeds...");
         System.out.println("-------------------------------------");
         String stewardSeed = "000000000000000000000000Steward1";
-        String faberSeed = IndyWallet.generateSeed();
+        String faberSeed = SeedUtil.generateSeed();
         String acmeSeed = "0000000000000000000000StaticSeed";
-        String randomSeed = IndyWallet.generateSeed();
+        String randomSeed = SeedUtil.generateSeed();
         System.out.println("GENERATED SEEDS:");
         System.out.println("stewardSeed: " + stewardSeed);
         System.out.println("faberSeed: " + faberSeed);

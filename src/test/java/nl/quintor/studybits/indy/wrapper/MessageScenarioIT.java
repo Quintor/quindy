@@ -4,6 +4,7 @@ import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.message.IndyMessageTypes;
 import nl.quintor.studybits.indy.wrapper.message.MessageEnvelope;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
+import nl.quintor.studybits.indy.wrapper.util.SeedUtil;
 import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.pool.Pool;
 import org.junit.Assert;
@@ -46,7 +47,7 @@ public class MessageScenarioIT {
         TrustAnchor steward = new TrustAnchor(IndyWallet.create(indyPool, "steward", "000000000000000000000000Steward1"));
 
         // Create new wallet (with DID and VerKey) for Government (TrustAnchor)
-        Issuer government = new Issuer(IndyWallet.create(indyPool, "government", IndyWallet.generateSeed()));
+        Issuer government = new Issuer(IndyWallet.create(indyPool, "government", SeedUtil.generateSeed()));
         // #Step 4
         // Onboard the issuers (onboard -> verinym -> issuerDids)
         // Onboard the TrustAnchor
@@ -54,24 +55,24 @@ public class MessageScenarioIT {
 
         // #Step 4.1.7 & 4.1.8
         // Create new wallet (with DID and VerKey) for Faber (TrustAnchor)
-        Issuer faber = new Issuer(IndyWallet.create(indyPool, "faber", IndyWallet.generateSeed()));
+        Issuer faber = new Issuer(IndyWallet.create(indyPool, "faber", SeedUtil.generateSeed()));
         // Onboard the TrustAnchor
         onboardIssuer(steward, faber);
 
         // Create new wallet (with DID and VerKey) for ACME (TrustAnchor)
-        IndyWallet acmeWallet = IndyWallet.create(indyPool, "acme", IndyWallet.generateSeed());
+        IndyWallet acmeWallet = IndyWallet.create(indyPool, "acme", SeedUtil.generateSeed());
         Issuer acme = new Issuer(acmeWallet);
         // Onboard the TrustAnchor
         onboardIssuer(steward, acme);
 
         // Create new wallet (with DID and VerKey) for Thrift (TrustAnchor)
-        Issuer thriftWallet = new Issuer(IndyWallet.create(indyPool, "thrift", IndyWallet.generateSeed()));
+        Issuer thriftWallet = new Issuer(IndyWallet.create(indyPool, "thrift", SeedUtil.generateSeed()));
         Issuer thrift = new Issuer(thriftWallet);
         // Onboard the TrustAnchor
         onboardIssuer(steward, thrift);
 
         // Create new wallet (with DID and VerKey) for Alice (IdentityOwner)
-        Prover alice = new Prover(IndyWallet.create(indyPool, "alice", IndyWallet.generateSeed()), "alice_master_secret");
+        Prover alice = new Prover(IndyWallet.create(indyPool, "alice", SeedUtil.generateSeed()), "alice_master_secret");
         // Onboard alice to Faber. Creates connection request with Faber
         String aliceFaberDid = onboardWalletOwner(faber, alice);
         // Create master secret for alice (Prover / Identity owner)

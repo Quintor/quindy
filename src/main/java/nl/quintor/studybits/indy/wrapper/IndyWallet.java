@@ -42,8 +42,6 @@ public class IndyWallet implements AutoCloseable {
 
     private Pool pool;
 
-    private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
     private IndyWallet(String name, String seed, Pool pool) throws IndyException, ExecutionException, InterruptedException {
         String issuerWalletConfig = "{\"id\":\""+name+"Wallet\"}";
         String issuerWalletCredentials = "{\"key\":\""+seed+"_wallet_key\"}";
@@ -271,20 +269,5 @@ public class IndyWallet implements AutoCloseable {
 
     public static void delete(String name) throws IndyException {
         Wallet.deleteWallet(name, null);
-    }
-
-
-    public static String randomAlphaNumeric(int count) {
-        StringBuilder builder = new StringBuilder();
-        SecureRandom secureRandom = new SecureRandom();
-        while (count-- != 0) {
-            int character = (int)(secureRandom.nextDouble()*ALPHA_NUMERIC_STRING.length());
-            builder.append(ALPHA_NUMERIC_STRING.charAt(character));
-        }
-        return builder.toString();
-    }
-
-    public static String generateSeed() {
-        return randomAlphaNumeric(32);
     }
 }
