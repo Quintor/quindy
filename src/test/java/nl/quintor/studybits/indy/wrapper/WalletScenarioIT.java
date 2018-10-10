@@ -18,15 +18,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class WalletScenarioIT {
 
-    /*
-        Steps refer to the steps in this document: https://github.com/hyperledger/indy-sdk/blob/rc/doc/getting-started/getting-started.md
-     */
-
     @Test
     public void walletScenarioTest() throws Exception {
-        // Clear indy_client directory
-//        removeIndyClientDirectory();
-
         // Set pool protocol version based on PoolUtils
         Pool.setProtocolVersion(PoolUtils.PROTOCOL_VERSION).get();
 

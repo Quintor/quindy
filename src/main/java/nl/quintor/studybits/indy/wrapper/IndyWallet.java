@@ -20,6 +20,7 @@ import org.hyperledger.indy.sdk.pool.Pool;
 import org.hyperledger.indy.sdk.wallet.Wallet;
 
 import java.nio.charset.Charset;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -62,7 +63,10 @@ public class IndyWallet implements AutoCloseable {
 
     public static IndyWallet create(IndyPool pool, String name, String seed) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
         if(seed == null || seed.isEmpty() ) {
-            seed = generateSeed();
+            throw new IllegalArgumentException("Seed cannot be null or empty");
+        }
+        if(seed.length() != 32) {
+            throw new IllegalArgumentException("Seed must be 32 characters long");
         }
         String issuerWalletConfig = "{\"id\":\""+name+"Wallet\"}";
         String issuerWalletCredentials = "{\"key\":\""+seed+"_wallet_key\"}";
@@ -272,8 +276,9 @@ public class IndyWallet implements AutoCloseable {
 
     public static String randomAlphaNumeric(int count) {
         StringBuilder builder = new StringBuilder();
+        SecureRandom secureRandom = new SecureRandom();
         while (count-- != 0) {
-            int character = (int)(Math.random()*ALPHA_NUMERIC_STRING.length());
+            int character = (int)(secureRandom.nextDouble()*ALPHA_NUMERIC_STRING.length());
             builder.append(ALPHA_NUMERIC_STRING.charAt(character));
         }
         return builder.toString();
