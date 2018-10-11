@@ -4,6 +4,7 @@ import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.message.IndyMessageTypes;
 import nl.quintor.studybits.indy.wrapper.message.MessageEnvelope;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
+import nl.quintor.studybits.indy.wrapper.util.SeedUtil;
 import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.pool.Pool;
 import org.junit.Assert;
@@ -22,6 +23,8 @@ public class MessageScenarioIT {
     /*
         Steps refer to the steps in this document: https://github.com/hyperledger/indy-sdk/blob/rc/doc/getting-started/getting-started.md
      */
+
+    private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     @Test
     public void fullScenarioTest() throws Exception {
@@ -44,7 +47,7 @@ public class MessageScenarioIT {
         TrustAnchor steward = new TrustAnchor(IndyWallet.create(indyPool, "steward", "000000000000000000000000Steward1"));
 
         // Create new wallet (with DID and VerKey) for Government (TrustAnchor)
-        Issuer government = new Issuer(IndyWallet.create(indyPool, "government",null));
+        Issuer government = new Issuer(IndyWallet.create(indyPool, "government", SeedUtil.generateSeed()));
         // #Step 4
         // Onboard the issuers (onboard -> verinym -> issuerDids)
         // Onboard the TrustAnchor
@@ -52,24 +55,24 @@ public class MessageScenarioIT {
 
         // #Step 4.1.7 & 4.1.8
         // Create new wallet (with DID and VerKey) for Faber (TrustAnchor)
-        Issuer faber = new Issuer(IndyWallet.create(indyPool, "faber", null));
+        Issuer faber = new Issuer(IndyWallet.create(indyPool, "faber", SeedUtil.generateSeed()));
         // Onboard the TrustAnchor
         onboardIssuer(steward, faber);
 
         // Create new wallet (with DID and VerKey) for ACME (TrustAnchor)
-        IndyWallet acmeWallet = IndyWallet.create(indyPool, "acme", null);
+        IndyWallet acmeWallet = IndyWallet.create(indyPool, "acme", SeedUtil.generateSeed());
         Issuer acme = new Issuer(acmeWallet);
         // Onboard the TrustAnchor
         onboardIssuer(steward, acme);
 
         // Create new wallet (with DID and VerKey) for Thrift (TrustAnchor)
-        Issuer thriftWallet = new Issuer(IndyWallet.create(indyPool, "thrift", null));
+        Issuer thriftWallet = new Issuer(IndyWallet.create(indyPool, "thrift", SeedUtil.generateSeed()));
         Issuer thrift = new Issuer(thriftWallet);
         // Onboard the TrustAnchor
         onboardIssuer(steward, thrift);
 
         // Create new wallet (with DID and VerKey) for Alice (IdentityOwner)
-        Prover alice = new Prover(IndyWallet.create(indyPool, "alice", null), "alice_master_secret");
+        Prover alice = new Prover(IndyWallet.create(indyPool, "alice", SeedUtil.generateSeed()), "alice_master_secret");
         // Onboard alice to Faber. Creates connection request with Faber
         String aliceFaberDid = onboardWalletOwner(faber, alice);
         // Create master secret for alice (Prover / Identity owner)
@@ -356,15 +359,20 @@ public class MessageScenarioIT {
     }
 
     private static String onboardWalletOwner(TrustAnchor trustAnchor, IndyWallet newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {
+        // ThrustAnchor creates a connection request for newcomer
         String governmentConnectionRequest = trustAnchor.createConnectionRequest(newcomer.getName(), null)
                 .thenApply(connectionRequest -> new MessageEnvelope<>(IndyMessageTypes.CONNECTION_REQUEST, connectionRequest, null, trustAnchor, null)).get().toJSON();
 
-
+        // Newcomer receives connectionRequest from trustAnchor
         MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(governmentConnectionRequest, newcomer);
+        // Newcomer accepts the connectionRequest from trustAnchor and creates a connectionResponse
         ConnectionResponse newcomerConnectionResponse = newcomer.acceptConnectionRequest(connectionRequestMessageEnvelope.getMessage()).get();
+        // Newcomer sends a connection response to trustAnchor
         String newcomerConnectionResponseString =  MessageEnvelope.fromAnoncryptable(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE, newcomer).toJSON();
 
+        // TrustAnchor receives the connectionResponse
         ConnectionResponse connectionResponse = MessageEnvelope.<ConnectionResponse>parseFromString(newcomerConnectionResponseString, trustAnchor).getMessage();
+        // TrustAnchor accepts the connectionResponse from the newcomer
         String newcomerDid = trustAnchor.acceptConnectionResponse(connectionResponse).get();
 
         return newcomerDid;

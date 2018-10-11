@@ -37,6 +37,7 @@ public class MessageEnvelope<T> implements Serializable {
 
     private JsonNode encodedMessage;
 
+    //TODO Validate non null on getMessage()
     @Setter
     private IndyWallet indyWallet;
     @Getter
