@@ -18,8 +18,8 @@ public class MessageTypes {
     }
 
     public static MessageType forURN(String urn) {
-        log.debug("Querying for URN {}", urn);
-        log.debug("Message types: " + messageTypes.toString());
+        log.trace("Querying for URN {}", urn);
+        log.trace("Message types: " + messageTypes.toString());
         return messageTypes.get(urn);
     }
 }

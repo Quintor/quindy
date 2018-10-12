@@ -56,7 +56,7 @@ public class TrustAnchor extends IndyWallet {
     }
 
     public CompletableFuture<String> acceptVerinymRequest(Verinym verinym) throws IndyException {
-        log.debug("{} accepting verinym encrypted with did {}", name, verinym.getDid());
+        log.debug("{} accepting verinym encrypted with targetDid {}", name, verinym.getDid());
        return sendNym(verinym.getDid(), verinym.getVerkey(), rolesByDid.get(verinym.getTheirDid()));
     }
 

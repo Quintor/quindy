@@ -15,19 +15,16 @@ import org.hyperledger.indy.sdk.did.DidResults;
 import org.hyperledger.indy.sdk.ledger.Ledger;
 import org.hyperledger.indy.sdk.ledger.LedgerResults;
 import org.hyperledger.indy.sdk.non_secrets.WalletRecord;
-import org.hyperledger.indy.sdk.pairwise.Pairwise;
 import org.hyperledger.indy.sdk.pool.Pool;
 import org.hyperledger.indy.sdk.wallet.Wallet;
 
 import java.nio.charset.Charset;
-import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapBiFunctionException;
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
 @Slf4j
@@ -94,7 +91,7 @@ public class IndyWallet implements AutoCloseable {
 
     CompletableFuture<DidResults.CreateAndStoreMyDidResult> newDid(String seed) throws JsonProcessingException, IndyException {
         String seedJSON = StringUtils.isNotBlank(seed) ? (new MyDidInfo(seed)).toJSON() : "{}";
-        log.debug("Creating new did with seedJSON: {}", seedJSON);
+        log.debug("Creating new targetDid with seedJSON: {}", seedJSON);
         return Did.createAndStoreMyDid(wallet, seedJSON);
     }
 
@@ -130,7 +127,7 @@ public class IndyWallet implements AutoCloseable {
     }
 
     public CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid(String theirDid) throws IndyException {
-        log.debug("{} Called getPairwise by their did: {}", name, theirDid);
+        log.debug("{} Called getPairwise by their targetDid: {}", name, theirDid);
         return WalletRecord.get(wallet, "pairwise", theirDid, "{}")
                 .thenApply(wrapException(result -> JSONUtil.mapper.readValue(result, nl.quintor.studybits.indy.wrapper.dto.WalletRecord.class)))
                 .thenApply(result -> new GetPairwiseResult(result.getValue(), ""));
@@ -142,10 +139,10 @@ public class IndyWallet implements AutoCloseable {
         log.debug("{} Matches lastDid {}", name, did.equals(lastDid));
         lastDid = did;
 
-        log.debug("{} calling keyForDid pool: {}, wallet: {}, did: {}", name, pool, wallet, did);
+        log.debug("{} calling keyForDid pool: {}, wallet: {}, targetDid: {}", name, pool, wallet, did);
         return Did.keyForDid(pool, wallet, did)
                 .thenApply(key -> {
-                    log.debug("{} Got key for did {} key {}", name, did, key);
+                    log.debug("{} Got key for targetDid {} key {}", name, did, key);
                     return key;
                 });
     }
@@ -167,7 +164,7 @@ public class IndyWallet implements AutoCloseable {
     }
 
     CompletableFuture<CredentialDefinition> getCredentialDef(String did, String id) throws IndyException {
-        log.debug("{} Getting credential def with did {} schema with id {}", name, did, id);
+        log.debug("{} Getting credential def with targetDid {} schema with id {}", name, did, id);
         return Ledger.buildGetCredDefRequest(did, id)
                 .thenCompose(wrapException(request -> {
                     log.debug("{} Submitting GetCredDefRequest {}", name, request);
@@ -195,8 +192,8 @@ public class IndyWallet implements AutoCloseable {
                         .collect(EntitiesFromLedger.collector()));
     }
 
-    public CompletableFuture<AnoncryptedMessage> anonEncrypt(byte[] message, String theirDid) throws JsonProcessingException, IndyException {
-        log.debug("{} Anoncrypting message: {}, with did: {}", name, message, theirDid);
+    public CompletableFuture<EncryptedMessage> anonEncrypt(byte[] message, String theirDid) throws JsonProcessingException, IndyException {
+        log.debug("{} Anoncrypting message: {}, with targetDid: {}", name, message, theirDid);
         return getKeyForDid(theirDid)
                 .thenApply(key -> {
                     log.debug("{} EXTRA LOGGING", name);
@@ -205,11 +202,11 @@ public class IndyWallet implements AutoCloseable {
                 .thenCompose(wrapException((String key) -> {
                     log.debug("{} Anoncrypting with key: {}", name, key);
                     return Crypto.anonCrypt(key, message)
-                            .thenApply((byte[] cryptedMessage) -> new AnoncryptedMessage(cryptedMessage, theirDid));
+                            .thenApply((byte[] cryptedMessage) -> new EncryptedMessage(cryptedMessage, theirDid));
                 }));
     }
 
-    public CompletableFuture<AnoncryptedMessage> anonEncrypt(AnonCryptable message) throws JsonProcessingException, IndyException {
+    public CompletableFuture<EncryptedMessage> anonEncrypt(AnonCryptable message) throws JsonProcessingException, IndyException {
         return anonEncrypt(message.toJSON().getBytes(Charset.forName("utf8")), message.getTheirDid());
     }
 
@@ -221,11 +218,11 @@ public class IndyWallet implements AutoCloseable {
                         .forName("utf8")), valueType)));
     }
 
-    public <T> CompletableFuture<T> anonDecrypt(AnoncryptedMessage message, Class<T> valueType) throws IndyException {
+    public <T> CompletableFuture<T> anonDecrypt(EncryptedMessage message, Class<T> valueType) throws IndyException {
         return anonDecrypt(message.getMessage(), message.getTargetDid(), valueType);
     }
 
-    public CompletableFuture<AuthcryptedMessage> authEncrypt(byte[] message, String theirDid) throws JsonProcessingException, IndyException {
+    public CompletableFuture<EncryptedMessage> authEncrypt(byte[] message, String theirDid) throws JsonProcessingException, IndyException {
         log.debug("{} Authcrypting message: {}, theirDid: {}", name, message, theirDid);
         return getKeyForDid(theirDid).thenCompose(wrapException((String theirKey) -> {
             return getPairwiseByTheirDid(theirDid)
@@ -233,13 +230,14 @@ public class IndyWallet implements AutoCloseable {
                             .thenCompose(wrapException((String myKey) -> {
                                 log.debug("{} Authcrypting with keys myKey {}, theirKey {}", name, myKey, theirKey);
                                 return Crypto.authCrypt(wallet, myKey, theirKey, message)
-                                        .thenApply(cryptedMessage -> new AuthcryptedMessage(cryptedMessage, getPairwiseResult.getMyDid()));
+                                        .thenApply(cryptedMessage -> new EncryptedMessage(cryptedMessage, getPairwiseResult.getMyDid()));
                             })))
                     );
         }));
     }
 
-    public CompletableFuture<AuthcryptedMessage> authEncrypt(AuthCryptable message) throws JsonProcessingException, IndyException {
+    public CompletableFuture<EncryptedMessage> authEncrypt(AuthCryptable message) throws JsonProcessingException, IndyException {
+        log.debug("{} Authcrypting message: {}", message);
         return authEncrypt(message.toJSON().getBytes(Charset.forName("utf8")), message.getTheirDid());
     }
 
@@ -258,8 +256,8 @@ public class IndyWallet implements AutoCloseable {
                 ;
     }
 
-    public <T extends AuthCryptable> CompletableFuture<T> authDecrypt(AuthcryptedMessage message, Class<T> valueType) throws IndyException {
-        return authDecrypt(message.getMessage(), message.getDid(), valueType);
+    public <T extends AuthCryptable> CompletableFuture<T> authDecrypt(EncryptedMessage message, Class<T> valueType) throws IndyException {
+        return authDecrypt(message.getMessage(), message.getTargetDid(), valueType);
     }
 
     @Override
