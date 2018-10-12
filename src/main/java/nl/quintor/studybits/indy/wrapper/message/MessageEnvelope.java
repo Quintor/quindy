@@ -44,7 +44,7 @@ public class MessageEnvelope<T> implements Serializable {
         this.encodedMessage = message;
     }
 
-    public static <S> CompletableFuture<MessageEnvelope<S>> fromMessage(S message, MessageType<S> type, IndyWallet indyWallet) throws JsonProcessingException, IndyException, ExecutionException, InterruptedException {
+    public static <S> CompletableFuture<MessageEnvelope<S>> fromMessage(S message, MessageType<S> type, IndyWallet indyWallet) throws JsonProcessingException, IndyException {
         if (!type.getEncryption().equals(MessageType.Encryption.PLAINTEXT) && indyWallet == null) {
             throw new IndyWrapperException("Cannot encrypt message without wallet");
         }
