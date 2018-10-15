@@ -1,5 +1,6 @@
 package nl.quintor.studybits.indy.wrapper;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.*;
 import nl.quintor.studybits.indy.wrapper.message.IndyMessageTypes;
 import nl.quintor.studybits.indy.wrapper.message.MessageEnvelope;
@@ -18,6 +19,7 @@ import static nl.quintor.studybits.indy.wrapper.TestUtil.removeIndyClientDirecto
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
+@Slf4j
 public class MessageScenarioIT {
 
     /*
@@ -134,8 +136,8 @@ public class MessageScenarioIT {
         // DEBUG: Check credentials
         List<CredentialInfo> credentialInfos = alice.findAllCredentials()
                 .get();
-        System.out.println("CREDENTIAL INFOS:");
-        System.out.println(credentialInfos);
+        log.debug("CREDENTIAL INFOS:");
+        log.debug(String.valueOf(credentialInfos));
 
         // ACME Builds the proof request
         List<Filter> transcriptFilter = Collections.singletonList(new Filter(transcriptCredentialDefId));
@@ -175,7 +177,7 @@ public class MessageScenarioIT {
 
         List<ProofAttribute> attributes = new Verifier(acmeWallet).getVerifiedProofAttributes(jobApplicationProofRequest, decryptedProof).get();
 
-        System.out.println(attributes);
+        log.debug(String.valueOf(attributes));
         // ACME Validates proof
         assertThat(attributes, containsInAnyOrder(
                 new ProofAttribute("attr1_referent", "first_name", "Alice"),
@@ -188,7 +190,7 @@ public class MessageScenarioIT {
 
         // ACME Validates proof
         boolean isValidProof = new Verifier(acmeWallet).validateProof(jobApplicationProofRequest, decryptedProof).get();
-        System.out.println("Degree validation: " + isValidProof);
+        log.info("Degree validation: " + isValidProof);
 
         Assert.assertTrue(isValidProof);
 
@@ -227,8 +229,8 @@ public class MessageScenarioIT {
         credentialInfos  = alice.findAllCredentials()
                 .get();
 
-        System.out.println("CREDENTIAL INFOS:");
-        System.out.println(credentialInfos);
+        log.debug("CREDENTIAL INFOS:");
+        log.debug(String.valueOf(credentialInfos));
 
         // ---------------------Apply for a loan---------------------
         // Alice now has a proof of being an employee at ACME (Job credential in her wallet) and should be able to apply for a loan
@@ -264,7 +266,7 @@ public class MessageScenarioIT {
 
         List<ProofAttribute> jobAttributes = new Verifier(thriftWallet).getVerifiedProofAttributes(loanApplicationProofRequest, decryptedJobProof).get();
 
-        System.out.println(jobAttributes);
+        log.debug(String.valueOf(jobAttributes));
         // Thrift Validates proof
         assertThat(jobAttributes, containsInAnyOrder(
                 new ProofAttribute("attr1_referent", "employee_status", "Permanent")
@@ -272,7 +274,7 @@ public class MessageScenarioIT {
 
         // Thrift Validates proof
         Boolean jobIsValidProof = new Verifier(thriftWallet).validateProof(loanApplicationProofRequest, decryptedJobProof).get();
-        System.out.println("Job validation: " + jobIsValidProof);
+        log.info("Job validation: " + jobIsValidProof);
 
         Assert.assertTrue(jobIsValidProof);
 
@@ -310,11 +312,11 @@ public class MessageScenarioIT {
 
         List<ProofAttribute> KYCAttributes = new Verifier(thriftWallet).getVerifiedProofAttributes(loanApplicationPersonalDetailsProofRequest, decryptedKYCProof).get();
 
-        System.out.println(KYCAttributes);
+        log.debug(String.valueOf(KYCAttributes));
 
         // Thrift Validates proof
         Boolean KYCIsValidProof = new Verifier(thriftWallet).validateProof(loanApplicationProofRequest, decryptedJobProof).get();
-        System.out.println("KYC Validation: " + KYCIsValidProof);
+        log.info("KYC Validation: " + KYCIsValidProof);
 
         Assert.assertTrue(KYCIsValidProof);
     }
@@ -325,7 +327,7 @@ public class MessageScenarioIT {
         // #Step 4.1.2 & 4.1.3
         // Create new DID (For steward_faber connection) and send NYM request to ledger
         String governmentConnectionRequest = steward.createConnectionRequest(newcomer.getName(), "TRUST_ANCHOR")
-                .thenApply(connectionRequest -> new MessageEnvelope<>(IndyMessageTypes.CONNECTION_REQUEST, connectionRequest, null, steward, null)).get().toJSON();
+                .thenApply(connectionRequest -> new MessageEnvelope<>(IndyMessageTypes.CONNECTION_REQUEST, connectionRequest, null, null, null)).get().toJSON();
 
         // #Step 4.1.4 & 4.1.5
         // Steward sends connection request to Faber
@@ -361,7 +363,7 @@ public class MessageScenarioIT {
     private static String onboardWalletOwner(TrustAnchor trustAnchor, IndyWallet newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {
         // ThrustAnchor creates a connection request for newcomer
         String governmentConnectionRequest = trustAnchor.createConnectionRequest(newcomer.getName(), null)
-                .thenApply(connectionRequest -> new MessageEnvelope<>(IndyMessageTypes.CONNECTION_REQUEST, connectionRequest, null, trustAnchor, null)).get().toJSON();
+                .thenApply(connectionRequest -> new MessageEnvelope<>(IndyMessageTypes.CONNECTION_REQUEST, connectionRequest, null, null, null)).get().toJSON();
 
         // Newcomer receives connectionRequest from trustAnchor
         MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(governmentConnectionRequest, newcomer);
