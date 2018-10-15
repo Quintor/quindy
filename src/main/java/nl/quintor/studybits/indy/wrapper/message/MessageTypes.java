@@ -22,4 +22,8 @@ public class MessageTypes {
         log.trace("Message types: " + messageTypes.toString());
         return messageTypes.get(urn);
     }
+
+    public static Map getMap() {
+        return messageTypes;
+    }
 }

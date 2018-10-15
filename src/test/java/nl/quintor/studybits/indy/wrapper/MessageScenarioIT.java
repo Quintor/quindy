@@ -103,13 +103,17 @@ public class MessageScenarioIT {
         // ---------------------Alice Gets a Transcript---------------------
         // Faber creates a credential offer for Alice
         CredentialOffer transcriptCredentialOffer = faber.createCredentialOffer(transcriptCredentialDefId, aliceFaberDid).get();
-        String credentialOfferMessageEnvelope = MessageEnvelope.fromMessage(transcriptCredentialOffer, IndyMessageTypes.CREDENTIAL_OFFER, faber).get().toJSON();
+//        String credentialOfferMessageEnvelope = MessageEnvelope.fromMessage(transcriptCredentialOffer, faber).get().toJSON();
+        String credentialOfferMessageEnvelope = faber.createMessage(transcriptCredentialOffer).get().toJSON();
 
         // Alice receives the transcript offer
-        CredentialOffer decryptedTranscriptCredentialOffer = MessageEnvelope.<CredentialOffer>parseFromString(credentialOfferMessageEnvelope).getMessage(alice).get();
+//        CredentialOffer decryptedTranscriptCredentialOffer = MessageEnvelope.<CredentialOffer>parseFromString(credentialOfferMessageEnvelope).getMessage(alice).get();
+        CredentialOffer decryptedTranscriptCredentialOffer = alice.decryptMessage(credentialOfferMessageEnvelope);
+
         // Alice creates a credential request
         CredentialRequest transcriptCredentialRequest = alice.createCredentialRequest(decryptedTranscriptCredentialOffer).get();
-        String transcriptCredentialRequestMessageEnvelope = MessageEnvelope.<CredentialRequest>fromMessage(transcriptCredentialRequest, IndyMessageTypes.CREDENTIAL_REQUEST, alice).get().toJSON();
+//        String transcriptCredentialRequestMessageEnvelope = MessageEnvelope.<CredentialRequest>fromMessage(transcriptCredentialRequest, alice).get().toJSON();
+        String transcriptCredentialRequestMessageEnvelope = alice.createMessage(transcriptCredentialRequest).get().toJSON();
 
 
         Map<String, Object> credentialValues  = new HashMap<>();
@@ -122,13 +126,16 @@ public class MessageScenarioIT {
         credentialValues.put("average", 5);
 
         // Faber receives the credential request from Alice
-        CredentialRequest credentialRequest = MessageEnvelope.<CredentialRequest>parseFromString(transcriptCredentialRequestMessageEnvelope).getMessage(faber).get();
+//        CredentialRequest credentialRequest = MessageEnvelope.<CredentialRequest>parseFromString(transcriptCredentialRequestMessageEnvelope).getMessage(faber).get();
+        CredentialRequest credentialRequest = faber.decryptMessage(transcriptCredentialRequestMessageEnvelope);
         // Faber creates a new credential for Alice and sends it to her
         CredentialWithRequest credential = faber.createCredential(credentialRequest, credentialValues).get();
-        String credentialMessageEnvelope = MessageEnvelope.fromMessage(credential, IndyMessageTypes.CREDENTIAL, faber).get().toJSON();
+//        String credentialMessageEnvelope = MessageEnvelope.fromMessage(credential, faber).get().toJSON();
+        String credentialMessageEnvelope = faber.createMessage(credential).get().toJSON();
 
         // Alice receives her credential and stores it inside her wallet
-        CredentialWithRequest decryptedCredential = MessageEnvelope.<CredentialWithRequest>parseFromString(credentialMessageEnvelope).getMessage(alice).get();
+//        CredentialWithRequest decryptedCredential = MessageEnvelope.<CredentialWithRequest>parseFromString(credentialMessageEnvelope).getMessage(alice).get();
+        CredentialWithRequest decryptedCredential = alice.decryptMessage(credentialMessageEnvelope);
         alice.storeCredential(decryptedCredential).get();
 
         // ---------------------Apply for a Job---------------------
@@ -155,7 +162,8 @@ public class MessageScenarioIT {
 
         jobApplicationProofRequest.setTheirDid(aliceAcmeDid);
         // ACME Sends proof request to Alice
-        String jobApplicationProofRequestEnvelope = MessageEnvelope.fromMessage(jobApplicationProofRequest, IndyMessageTypes.PROOF_REQUEST, acme).get().toJSON();
+//        String jobApplicationProofRequestEnvelope = MessageEnvelope.fromMessage(jobApplicationProofRequest, acme).get().toJSON();
+        String jobApplicationProofRequestEnvelope = acme.createMessage(jobApplicationProofRequest).get().toJSON();
 
 
         Map<String, String> selfAttestedAttributes = new HashMap<>();
@@ -164,15 +172,18 @@ public class MessageScenarioIT {
         selfAttestedAttributes.put("phone_number", "123phonenumber");
 
         // Alice receives proof request from ACME
-        ProofRequest decryptedProofRequest = MessageEnvelope.<ProofRequest>parseFromString(jobApplicationProofRequestEnvelope).getMessage(alice).get();
+//        ProofRequest decryptedProofRequest = MessageEnvelope.<ProofRequest>parseFromString(jobApplicationProofRequestEnvelope).getMessage(alice).get();
+        ProofRequest decryptedProofRequest = alice.decryptMessage(jobApplicationProofRequestEnvelope);
         // Alice fufills proof request
         // Create proof object from available credentials for this proof request and self-attested attributes
         Proof proof = alice.fulfillProofRequest(decryptedProofRequest, selfAttestedAttributes).get();
         // Send proof to ACME
-        String proofEnvelope = MessageEnvelope.fromMessage(proof, IndyMessageTypes.PROOF, alice).get().toJSON();
+//        String proofEnvelope = MessageEnvelope.fromMessage(proof, alice).get().toJSON();
+        String proofEnvelope = alice.createMessage(proof).get().toJSON();
 
         // ACME receives proof
-        Proof decryptedProof = MessageEnvelope.<Proof>parseFromString(proofEnvelope).getMessage(acme).get();
+//        Proof decryptedProof = MessageEnvelope.<Proof>parseFromString(proofEnvelope).getMessage(acme).get();
+        Proof decryptedProof = acme.decryptMessage(proofEnvelope);
 
         List<ProofAttribute> attributes = new Verifier(acmeWallet).getVerifiedProofAttributes(jobApplicationProofRequest, decryptedProof).get();
 
@@ -196,14 +207,17 @@ public class MessageScenarioIT {
         // ACME creates a new credential offer (Job certificate) for Alice
         // ACME creates a credential offer for Alice
         CredentialOffer jobCertificateCredentialOffer = acme.createCredentialOffer(jobCertificateCredentialDefId, aliceAcmeDid).get();
-        credentialOfferMessageEnvelope = MessageEnvelope.fromMessage(jobCertificateCredentialOffer, IndyMessageTypes.CREDENTIAL_OFFER, acme).get().toJSON();
+//        credentialOfferMessageEnvelope = MessageEnvelope.fromMessage(jobCertificateCredentialOffer, acme).get().toJSON();
+        credentialOfferMessageEnvelope = acme.createMessage(jobCertificateCredentialOffer).get().toJSON();
 
 
         // Alice receives the jobCertificate offer
-        CredentialOffer decryptedJobCertificateCredentialOffer = MessageEnvelope.<CredentialOffer>parseFromString(credentialOfferMessageEnvelope).getMessage(alice).get();
+//        CredentialOffer decryptedJobCertificateCredentialOffer = MessageEnvelope.<CredentialOffer>parseFromString(credentialOfferMessageEnvelope).getMessage(alice).get();
+        CredentialOffer decryptedJobCertificateCredentialOffer = alice.decryptMessage(credentialOfferMessageEnvelope);
         // Alice creates a credential request
         CredentialRequest jobCertificateCredentialRequest = alice.createCredentialRequest(decryptedJobCertificateCredentialOffer).get();
-        String jobCertificateCredentialRequestMessageEnvelope = MessageEnvelope.<CredentialRequest>fromMessage(jobCertificateCredentialRequest, IndyMessageTypes.CREDENTIAL_REQUEST, alice).get().toJSON();
+//        String jobCertificateCredentialRequestMessageEnvelope = MessageEnvelope.<CredentialRequest>fromMessage(jobCertificateCredentialRequest, alice).get().toJSON();
+        String jobCertificateCredentialRequestMessageEnvelope = alice.createMessage(jobCertificateCredentialRequest).get().toJSON();
 
 
         Map<String, Object> jobCredentialValues  = new HashMap<>();
@@ -214,13 +228,16 @@ public class MessageScenarioIT {
         jobCredentialValues.put("experience", 5);
 
         // ACME receives the credential request from Alice
-        CredentialRequest jobCredentialRequest = MessageEnvelope.<CredentialRequest>parseFromString(jobCertificateCredentialRequestMessageEnvelope).getMessage(acme).get();
+//        CredentialRequest jobCredentialRequest = MessageEnvelope.<CredentialRequest>parseFromString(jobCertificateCredentialRequestMessageEnvelope).getMessage(acme).get();
+        CredentialRequest jobCredentialRequest = acme.decryptMessage(jobCertificateCredentialRequestMessageEnvelope);
         // ACME creates a new credential for Alice and sends it to her
         CredentialWithRequest jobCredential = acme.createCredential(jobCredentialRequest, jobCredentialValues).get();
-        String jobCredentialMessageEnvelope = MessageEnvelope.fromMessage(jobCredential, IndyMessageTypes.CREDENTIAL, acme).get().toJSON();
+//        String jobCredentialMessageEnvelope = MessageEnvelope.fromMessage(jobCredential, acme).get().toJSON();
+        String jobCredentialMessageEnvelope = acme.createMessage(jobCredential).get().toJSON();
 
         // Alice receives her credential and stores it inside her wallet
-        CredentialWithRequest decryptedJobCredential = MessageEnvelope.<CredentialWithRequest>parseFromString(jobCredentialMessageEnvelope).getMessage(alice).get();
+//        CredentialWithRequest decryptedJobCredential = MessageEnvelope.<CredentialWithRequest>parseFromString(jobCredentialMessageEnvelope).getMessage(alice).get();
+        CredentialWithRequest decryptedJobCredential = alice.decryptMessage(jobCredentialMessageEnvelope);
         alice.storeCredential(decryptedJobCredential).get();
 
 
@@ -247,21 +264,25 @@ public class MessageScenarioIT {
 
         loanApplicationProofRequest.setTheirDid(aliceThriftDid);
         // Thrift Sends proof request to Alice
-        String loanApplicationProofRequestEnvelope = MessageEnvelope.fromMessage(loanApplicationProofRequest, IndyMessageTypes.PROOF_REQUEST, thrift).get().toJSON();
+//        String loanApplicationProofRequestEnvelope = MessageEnvelope.fromMessage(loanApplicationProofRequest, thrift).get().toJSON();
+        String loanApplicationProofRequestEnvelope = thrift.createMessage(loanApplicationProofRequest).get().toJSON();
 
 
         Map<String, String> emptyMap = new HashMap<>();
 
         // Alice receives proof request from Thrift
-        decryptedProofRequest = MessageEnvelope.<ProofRequest>parseFromString(loanApplicationProofRequestEnvelope).getMessage(alice).get();
+//        decryptedProofRequest = MessageEnvelope.<ProofRequest>parseFromString(loanApplicationProofRequestEnvelope).getMessage(alice).get();
+        decryptedProofRequest = alice.decryptMessage(loanApplicationProofRequestEnvelope);
         // Alice fufills proof request
         // Create proof object from available credentials for this proof request and self-attested attributes
         Proof jobProof = alice.fulfillProofRequest(decryptedProofRequest, emptyMap).get();
         // Send proof to Thrift
-        String jobProofEnvelope = MessageEnvelope.fromMessage(jobProof, IndyMessageTypes.PROOF, alice).get().toJSON();
+//        String jobProofEnvelope = MessageEnvelope.fromMessage(jobProof, alice).get().toJSON();
+        String jobProofEnvelope = alice.createMessage(jobProof).get().toJSON();
 
         // Thrift receives proof
-        Proof decryptedJobProof = MessageEnvelope.<Proof>parseFromString(jobProofEnvelope).getMessage(thrift).get();
+//        Proof decryptedJobProof = MessageEnvelope.<Proof>parseFromString(jobProofEnvelope).getMessage(thrift).get();
+        Proof decryptedJobProof = thrift.decryptMessage(jobProofEnvelope);
 
         List<ProofAttribute> jobAttributes = new Verifier(thriftWallet).getVerifiedProofAttributes(loanApplicationProofRequest, decryptedJobProof).get();
 
@@ -294,20 +315,24 @@ public class MessageScenarioIT {
         }
 
         // Thrift Sends proof request to Alice
-        String loanApplicationPersonalDetailsProofRequestEnvelope = MessageEnvelope.fromMessage(loanApplicationPersonalDetailsProofRequest, IndyMessageTypes.PROOF_REQUEST, thrift).get().toJSON();
+//        String loanApplicationPersonalDetailsProofRequestEnvelope = MessageEnvelope.fromMessage(loanApplicationPersonalDetailsProofRequest, thrift).get().toJSON();
+        String loanApplicationPersonalDetailsProofRequestEnvelope = thrift.createMessage(loanApplicationPersonalDetailsProofRequest).get().toJSON();
 
 
         // Alice receives proof request from Thrift
-        decryptedProofRequest = MessageEnvelope.<ProofRequest>parseFromString(loanApplicationPersonalDetailsProofRequestEnvelope).getMessage(alice).get();
+//        decryptedProofRequest = MessageEnvelope.<ProofRequest>parseFromString(loanApplicationPersonalDetailsProofRequestEnvelope).getMessage(alice).get();
+        decryptedProofRequest = alice.decryptMessage(loanApplicationPersonalDetailsProofRequestEnvelope);
 
         // Alice fufills proof request
         // Create proof object from available credentials for this proof request and self-attested attributes
         Proof KYCProof = alice.fulfillProofRequest(decryptedProofRequest, emptyMap).get();
         // Send proof to Thrift
-        String KYCProofEnvelope = MessageEnvelope.fromMessage(KYCProof, IndyMessageTypes.PROOF, alice).get().toJSON();
+//        String KYCProofEnvelope = MessageEnvelope.fromMessage(KYCProof, alice).get().toJSON();
+        String KYCProofEnvelope = alice.createMessage(KYCProof).get().toJSON();
 
         // Thrift receives proof
-        Proof decryptedKYCProof = MessageEnvelope.<Proof>parseFromString(KYCProofEnvelope).getMessage(thrift).get();
+//        Proof decryptedKYCProof = MessageEnvelope.<Proof>parseFromString(KYCProofEnvelope).getMessage(thrift).get();
+        Proof decryptedKYCProof = thrift.decryptMessage(KYCProofEnvelope);
 
         List<ProofAttribute> KYCAttributes = new Verifier(thriftWallet).getVerifiedProofAttributes(loanApplicationPersonalDetailsProofRequest, decryptedKYCProof).get();
 
@@ -325,12 +350,12 @@ public class MessageScenarioIT {
 
         // #Step 4.1.2 & 4.1.3
         // Create new DID (For steward_faber connection) and send NYM request to ledger
-        String governmentConnectionRequest = MessageEnvelope.fromMessage(steward.createConnectionRequest(newcomer.getName(), "TRUST_ANCHOR").get(),
-                IndyMessageTypes.CONNECTION_REQUEST, null).get().toJSON();
-
+//        String governmentConnectionRequest = MessageEnvelope.fromMessage(steward.createConnectionRequest(newcomer.getName(), "TRUST_ANCHOR").get(),null).get().toJSON();
+        String governmentConnectionRequest = steward.createMessage(steward.createConnectionRequest(newcomer.getName(), "TRUST_ANCHOR").get()).get().toJSON();
         // #Step 4.1.4 & 4.1.5
         // Steward sends connection request to Faber
-        ConnectionRequest connectionRequest = MessageEnvelope.<ConnectionRequest>parseFromString(governmentConnectionRequest).getMessage(newcomer).get();
+//        ConnectionRequest connectionRequest = MessageEnvelope.<ConnectionRequest>parseFromString(governmentConnectionRequest).getMessage(newcomer).get();
+        ConnectionRequest connectionRequest = newcomer.decryptMessage(governmentConnectionRequest);
 
         // #Step 4.1.6
         // Faber accepts the connection request from Steward
@@ -338,11 +363,14 @@ public class MessageScenarioIT {
 
         // #Step 4.1.9
         // Faber creates a connection response with its created DID and Nonce from the received request from Steward
-        String newcomerConnectionResponseString =  MessageEnvelope.fromMessage(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE, newcomer).get().toJSON();
+//        String newcomerConnectionResponseString =  MessageEnvelope.fromMessage(newcomerConnectionResponse, newcomer).get().toJSON();
+        String newcomerConnectionResponseString =  newcomer.createMessage(newcomerConnectionResponse).get().toJSON();
 
         // #Step 4.1.13
         // Steward decrypts the anonymously encrypted message from Faber
-        ConnectionResponse connectionResponse = MessageEnvelope.<ConnectionResponse>parseFromString(newcomerConnectionResponseString).getMessage(steward).get();
+//        ConnectionResponse connectionResponse = MessageEnvelope.<ConnectionResponse>parseFromString(newcomerConnectionResponseString).getMessage(steward).get();
+        ConnectionResponse connectionResponse = steward.decryptMessage(newcomerConnectionResponseString);
+
 
         // #Step 4.1.14 & 4.1.15
         // Steward authenticates Faber
@@ -351,27 +379,38 @@ public class MessageScenarioIT {
 
         // #Step 4.2.1 t/m 4.2.4
         // Faber needs a new DID to interact with identiy owners, thus create a new DID request steward to write on ledger
-        String verinymRequest = MessageEnvelope.fromMessage(newcomer.createVerinymRequest(MessageEnvelope.<ConnectionRequest>parseFromString(governmentConnectionRequest).getMessage(newcomer).get()
-                .getDid()), IndyMessageTypes.VERINYM, newcomer).get().toJSON();
+//        String verinymRequest = MessageEnvelope.fromMessage(newcomer.createVerinymRequest(MessageEnvelope.<ConnectionRequest>parseFromString(governmentConnectionRequest).getMessage(newcomer).get()
+//                .getDid()), newcomer).get().toJSON();
+//        String verinymRequest = newcomer.createMessage(newcomer.createVerinymRequest(MessageEnvelope.<ConnectionRequest>parseFromString(governmentConnectionRequest).getMessage(newcomer).get()
+//                .getDid())).get().toJSON();
+        ConnectionRequest govConnectionRequest = newcomer.decryptMessage(governmentConnectionRequest);
+        String verinymRequest = newcomer.createMessage(newcomer.createVerinymRequest(govConnectionRequest.getDid())).get().toJSON();
 
         // #step 4.2.5 t/m 4.2.8
         // Steward accepts verinym request from Faber and thus writes the new DID on the ledger
-        steward.acceptVerinymRequest(MessageEnvelope.<Verinym>parseFromString(verinymRequest).getMessage(steward).get()).get();
+//        steward.acceptVerinymRequest(MessageEnvelope.<Verinym>parseFromString(verinymRequest).getMessage(steward).get()).get();
+        steward.acceptVerinymRequest(steward.decryptMessage(verinymRequest)).get();
     }
 
     private static String onboardWalletOwner(TrustAnchor trustAnchor, IndyWallet newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {
         // ThrustAnchor creates a connection request for newcomer
-        String governmentConnectionRequest = MessageEnvelope.fromMessage(trustAnchor.createConnectionRequest(newcomer.getName(), null).get(),
-                IndyMessageTypes.CONNECTION_REQUEST, null).get().toJSON();
+//        String governmentConnectionRequest = MessageEnvelope.fromMessage(trustAnchor.createConnectionRequest(newcomer.getName(), null).get(),null).get().toJSON();
+        String governmentConnectionRequest = trustAnchor.createMessage(trustAnchor.createConnectionRequest(newcomer.getName(), null).get()).get().toJSON();
         // Newcomer receives connectionRequest from trustAnchor
-        MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(governmentConnectionRequest);
+//        MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(governmentConnectionRequest);
+        ConnectionRequest connectionRequest = newcomer.decryptMessage(governmentConnectionRequest);
+
         // Newcomer accepts the connectionRequest from trustAnchor and creates a connectionResponse
-        ConnectionResponse newcomerConnectionResponse = newcomer.acceptConnectionRequest(connectionRequestMessageEnvelope.getMessage(newcomer).get()).get();
+//        ConnectionResponse newcomerConnectionResponse = newcomer.acceptConnectionRequest(connectionRequestMessageEnvelope.getMessage(newcomer).get()).get();
+        ConnectionResponse newcomerConnectionResponse = newcomer.acceptConnectionRequest(connectionRequest).get();
+
         // Newcomer sends a connection response to trustAnchor
-        String newcomerConnectionResponseString =  MessageEnvelope.fromMessage(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE, newcomer).get().toJSON();
+//        String newcomerConnectionResponseString =  MessageEnvelope.fromMessage(newcomerConnectionResponse, newcomer).get().toJSON();
+        String newcomerConnectionResponseString =  newcomer.createMessage(newcomerConnectionResponse).get().toJSON();
 
         // TrustAnchor receives the connectionResponse
-        ConnectionResponse connectionResponse = MessageEnvelope.<ConnectionResponse>parseFromString(newcomerConnectionResponseString).getMessage(trustAnchor).get();
+//        ConnectionResponse connectionResponse = MessageEnvelope.<ConnectionResponse>parseFromString(newcomerConnectionResponseString).getMessage(trustAnchor).get();
+        ConnectionResponse connectionResponse = trustAnchor.decryptMessage(newcomerConnectionResponseString);
         // TrustAnchor accepts the connectionResponse from the newcomer
         String newcomerDid = trustAnchor.acceptConnectionResponse(connectionResponse).get();
 

@@ -1,15 +1,14 @@
 package nl.quintor.studybits.indy.wrapper;
 
 
+import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
+import nl.quintor.studybits.indy.wrapper.dto.ConnectionResponse;
+import nl.quintor.studybits.indy.wrapper.dto.Verinym;
 import nl.quintor.studybits.indy.wrapper.message.IndyMessageTypes;
-
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
-
 import nl.quintor.studybits.indy.wrapper.util.SeedUtil;
 import org.hyperledger.indy.sdk.pool.Pool;
-import org.junit.Assert;
 import org.junit.Test;
-
 
 import static nl.quintor.studybits.indy.wrapper.TestUtil.removeIndyClientDirectory;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -17,10 +16,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 
-public class WalletScenarioIT {
+public class WalletMessagesIT {
 
     @Test
-    public void walletScenarioTest() throws Exception {
+    public void WalletMessagesTest() throws Exception {
+        // Clear indy_client directory
+        removeIndyClientDirectory();
+
         // Set pool protocol version based on PoolUtils
         Pool.setProtocolVersion(PoolUtils.PROTOCOL_VERSION).get();
 
@@ -31,100 +33,74 @@ public class WalletScenarioIT {
         String poolName = PoolUtils.createPoolLedgerConfig(null, "testPool" + System.currentTimeMillis());
         IndyPool indyPool = new IndyPool(poolName);
 
-        // Generate wallet names
-        System.out.println("-------------------------------------");
-        System.out.println("Generating base names...");
-        System.out.println("-------------------------------------");
-        String stewardName = "steward"+System.currentTimeMillis();
-        String faberName = "faber"+System.currentTimeMillis();
-        String acmeName = "acme"+System.currentTimeMillis();
-        String randomName = "random"+System.currentTimeMillis();
-        String stewardNameNew = "stewardNew"+System.currentTimeMillis();
-        String faberNameNew = "faberNew"+System.currentTimeMillis();
-        String acmeNameNew = "acmeNew"+System.currentTimeMillis();
-        String randomNameNew = "randomNew"+System.currentTimeMillis();
-        System.out.println("GENERATED NAMES:");
-        System.out.println("stewardName: " + stewardName);
-        System.out.println("faberName: " + faberName);
-        System.out.println("acmeName: " + acmeName);
-        System.out.println("randomName: " + randomName);
-        System.out.println("stewardNameNew: " + stewardNameNew);
-        System.out.println("faberNameNew: " + faberNameNew);
-        System.out.println("acmeNameNew: " + acmeNameNew);
-        System.out.println("randomNameNew: " + randomNameNew);
-        System.out.println("-------------------------------------");
+
+        // Create new wallet for Steward
+        TrustAnchor steward = new TrustAnchor(IndyWallet.create(indyPool, "steward", "000000000000000000000000Steward1"));
+        // Create new wallet for faber
+        Issuer faber = new Issuer(IndyWallet.create(indyPool, "faber", SeedUtil.generateSeed()));
+        // Create a new wallet for alice
+        Prover alice = new Prover(IndyWallet.create(indyPool, "alice", SeedUtil.generateSeed()), "alice_master_secret");
 
 
-        // Generate seeds
-        System.out.println("-------------------------------------");
-        System.out.println("Generating base seeds...");
-        System.out.println("-------------------------------------");
-        String stewardSeed = "000000000000000000000000Steward1";
-        String faberSeed = SeedUtil.generateSeed();
-        String acmeSeed = "0000000000000000000000StaticSeed";
-        String randomSeed = SeedUtil.generateSeed();
-        System.out.println("GENERATED SEEDS:");
-        System.out.println("stewardSeed: " + stewardSeed);
-        System.out.println("faberSeed: " + faberSeed);
-        System.out.println("acmeSeed: " + acmeSeed);
-        System.out.println("randomSeed: " + randomSeed);
-        System.out.println("-------------------------------------");
+        // Onboard faber
+        // Steward creates a connection request for faber with the TRUST_ANCHOR ROLE
+        ConnectionRequest connectionRequestForFaber = steward.createConnectionRequest(faber.getName(), "TRUST_ANCHOR").get();
+        // Steward creates a message ready to send to faber
+        String connectionRequestForFaberMessage = steward.createMessage(connectionRequestForFaber).get().toJSON();
+        System.out.println("Connection request message:");
+        System.out.println(connectionRequestForFaberMessage);
 
-        // Create base wallets
-        System.out.println("-------------------------------------");
-        System.out.println("Generating base wallets...");
-        System.out.println("-------------------------------------");
-        IndyWallet stewardWallet = IndyWallet.create(indyPool, stewardName, stewardSeed);
-        System.out.println("Generated stewardWallet. [ID: " + stewardName + "] [Seed: " + stewardSeed + "]");
-        IndyWallet faberWallet = IndyWallet.create(indyPool, faberName, faberSeed);
-        System.out.println("Generated faberWallet. [ID: " + faberName + "] [Seed: " + faberSeed + "]");
-        IndyWallet acmeWallet = IndyWallet.create(indyPool, acmeName, acmeSeed);
-        System.out.println("Generated acmeWallet. [ID: " + acmeName + "] [Seed: " + acmeSeed + "]");
-        IndyWallet radomWallet = IndyWallet.create(indyPool, randomName, randomSeed);
-        System.out.println("Generated randomWallet. [ID: " + randomName + "] [Seed: " + randomSeed + "]");
-        System.out.println("-------------------------------------");
+        // Faber receives the connection request
+        // Faber decrypts the message to get the ConnectionRequest object
+        ConnectionRequest connectionRequestForFaberReceived = faber.decryptMessage(connectionRequestForFaberMessage);
 
-        // Get DID's from wallets
-        System.out.println("-------------------------------------");
-        System.out.println("Getting DIDs");
-        System.out.println("-------------------------------------");
-        System.out.println("DIDs:");
-        System.out.println("stewardDid: " + stewardWallet.getMainDid());
-        System.out.println("faberDid: " + faberWallet.getMainDid());
-        System.out.println("acmeDid: " + acmeWallet.getMainDid());
-        System.out.println("randomDid: " + radomWallet.getMainDid());
-        System.out.println("-------------------------------------");
+        // Faber accepts the connectionRequest and creates a connectionResponse
+        ConnectionResponse connectionResponseForSteward = faber.acceptConnectionRequest(connectionRequestForFaberReceived).get();
+        // Faber encrypts the message ready to send back to steward
+        String faberConnectionResponseMessage =  faber.createMessage(connectionResponseForSteward).get().toJSON();
+        System.out.println("Connection response message:");
+        System.out.println(faberConnectionResponseMessage);
 
-        // Create new wallets with same seeds
-        System.out.println("-------------------------------------");
-        System.out.println("Generating new wallets...");
-        System.out.println("-------------------------------------");
-        IndyWallet stewardWalletNew = IndyWallet.create(indyPool, stewardNameNew, stewardSeed);
-        System.out.println("Generated stewardWallet. [ID: " + stewardNameNew + "] [Seed: " + stewardSeed + "]");
-        IndyWallet faberWalletNew = IndyWallet.create(indyPool, faberNameNew, faberSeed);
-        System.out.println("Generated faberWallet. [ID: " + faberNameNew + "] [Seed: " + faberSeed + "]");
-        IndyWallet acmeWalletNew = IndyWallet.create(indyPool, acmeNameNew, acmeSeed);
-        System.out.println("Generated acmeWallet. [ID: " + acmeNameNew + "] [Seed: " + acmeSeed + "]");
-        IndyWallet radomWalletNew = IndyWallet.create(indyPool, randomNameNew, randomSeed);
-        System.out.println("Generated randomWallet. [ID: " + randomNameNew + "] [Seed: " + randomSeed + "]");
-        System.out.println("-------------------------------------");
-
-        // Get DID's from wallets
-        System.out.println("-------------------------------------");
-        System.out.println("Getting DIDs");
-        System.out.println("-------------------------------------");
-        System.out.println("DIDs:");
-        System.out.println("stewardDid: " + stewardWalletNew.getMainDid());
-        System.out.println("faberDid: " + faberWalletNew.getMainDid());
-        System.out.println("acmeDid: " + acmeWalletNew.getMainDid());
-        System.out.println("randomDid: " + radomWalletNew.getMainDid());
-        System.out.println("-------------------------------------");
-
-        assertThat(stewardWallet.getMainDid(), is(equalTo(stewardWalletNew.getMainDid())));
-        assertThat(faberWallet.getMainDid(), is(equalTo(faberWalletNew.getMainDid())));
-        assertThat(acmeWallet.getMainDid(), is(equalTo(acmeWalletNew.getMainDid())));
-        assertThat(radomWallet.getMainDid(), is(equalTo(radomWalletNew.getMainDid())));
+        // Steward receives the message from Faber and decrypts it
+        ConnectionResponse connectionResponseForStewardReceived = steward.decryptMessage(faberConnectionResponseMessage);
+        // Steward accepts the connection response received from Faber
+        steward.acceptConnectionResponse(connectionResponseForStewardReceived).get();
 
 
+        // Faber creates a verinymRequest
+        Verinym verinymRequest = faber.createVerinymRequest(connectionRequestForFaber.getDid());
+        // Faber creates and encrypts the message ready to send
+        String verinymRequestMessage = faber.createMessage(verinymRequest).get().toJSON();
+        System.out.println("Verinym request message:");
+        System.out.println(verinymRequestMessage);
+
+        // Steward accepts verinym request from Faber and thus writes the new DID on the ledger
+        Verinym verinymRequestReceived = steward.decryptMessage(verinymRequestMessage);
+        steward.acceptVerinymRequest(verinymRequestReceived).get();
+
+        // Assert that the connection request received by faber is equally to the one sent by steward
+        assertThat(connectionRequestForFaberReceived.getDid(), is(equalTo(connectionRequestForFaber.getDid())));
+        assertThat(connectionRequestForFaberReceived.getRequestNonce(), is(equalTo(connectionRequestForFaber.getRequestNonce())));
+        // Assert that the connection response received by steward is equally to the one sent by faber
+        assertThat(connectionResponseForSteward.getDid(), is(equalTo(connectionResponseForStewardReceived.getDid())));
+        assertThat(connectionResponseForSteward.getRequestNonce(), is(equalTo(connectionResponseForStewardReceived.getRequestNonce())));
+        // Assert that verinym request received by stward is equally to the one sent by faber
+        assertThat(verinymRequest.getDid(), is(equalTo(verinymRequestReceived.getDid())));
+        assertThat(verinymRequest.getVerkey(), is(equalTo(verinymRequestReceived.getVerkey())));
+
+        // Now faber can onboard Alice
+        // Faber creates a connection request message for alice
+        String connectionRequestForAliceMessage = faber.createMessage(faber.createConnectionRequest(alice.getName(), null).get()).get().toJSON();
+
+        // Alice receives and decrypts the message
+        ConnectionRequest connectionRequestForAliceReceived = alice.decryptMessage(connectionRequestForAliceMessage);
+        // Alice accepts the connection request and creates a connection response message for Faber
+        String connectionResponseForFaberMessage =  alice.createMessage(alice.acceptConnectionRequest(connectionRequestForAliceReceived).get()).get().toJSON();
+
+        // Faber receives and decrypts the response from alice
+        ConnectionResponse connectionResponseForFaberReceived = faber.decryptMessage(connectionResponseForFaberMessage);
+        // Faber accepts the response
+        String aliceFaberDid = faber.acceptConnectionResponse(connectionResponseForFaberReceived).get();
+        System.out.println("New DID for Alice-Faber: " + aliceFaberDid);
     }
 }

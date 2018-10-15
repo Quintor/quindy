@@ -6,8 +6,14 @@ import nl.quintor.studybits.indy.wrapper.dto.*;
 import org.hyperledger.indy.sdk.anoncreds.ProofRejectedException;
 import sun.net.ConnectionResetException;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class IndyMessageTypes {
@@ -63,6 +69,19 @@ public class IndyMessageTypes {
             }
         }
     }
+
+    public static MessageType getMessageTypeFromClass(Class c) {
+        Map<String, MessageType> messageTypesMap = MessageTypes.getMap();
+
+        Optional<Map.Entry<String, MessageType>> theOptional = messageTypesMap.entrySet().stream().filter(x -> (x.getValue().getValueType().equals(c))).findFirst();
+        if(theOptional.isPresent()) {
+            MessageType messageType = theOptional.get().getValue();
+
+            return messageType;
+        }
+        return null;
+    }
+
     @Data
     public static class StandardMessageType<T> implements MessageType<T> {
         private final String URN;

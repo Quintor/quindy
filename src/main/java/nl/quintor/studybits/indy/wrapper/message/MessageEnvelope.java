@@ -44,7 +44,9 @@ public class MessageEnvelope<T> implements Serializable {
         this.encodedMessage = message;
     }
 
-    public static <S> CompletableFuture<MessageEnvelope<S>> fromMessage(S message, MessageType<S> type, IndyWallet indyWallet) throws JsonProcessingException, IndyException {
+    public static <S> CompletableFuture<MessageEnvelope<S>> fromMessage(S message, IndyWallet indyWallet) throws JsonProcessingException, IndyException {
+        MessageType type = IndyMessageTypes.getMessageTypeFromClass(message.getClass());
+
         if (!type.getEncryption().equals(MessageType.Encryption.PLAINTEXT) && indyWallet == null) {
             throw new IndyWrapperException("Cannot encrypt message without wallet");
         }
@@ -66,7 +68,7 @@ public class MessageEnvelope<T> implements Serializable {
 
         if (encryptedMessageFuture == null) {
             envelopeFuture = CompletableFuture.<JsonNode>completedFuture(JSONUtil.mapper.valueToTree(message))
-                    .thenApply(encodedMessage -> new MessageEnvelope<S>(type.getIdProvider().apply(message), type.getURN(), encodedMessage));
+                    .thenApply(encodedMessage -> new MessageEnvelope<S>(type.getIdProvider().apply(message).toString(), type.getURN(), encodedMessage));
         }
         else {
             envelopeFuture = encryptedMessageFuture.thenApply(encryptedMessage -> new MessageEnvelope<S>(encryptedMessage.getTargetDid(), type.getURN(),  new TextNode(Base64.encodeBase64String(encryptedMessage.getMessage()))));
@@ -76,6 +78,9 @@ public class MessageEnvelope<T> implements Serializable {
     }
 
     public CompletableFuture<T> getMessage(IndyWallet indyWallet) throws IndyException, JsonProcessingException {
+        if(!getMessageType().equals(MessageType.Encryption.PLAINTEXT) && indyWallet == null) {
+            throw new IndyWrapperException("Cannot decrypt message without wallet");
+        }
         CompletableFuture<T> messageFuture;
         if (getMessageType().getEncryption().equals(MessageType.Encryption.AUTHCRYPTED)) {
             messageFuture = indyWallet.authDecrypt(Base64.decodeBase64(encodedMessage.asText()), didOrNonce, getMessageType().getValueType());
@@ -88,6 +93,14 @@ public class MessageEnvelope<T> implements Serializable {
         }
 
         return messageFuture;
+    }
+
+    public JsonNode getEncodedMessage() {
+        return encodedMessage;
+    }
+
+    public String getDidOrNonce() {
+        return didOrNonce;
     }
 
     @JsonIgnore
