@@ -28,6 +28,11 @@ import java.util.stream.Collectors;
 
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
+/**
+ * The IndyWallet is responsible for interfacing with the HyperLedger Indy APIs, through indy-sdk.
+ *
+ * This concerns the base functionality that is needed by the various roles, including encryption/decryption.
+ */
 @Slf4j
 @Getter
 public class IndyWallet implements AutoCloseable {
