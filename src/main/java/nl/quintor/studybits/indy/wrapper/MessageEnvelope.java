@@ -1,4 +1,4 @@
-package nl.quintor.studybits.indy.wrapper.message;
+package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -9,19 +9,19 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.indy.wrapper.dto.AnonCryptable;
 import nl.quintor.studybits.indy.wrapper.dto.AuthCryptable;
 import nl.quintor.studybits.indy.wrapper.dto.EncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.Serializable;
 import nl.quintor.studybits.indy.wrapper.exception.IndyWrapperException;
+import nl.quintor.studybits.indy.wrapper.message.MessageType;
+import nl.quintor.studybits.indy.wrapper.message.MessageTypes;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.hyperledger.indy.sdk.IndyException;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @NoArgsConstructor

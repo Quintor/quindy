@@ -70,7 +70,7 @@ public class TrustAnchor extends IndyWallet {
 
         return sendNym(connectionResponse.getDid(), connectionResponse.getVerkey(), connectionRequest.getRole())
                 .thenCompose(wrapException((nymResponse) ->
-                        storeDidAndPairwise(connectionRequest.getDid(), connectionResponse.getDid(), connectionResponse.getVerkey())))
+                        storeDidAndPairwise(connectionRequest.getDid(), connectionResponse.getDid())))
                 .thenApply((void_) -> {
                     log.debug("Removing connectionRequest with requestNonce {}", connectionRequest.getRequestNonce());
                     rolesByDid.put(connectionResponse.getDid(), connectionRequest.getRole());
