@@ -24,8 +24,8 @@ public class IndyMessageTypes {
     public static MessageType<Verinym> VERINYM = new StandardMessageType<>(
             SOVRIN_URN_PREFIX + "connection/1.0/verinym", MessageType.Encryption.AUTHCRYPTED, null, Verinym.class);
 
-    public static MessageType<String> CONNECTION_ACKNOWLEDGEMENT = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "connection/1.0/connection_acknowledgement", MessageType.Encryption.AUTHCRYPTED, null, String.class);
+    public static MessageType<AuthcryptableString> CONNECTION_ACKNOWLEDGEMENT = new StandardMessageType<>(
+            SOVRIN_URN_PREFIX + "connection/1.0/connection_acknowledgement", MessageType.Encryption.AUTHCRYPTED, null, AuthcryptableString.class);
 
     public static MessageType<CredentialOffer> CREDENTIAL_OFFER = new StandardMessageType<>(
             SOVRIN_URN_PREFIX + "credential/1.0/credential_offer", MessageType.Encryption.AUTHCRYPTED, null, CredentialOffer.class);

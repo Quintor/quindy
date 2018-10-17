@@ -15,6 +15,8 @@ import java.util.concurrent.ExecutionException;
 
 import static nl.quintor.studybits.indy.wrapper.TestUtil.removeIndyClientDirectory;
 import static nl.quintor.studybits.indy.wrapper.message.IndyMessageTypes.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
@@ -366,7 +368,7 @@ public class MessageScenarioIT {
         String governmentConnectionRequest = MessageEnvelope.encryptMessage(trustAnchor.createConnectionRequest(newcomer.getName(), null).get(),
                 IndyMessageTypes.CONNECTION_REQUEST, null).get().toJSON();
         // Newcomer receives connectionRequest from trustAnchor
-        MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(governmentConnectionRequest);
+        MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(governmentConnectionRequest, IndyMessageTypes.CONNECTION_REQUEST);
         // Newcomer accepts the connectionRequest from trustAnchor and creates a connectionResponse
         ConnectionResponse newcomerConnectionResponse = newcomer.acceptConnectionRequest(connectionRequestMessageEnvelope.extractMessage(newcomer).get()).get();
         // Newcomer sends a connection response to trustAnchor
@@ -376,6 +378,14 @@ public class MessageScenarioIT {
         ConnectionResponse connectionResponse = MessageEnvelope.parseFromString(newcomerConnectionResponseString, CONNECTION_RESPONSE).extractMessage(trustAnchor).get();
         // TrustAnchor accepts the connectionResponse from the newcomer
         String newcomerDid = trustAnchor.acceptConnectionResponse(connectionResponse).get();
+
+
+        // Test connection by sending encrypted connection acknowledgement
+        String acknowledgementEnvelope = MessageEnvelope.encryptMessage(new AuthcryptableString("connected", connectionResponse.getDid()), CONNECTION_ACKNOWLEDGEMENT, trustAnchor).get().toJSON();
+
+        // Decrypt connection acknowledgement and test content
+        AuthcryptableString acknowledgement = MessageEnvelope.parseFromString(acknowledgementEnvelope, CONNECTION_ACKNOWLEDGEMENT).extractMessage(newcomer).get();
+        assertThat(acknowledgement.getPayload(), is(equalTo("connected")));
 
         return newcomerDid;
     }
