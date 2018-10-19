@@ -189,7 +189,7 @@ public class IndyWallet implements AutoCloseable {
                         .collect(EntitiesFromLedger.collector()));
     }
 
-    CompletableFuture<EncryptedMessage> anonEncrypt(byte[] message, String theirDid) throws IndyException {
+    public CompletableFuture<EncryptedMessage> anonEncrypt(byte[] message, String theirDid) throws IndyException {
         log.debug("{} Anoncrypting message: {}, with targetDid: {}", name, message, theirDid);
         return getKeyForDid(theirDid)
                 .thenApply(key -> {
@@ -203,7 +203,7 @@ public class IndyWallet implements AutoCloseable {
                 }));
     }
 
-    <T> CompletableFuture<T> anonDecrypt(byte[] message, String myDid, Class<T> valueType) throws IndyException {
+    public <T> CompletableFuture<T> anonDecrypt(byte[] message, String myDid, Class<T> valueType) throws IndyException {
         log.debug("{} Called anonDecrypt", name);
         return getKeyForDid(myDid)
                 .thenCompose(wrapException(key -> Crypto.anonDecrypt(wallet, key, message)))
@@ -211,7 +211,7 @@ public class IndyWallet implements AutoCloseable {
                         .forName("utf8")), valueType)));
     }
 
-    CompletableFuture<EncryptedMessage> authEncrypt(byte[] message, String theirDid) throws IndyException {
+    public CompletableFuture<EncryptedMessage> authEncrypt(byte[] message, String theirDid) throws IndyException {
         log.debug("{} Authcrypting message: {}, theirDid: {}", name, message, theirDid);
         return getKeyForDid(theirDid).thenCompose(wrapException((String theirKey) -> {
             return getPairwiseByTheirDid(theirDid)
@@ -225,7 +225,7 @@ public class IndyWallet implements AutoCloseable {
         }));
     }
 
-    <T> CompletableFuture<T> authDecrypt(byte[] message, String theirDid, Class<T> valueType) throws IndyException {
+    public <T> CompletableFuture<T> authDecrypt(byte[] message, String theirDid, Class<T> valueType) throws IndyException {
         return getPairwiseByTheirDid(theirDid)
                 .thenCompose(wrapException(pairwiseResult -> getKeyForDid(pairwiseResult.getMyDid())
                         .thenCompose(wrapException(key -> Crypto.authDecrypt(wallet, key, message)

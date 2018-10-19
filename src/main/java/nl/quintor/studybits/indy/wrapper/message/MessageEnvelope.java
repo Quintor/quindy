@@ -1,4 +1,4 @@
-package nl.quintor.studybits.indy.wrapper;
+package nl.quintor.studybits.indy.wrapper.message;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -6,16 +6,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.indy.wrapper.dto.AnonCryptable;
 import nl.quintor.studybits.indy.wrapper.dto.AuthCryptable;
 import nl.quintor.studybits.indy.wrapper.dto.EncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.Serializable;
 import nl.quintor.studybits.indy.wrapper.exception.IndyWrapperException;
-import nl.quintor.studybits.indy.wrapper.message.MessageType;
-import nl.quintor.studybits.indy.wrapper.message.MessageTypes;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.hyperledger.indy.sdk.IndyException;
@@ -39,82 +39,19 @@ public class MessageEnvelope<T> implements Serializable {
     private String didOrNonce;
 
     @JsonProperty("type")
+    @Getter(value = AccessLevel.PACKAGE)
     private String type;
 
     @JsonProperty("message")
+    @Getter(value = AccessLevel.PACKAGE)
     private JsonNode encodedMessage;
 
 
     @JsonCreator
-    private MessageEnvelope(@JsonProperty("id") String id, @JsonProperty("type") String type, @JsonProperty("message") JsonNode message) {
+    MessageEnvelope(@JsonProperty("id") String id, @JsonProperty("type") String type, @JsonProperty("message") JsonNode message) {
         this.type = type;
         this.didOrNonce = id;
         this.encodedMessage = message;
-    }
-
-    /**
-     * Encrypts message to a MessageEnvelope
-     *
-     * @param message content as POJO
-     * @param type the message type
-     * @param indyWallet used to encrypt, optional if the type has encryption plaintext
-     * @param <S> type of the content
-     *
-     * @return A future that resolves when the encryption is completed
-     *
-     * @throws JsonProcessingException
-     * @throws IndyException
-     */
-    public static <S> CompletableFuture<MessageEnvelope<S>> encryptMessage(S message, MessageType<S> type, IndyWallet indyWallet) throws JsonProcessingException, IndyException {
-        if (!type.getEncryption().equals(MessageType.Encryption.PLAINTEXT) && indyWallet == null) {
-            throw new IndyWrapperException("Cannot encrypt message without wallet");
-        }
-
-        log.debug("Creating MessageEnvelope from message {}", message);
-
-
-        CompletableFuture<EncryptedMessage> encryptedMessageFuture = null;
-        if (type.getEncryption().equals(MessageType.Encryption.AUTHCRYPTED)) {
-            String did = ((AuthCryptable) message).getTheirDid();
-            encryptedMessageFuture = indyWallet.authEncrypt(JSONUtil.mapper.writeValueAsBytes(message), did);
-        }
-        else if (type.getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
-            String did = ((AnonCryptable) message).getTheirDid();
-            encryptedMessageFuture = indyWallet.anonEncrypt(JSONUtil.mapper.writeValueAsBytes(message), did);
-        }
-
-        CompletableFuture<MessageEnvelope<S>> envelopeFuture;
-
-        if (encryptedMessageFuture == null) {
-            envelopeFuture = CompletableFuture.<JsonNode>completedFuture(JSONUtil.mapper.valueToTree(message))
-                    .thenApply(encodedMessage -> new MessageEnvelope<S>(type.getIdProvider().apply(message), type.getURN(), encodedMessage));
-        }
-        else {
-            envelopeFuture = encryptedMessageFuture.thenApply(encryptedMessage ->
-                    new MessageEnvelope<>(encryptedMessage.getTargetDid(), type.getURN(),
-                            new TextNode(Base64.encodeBase64String(encryptedMessage.getMessage()))));
-        }
-
-        return envelopeFuture;
-    }
-
-    public CompletableFuture<T> extractMessage(IndyWallet indyWallet) throws IndyException, JsonProcessingException {
-        if (!getMessageType().getEncryption().equals(MessageType.Encryption.PLAINTEXT) && indyWallet == null) {
-            throw new IndyWrapperException("Cannot decrypt message without wallet");
-        }
-
-        CompletableFuture<T> messageFuture;
-        if (getMessageType().getEncryption().equals(MessageType.Encryption.AUTHCRYPTED)) {
-            messageFuture = indyWallet.authDecrypt(Base64.decodeBase64(encodedMessage.asText()), didOrNonce, getMessageType().getValueType());
-        }
-        else if (getMessageType().getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
-            messageFuture = indyWallet.anonDecrypt(Base64.decodeBase64(encodedMessage.asText()), didOrNonce, getMessageType().getValueType());
-        }
-        else {
-            messageFuture = CompletableFuture.completedFuture(JSONUtil.mapper.treeToValue(encodedMessage, getMessageType().getValueType()));
-        }
-
-        return messageFuture;
     }
 
     /**
