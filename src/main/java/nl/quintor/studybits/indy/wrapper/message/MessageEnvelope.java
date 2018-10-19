@@ -56,10 +56,10 @@ public class MessageEnvelope<T> implements Serializable {
         }
 
         if (this.type.getEncryption().equals(MessageType.Encryption.AUTHCRYPTED)) {
-            this.message = indyWallet.authDecrypt(Base64.decodeBase64(encodedMessage.asText()), did, this.type.getValueType()).get();
+            this.message = indyWallet.authDecrypt(Base64.decodeBase64(encodedMessage.asText().getBytes(Charset.forName("UTF8"))), did, this.type.getValueType()).get();
         }
         else if (this.type.getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
-            this.message = indyWallet.anonDecrypt(Base64.decodeBase64(encodedMessage.asText()), did, this.type.getValueType()).get();
+            this.message = indyWallet.anonDecrypt(Base64.decodeBase64(encodedMessage.asText().getBytes(Charset.forName("UTF8"))), did, this.type.getValueType()).get();
         }
         else {
             this.message = JSONUtil.mapper.treeToValue(encodedMessage, this.type.getValueType());
