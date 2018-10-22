@@ -56,10 +56,10 @@ public class MessageEnvelope<T> implements Serializable {
         }
 
         if (this.type.getEncryption().equals(MessageType.Encryption.AUTHCRYPTED)) {
-            this.message = indyWallet.authDecrypt(Base64.decodeBase64(encodedMessage.asText()), did, this.type.getValueType()).get();
+            this.message = indyWallet.authDecrypt(Base64.decodeBase64(encodedMessage.asText().getBytes(Charset.forName("UTF8"))), did, this.type.getValueType()).get();
         }
         else if (this.type.getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
-            this.message = indyWallet.anonDecrypt(Base64.decodeBase64(encodedMessage.asText()), did, this.type.getValueType()).get();
+            this.message = indyWallet.anonDecrypt(Base64.decodeBase64(encodedMessage.asText().getBytes(Charset.forName("UTF8"))), did, this.type.getValueType()).get();
         }
         else {
             this.message = JSONUtil.mapper.treeToValue(encodedMessage, this.type.getValueType());
@@ -86,12 +86,14 @@ public class MessageEnvelope<T> implements Serializable {
                 if (m.type.getEncryption().equals(MessageType.Encryption.AUTHCRYPTED)) {
                     AuthcryptedMessage authcryptedMessage = m.indyWallet.authEncrypt(JSONUtil.mapper.writeValueAsBytes(m.message), m.did).get();
                     jsonGenerator.writeStringField("id", authcryptedMessage.getDid());
-                    jsonGenerator.writeStringField("message", Base64.encodeBase64String(authcryptedMessage.getMessage()));
+                    String encodedString = new String(Base64.encodeBase64(authcryptedMessage.getMessage()), Charset.forName("UTF8"));
+                    jsonGenerator.writeStringField("message", encodedString);
                 } else if (m.type.getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
                     byte[] bytes = JSONUtil.mapper.writeValueAsBytes(m.message);
                     AnoncryptedMessage anoncryptedMessage = m.indyWallet.anonEncrypt(bytes, m.did).get();
                     jsonGenerator.writeStringField("id", anoncryptedMessage.getTargetDid());
-                    jsonGenerator.writeStringField("message", Base64.encodeBase64String(anoncryptedMessage.getMessage()));
+                    String encodedString = new String(Base64.encodeBase64(anoncryptedMessage.getMessage()), Charset.forName("UTF8"));
+                    jsonGenerator.writeStringField("message", encodedString);
                 } else {
                     jsonGenerator.writeStringField("id", (String) m.type.getIdProvider().apply(m.message));
                     if (m.message != null) {
