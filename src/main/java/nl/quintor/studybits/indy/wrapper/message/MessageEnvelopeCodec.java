@@ -14,6 +14,7 @@ import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.hyperledger.indy.sdk.IndyException;
 
+import java.nio.charset.Charset;
 import java.util.concurrent.CompletableFuture;
 
 @Data
@@ -60,7 +61,7 @@ public class MessageEnvelopeCodec {
         else {
             envelopeFuture = encryptedMessageFuture.thenApply(encryptedMessage ->
                     new MessageEnvelope<>(encryptedMessage.getTargetDid(), type.getURN(),
-                            new TextNode(Base64.encodeBase64String(encryptedMessage.getMessage()))));
+                            new TextNode(new String(Base64.encodeBase64(encryptedMessage.getMessage()), Charset.forName("UTF8")))));
         }
 
         return envelopeFuture;
@@ -76,10 +77,10 @@ public class MessageEnvelopeCodec {
 
         CompletableFuture<S> messageFuture;
         if (type.getEncryption().equals(MessageType.Encryption.AUTHCRYPTED)) {
-            messageFuture = indyWallet.authDecrypt(Base64.decodeBase64(messageEnvelope.getEncodedMessage().asText()), didOrNonce, type.getValueType());
+            messageFuture = indyWallet.authDecrypt(Base64.decodeBase64(messageEnvelope.getEncodedMessage().asText().getBytes(Charset.forName("UTF8"))), didOrNonce, type.getValueType());
         }
         else if (type.getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
-            messageFuture = indyWallet.anonDecrypt(Base64.decodeBase64(messageEnvelope.getEncodedMessage().asText()), didOrNonce, type.getValueType());
+            messageFuture = indyWallet.anonDecrypt(Base64.decodeBase64(messageEnvelope.getEncodedMessage().asText().getBytes(Charset.forName("UTF8"))), didOrNonce, type.getValueType());
         }
         else {
             messageFuture = CompletableFuture.completedFuture(JSONUtil.mapper.treeToValue(messageEnvelope.getEncodedMessage(), type.getValueType()));
