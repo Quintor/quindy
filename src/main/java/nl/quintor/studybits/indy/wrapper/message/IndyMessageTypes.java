@@ -6,6 +6,7 @@ import nl.quintor.studybits.indy.wrapper.dto.*;
 import org.hyperledger.indy.sdk.anoncreds.ProofRejectedException;
 import sun.net.ConnectionResetException;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
@@ -29,6 +30,9 @@ public class IndyMessageTypes {
 
     public static MessageType<CredentialOffer> CREDENTIAL_OFFER = new StandardMessageType<>(
             SOVRIN_URN_PREFIX + "credential/1.0/credential_offer", MessageType.Encryption.AUTHCRYPTED, null, CredentialOffer.class);
+
+    public static MessageType<CredentialOfferList> CREDENTIAL_OFFERS = new StandardMessageType<> (
+            SOVRIN_URN_PREFIX + "credential/1.0/credential_offers", MessageType.Encryption.AUTHCRYPTED, null, CredentialOfferList.class);
 
     public static MessageType<CredentialRequest> CREDENTIAL_REQUEST = new StandardMessageType<>(
             SOVRIN_URN_PREFIX + "credential/1.0/credential_request", MessageType.Encryption.AUTHCRYPTED, null, CredentialRequest.class);
@@ -56,6 +60,7 @@ public class IndyMessageTypes {
                 MessageTypes.registerType(VERINYM);
                 MessageTypes.registerType(CONNECTION_ACKNOWLEDGEMENT);
                 MessageTypes.registerType(CREDENTIAL_OFFER);
+                MessageTypes.registerType(CREDENTIAL_OFFERS);
                 MessageTypes.registerType(CREDENTIAL_REQUEST);
                 MessageTypes.registerType(CREDENTIAL);
                 MessageTypes.registerType(PROOF_REQUEST);
