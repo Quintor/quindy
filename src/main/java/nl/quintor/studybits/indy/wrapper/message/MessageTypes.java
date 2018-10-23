@@ -17,9 +17,16 @@ public class MessageTypes {
         messageTypes.put(messageType.getURN(), messageType);
     }
 
+    /**
+     * Finds registered message type, if it exists
+     *
+     * @param urn Uniform Resource Name that identifies the type
+     *
+     * @return {@link MessageType}, including type of encryption and other metadata
+     */
     public static MessageType forURN(String urn) {
-        log.debug("Querying for URN {}", urn);
-        log.debug("Message types: " + messageTypes.toString());
+        log.trace("Querying for URN {}", urn);
+        log.trace("Message types: " + messageTypes.toString());
         return messageTypes.get(urn);
     }
 }

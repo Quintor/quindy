@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthcryptedMessage {
+public class EncryptedMessage {
     private byte[] message;
-    private String did;
+    private String targetDid;
 }

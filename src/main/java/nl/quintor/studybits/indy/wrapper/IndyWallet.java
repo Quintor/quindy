@@ -1,6 +1,7 @@
 package nl.quintor.studybits.indy.wrapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -15,36 +16,38 @@ import org.hyperledger.indy.sdk.did.DidResults;
 import org.hyperledger.indy.sdk.ledger.Ledger;
 import org.hyperledger.indy.sdk.ledger.LedgerResults;
 import org.hyperledger.indy.sdk.non_secrets.WalletRecord;
-import org.hyperledger.indy.sdk.pairwise.Pairwise;
 import org.hyperledger.indy.sdk.pool.Pool;
 import org.hyperledger.indy.sdk.wallet.Wallet;
 
 import java.nio.charset.Charset;
-import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapBiFunctionException;
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
 
+/**
+ * The IndyWallet is responsible for interfacing with the HyperLedger Indy APIs, through indy-sdk.
+ *
+ * This concerns the base functionality that is needed by the various roles, including encryption/decryption.
+ */
 @Slf4j
 @Getter
 public class IndyWallet implements AutoCloseable {
     private Wallet wallet;
     protected String name;
-    @Setter
+    @Setter(value = AccessLevel.PROTECTED)
     private String mainDid;
-    @Setter
+    @Setter(value = AccessLevel.PROTECTED)
     private String mainKey;
 
     private Pool pool;
 
     private IndyWallet(String name, String seed, Pool pool) throws IndyException, ExecutionException, InterruptedException {
-        String issuerWalletConfig = "{\"id\":\""+name+"Wallet\"}";
-        String issuerWalletCredentials = "{\"key\":\""+seed+"_wallet_key\"}";
+        String issuerWalletConfig = "{\"id\":\"" + name + "Wallet\"}";
+        String issuerWalletCredentials = "{\"key\":\"" + seed + "_wallet_key\"}";
         this.wallet = Wallet.openWallet(issuerWalletConfig, issuerWalletCredentials).get();
 
         this.name = name;
@@ -60,14 +63,14 @@ public class IndyWallet implements AutoCloseable {
     }
 
     public static IndyWallet create(IndyPool pool, String name, String seed) throws IndyException, ExecutionException, InterruptedException, JsonProcessingException {
-        if(seed == null || seed.isEmpty() ) {
+        if (seed == null || seed.isEmpty()) {
             throw new IllegalArgumentException("Seed cannot be null or empty");
         }
-        if(seed.length() != 32) {
+        if (seed.length() != 32) {
             throw new IllegalArgumentException("Seed must be 32 characters long");
         }
-        String issuerWalletConfig = "{\"id\":\""+name+"Wallet\"}";
-        String issuerWalletCredentials = "{\"key\":\""+seed+"_wallet_key\"}";
+        String issuerWalletConfig = "{\"id\":\"" + name + "Wallet\"}";
+        String issuerWalletCredentials = "{\"key\":\"" + seed + "_wallet_key\"}";
         Wallet.createWallet(issuerWalletConfig, issuerWalletCredentials).get();
 
         IndyWallet indyWallet = new IndyWallet(name, seed, pool.getPool());
@@ -94,7 +97,7 @@ public class IndyWallet implements AutoCloseable {
 
     CompletableFuture<DidResults.CreateAndStoreMyDidResult> newDid(String seed) throws JsonProcessingException, IndyException {
         String seedJSON = StringUtils.isNotBlank(seed) ? (new MyDidInfo(seed)).toJSON() : "{}";
-        log.debug("Creating new did with seedJSON: {}", seedJSON);
+        log.debug("Creating new targetDid with seedJSON: {}", seedJSON);
         return Did.createAndStoreMyDid(wallet, seedJSON);
     }
 
@@ -118,43 +121,34 @@ public class IndyWallet implements AutoCloseable {
                         (myDid) -> new ConnectionResponse(myDid.getDid(), myDid.getVerkey(), connectionRequest.getRequestNonce(), connectionRequest
                                 .getDid()))
                 .thenCompose(wrapException((ConnectionResponse connectionResponse) ->
-                        getKeyForDid(connectionRequest.getDid())
-                                .thenCompose(wrapException(key -> storeDidAndPairwise(connectionResponse.getDid(), connectionRequest.getDid(), key)))
+                        storeDidAndPairwise(connectionResponse.getDid(), connectionRequest.getDid())
                                 .thenApply((_void) -> connectionResponse)));
     }
 
-    CompletableFuture<Void> storeDidAndPairwise(String myDid, String theirDid, String theirKey) throws JsonProcessingException, IndyException {
+    CompletableFuture<Void> storeDidAndPairwise(String myDid, String theirDid) throws IndyException {
         log.debug("{} Called storeDidAndPairwise: myDid: {}, theirDid: {}", name, myDid, theirDid);
 
         return WalletRecord.add(wallet, "pairwise", theirDid, myDid, "{}");
     }
 
-    public CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid(String theirDid) throws IndyException {
-        log.debug("{} Called getPairwise by their did: {}", name, theirDid);
+    CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid(String theirDid) throws IndyException {
+        log.debug("{} Called getPairwise by their targetDid: {}", name, theirDid);
         return WalletRecord.get(wallet, "pairwise", theirDid, "{}")
                 .thenApply(wrapException(result -> JSONUtil.mapper.readValue(result, nl.quintor.studybits.indy.wrapper.dto.WalletRecord.class)))
                 .thenApply(result -> new GetPairwiseResult(result.getValue(), ""));
     }
 
-    static String lastDid;
-    private CompletableFuture<String> getKeyForDid(String did) throws IndyException {
-        log.debug("{} Called getKeyForDid: {}", name, did);
-        log.debug("{} Matches lastDid {}", name, did.equals(lastDid));
-        lastDid = did;
 
-        log.debug("{} calling keyForDid pool: {}, wallet: {}, did: {}", name, pool, wallet, did);
+    private CompletableFuture<String> getKeyForDid(String did) throws IndyException {
+        log.debug("{} calling keyForDid pool: {}, wallet: {}, targetDid: {}", name, pool, wallet, did);
         return Did.keyForDid(pool, wallet, did)
                 .thenApply(key -> {
-                    log.debug("{} Got key for did {} key {}", name, did, key);
+                    log.debug("{} Got key for targetDid {} key {}", name, did, key);
                     return key;
                 });
     }
 
-    public CompletableFuture<String> getEndpointForDid(String did) throws IndyException {
-        return Did.getEndpointForDid(wallet, pool, did).thenApply(DidResults.EndpointForDidResult::getAddress);
-    }
-
-    public CompletableFuture<Schema> getSchema(String did, String schemaId) throws JsonProcessingException, IndyException {
+    CompletableFuture<Schema> getSchema(String did, String schemaId) throws IndyException {
         log.debug("{}: Calling buildGetSchemaRequest with submitter: {} schemaId {}", name, did, schemaId);
         return Ledger.buildGetSchemaRequest(did, schemaId)
                 .thenCompose(wrapException(this::submitRequest))
@@ -167,7 +161,7 @@ public class IndyWallet implements AutoCloseable {
     }
 
     CompletableFuture<CredentialDefinition> getCredentialDef(String did, String id) throws IndyException {
-        log.debug("{} Getting credential def with did {} schema with id {}", name, did, id);
+        log.debug("{} Getting credential def with targetDid {} schema with id {}", name, did, id);
         return Ledger.buildGetCredDefRequest(did, id)
                 .thenCompose(wrapException(request -> {
                     log.debug("{} Submitting GetCredDefRequest {}", name, request);
@@ -195,8 +189,8 @@ public class IndyWallet implements AutoCloseable {
                         .collect(EntitiesFromLedger.collector()));
     }
 
-    public CompletableFuture<AnoncryptedMessage> anonEncrypt(byte[] message, String theirDid) throws JsonProcessingException, IndyException {
-        log.debug("{} Anoncrypting message: {}, with did: {}", name, message, theirDid);
+    public CompletableFuture<EncryptedMessage> anonEncrypt(byte[] message, String theirDid) throws IndyException {
+        log.debug("{} Anoncrypting message: {}, with targetDid: {}", name, message, theirDid);
         return getKeyForDid(theirDid)
                 .thenApply(key -> {
                     log.debug("{} EXTRA LOGGING", name);
@@ -205,12 +199,8 @@ public class IndyWallet implements AutoCloseable {
                 .thenCompose(wrapException((String key) -> {
                     log.debug("{} Anoncrypting with key: {}", name, key);
                     return Crypto.anonCrypt(key, message)
-                            .thenApply((byte[] cryptedMessage) -> new AnoncryptedMessage(cryptedMessage, theirDid));
+                            .thenApply((byte[] cryptedMessage) -> new EncryptedMessage(cryptedMessage, theirDid));
                 }));
-    }
-
-    public CompletableFuture<AnoncryptedMessage> anonEncrypt(AnonCryptable message) throws JsonProcessingException, IndyException {
-        return anonEncrypt(message.toJSON().getBytes(Charset.forName("utf8")), message.getTheirDid());
     }
 
     public <T> CompletableFuture<T> anonDecrypt(byte[] message, String myDid, Class<T> valueType) throws IndyException {
@@ -221,11 +211,7 @@ public class IndyWallet implements AutoCloseable {
                         .forName("utf8")), valueType)));
     }
 
-    public <T> CompletableFuture<T> anonDecrypt(AnoncryptedMessage message, Class<T> valueType) throws IndyException {
-        return anonDecrypt(message.getMessage(), message.getTargetDid(), valueType);
-    }
-
-    public CompletableFuture<AuthcryptedMessage> authEncrypt(byte[] message, String theirDid) throws JsonProcessingException, IndyException {
+    public CompletableFuture<EncryptedMessage> authEncrypt(byte[] message, String theirDid) throws IndyException {
         log.debug("{} Authcrypting message: {}, theirDid: {}", name, message, theirDid);
         return getKeyForDid(theirDid).thenCompose(wrapException((String theirKey) -> {
             return getPairwiseByTheirDid(theirDid)
@@ -233,14 +219,10 @@ public class IndyWallet implements AutoCloseable {
                             .thenCompose(wrapException((String myKey) -> {
                                 log.debug("{} Authcrypting with keys myKey {}, theirKey {}", name, myKey, theirKey);
                                 return Crypto.authCrypt(wallet, myKey, theirKey, message)
-                                        .thenApply(cryptedMessage -> new AuthcryptedMessage(cryptedMessage, getPairwiseResult.getMyDid()));
+                                        .thenApply(cryptedMessage -> new EncryptedMessage(cryptedMessage, getPairwiseResult.getMyDid()));
                             })))
                     );
         }));
-    }
-
-    public CompletableFuture<AuthcryptedMessage> authEncrypt(AuthCryptable message) throws JsonProcessingException, IndyException {
-        return authEncrypt(message.toJSON().getBytes(Charset.forName("utf8")), message.getTheirDid());
     }
 
     public <T> CompletableFuture<T> authDecrypt(byte[] message, String theirDid, Class<T> valueType) throws IndyException {
@@ -251,15 +233,11 @@ public class IndyWallet implements AutoCloseable {
                                     T decryptedObject = JSONUtil.mapper.readValue(new String(decryptedMessage.getDecryptedMessage(), Charset
                                             .forName("utf8")), valueType);
                                     if (decryptedObject instanceof AuthCryptable) {
-                                        ((AuthCryptable)decryptedObject).setTheirDid(theirDid);
+                                        ((AuthCryptable) decryptedObject).setTheirDid(theirDid);
                                     }
                                     return decryptedObject;
                                 }))))))
                 ;
-    }
-
-    public <T extends AuthCryptable> CompletableFuture<T> authDecrypt(AuthcryptedMessage message, Class<T> valueType) throws IndyException {
-        return authDecrypt(message.getMessage(), message.getDid(), valueType);
     }
 
     @Override
