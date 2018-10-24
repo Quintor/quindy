@@ -17,7 +17,7 @@ public class CredentialOfferList implements Serializable, AuthCryptable {
     @JsonProperty("issuer_did")
     private String issuerDid;
     @JsonProperty("credential_offers")
-    private List<CredentialOffer> credentialOffers;
+    private List<CredentialOffer> credentialOffers = new ArrayList();
 
     private String nonce;
 
