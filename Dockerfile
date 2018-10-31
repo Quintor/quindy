@@ -17,4 +17,4 @@ RUN apt-get update && apt-get install -y libindy=$LIBINDY_VERSION
 ADD pom.xml /
 RUN mvn package
 ADD . /
-CMD mvn -Djdk.net.URLClassPath.disableClassPathURLCheck=true verify
+CMD mvn verify -Djdk.net.URLClassPath.disableClassPathURLCheck=true
