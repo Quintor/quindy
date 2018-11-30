@@ -50,6 +50,8 @@ public class MessageScenarioIT {
         // Create new wallet (with DID and VerKey) using seed for Steward
         TrustAnchor steward = new TrustAnchor(IndyWallet.create(indyPool, "steward", "000000000000000000000000Steward1"));
 
+        steward.acceptVerinymRequest(new Verinym(steward.getMainDid(), steward.getMainDid(), null));
+
         // Create new wallet (with DID and VerKey) for Government (TrustAnchor)
         Issuer government = new Issuer(IndyWallet.create(indyPool, "government", SeedUtil.generateSeed()));
         // #Step 4
@@ -342,36 +344,31 @@ public class MessageScenarioIT {
 
         // Connecting newcomer with Steward
 
-        // #Step 4.1.2 & 4.1.3
-        // Create new DID (For steward_faber connection) and send NYM request to ledger
-        String governmentConnectionRequest = new MessageEnvelopeCodec(null).encryptMessage(steward.createConnectionRequest(newcomer.getName(), "TRUST_ANCHOR").get(),
+        // We revert the order from the tutorial, since we use the anoncryption from the verinym
+
+        // Create connection request for steward
+        String connectionRequestString = newcomerCodec.encryptMessage(newcomer.createConnectionRequest(newcomer.getName(), steward.getMainDid()).get(),
                 IndyMessageTypes.CONNECTION_REQUEST).get().toJSON();
 
-        // #Step 4.1.4 & 4.1.5
-        // Steward sends connection request to Faber
-        ConnectionRequest connectionRequest = newcomerCodec.decryptMessage(MessageEnvelope.parseFromString(governmentConnectionRequest, CONNECTION_REQUEST)).get();
+        // Steward decrypts connection request
+        ConnectionRequest connectionRequest = stewardCodec.decryptMessage(MessageEnvelope.parseFromString(connectionRequestString, CONNECTION_REQUEST)).get();
 
-        // #Step 4.1.6
-        // Faber accepts the connection request from Steward
-        ConnectionResponse newcomerConnectionResponse = newcomer.acceptConnectionRequest(connectionRequest).get();
+        // Steward accepts connection request
+        ConnectionResponse newcomerConnectionResponse = steward.acceptConnectionRequest(connectionRequest).get();
 
-        // #Step 4.1.9
-        // Faber creates a connection response with its created DID and Nonce from the received request from Steward
-        String newcomerConnectionResponseString =  newcomerCodec.encryptMessage(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE).get().toJSON();
+        // Steward sends a connection response
+        String newcomerConnectionResponseString =  stewardCodec.encryptMessage(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE).get().toJSON();
 
-        // #Step 4.1.13
-        // Steward decrypts the anonymously encrypted message from Faber
-        ConnectionResponse connectionResponse = stewardCodec.decryptMessage(MessageEnvelope.parseFromString(newcomerConnectionResponseString, CONNECTION_RESPONSE)).get();
 
-        // #Step 4.1.14 & 4.1.15
-        // Steward authenticates Faber
-        // Steward sends the NYM Transaction for Faber's DID to the ledger
-        steward.acceptConnectionResponse(connectionResponse).get();
+        MessageEnvelope<ConnectionResponse> connectionResponseEnvelope = MessageEnvelope.parseFromString(newcomerConnectionResponseString, CONNECTION_RESPONSE);
+        // Newcomer decrypts the connection response
+        ConnectionResponse connectionResponse = newcomerCodec.decryptMessage(connectionResponseEnvelope).get();
 
-        // #Step 4.2.1 t/m 4.2.4
-        // Faber needs a new DID to interact with identiy owners, thus create a new DID request steward to write on ledger
-        String verinymRequest = newcomerCodec.encryptMessage(newcomer.createVerinymRequest(newcomerCodec.decryptMessage(MessageEnvelope.parseFromString(governmentConnectionRequest, CONNECTION_REQUEST)).get()
-                .getDid()), IndyMessageTypes.VERINYM).get().toJSON();
+        // Newcomer accepts connection response
+        newcomer.acceptConnectionResponse(connectionResponse, connectionResponseEnvelope.getDidOrNonce()).get();
+
+        // Faber needs a new DID to interact with identity owners, thus create a new DID request steward to write on ledger
+        String verinymRequest = newcomerCodec.encryptMessage(newcomer.createVerinymRequest(connectionResponse.getDid()), IndyMessageTypes.VERINYM).get().toJSON();
 
         // #step 4.2.5 t/m 4.2.8
         // Steward accepts verinym request from Faber and thus writes the new DID on the ledger
@@ -383,30 +380,25 @@ public class MessageScenarioIT {
         MessageEnvelopeCodec trustAnchorCodec = new MessageEnvelopeCodec(trustAnchor);
         MessageEnvelopeCodec newcomerCodec = new MessageEnvelopeCodec(newcomer);
 
+        ConnectionRequest newcomerConnectionRequest = newcomer.createConnectionRequest(newcomer.getName(), trustAnchor.getMainDid()).get();
+        // Newcomer creates connection request for trust anchor
+        String newcomerConnectionRequestString = newcomerCodec.encryptMessage(newcomerConnectionRequest, IndyMessageTypes.CONNECTION_REQUEST).get().toJSON();
+        // Newcomer sends connectionRequest to trustAnchor
+        MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(newcomerConnectionRequestString, IndyMessageTypes.CONNECTION_REQUEST);
 
-        // ThrustAnchor creates a connection request for newcomer
-        String governmentConnectionRequest = new MessageEnvelopeCodec(null).encryptMessage(trustAnchor.createConnectionRequest(newcomer.getName(), null).get(),
-                IndyMessageTypes.CONNECTION_REQUEST).get().toJSON();
-        // Newcomer receives connectionRequest from trustAnchor
-        MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(governmentConnectionRequest, IndyMessageTypes.CONNECTION_REQUEST);
-        // Newcomer accepts the connectionRequest from trustAnchor and creates a connectionResponse
-        ConnectionResponse newcomerConnectionResponse = newcomer.acceptConnectionRequest(newcomerCodec.decryptMessage(connectionRequestMessageEnvelope).get()).get();
-        // Newcomer sends a connection response to trustAnchor
-        String newcomerConnectionResponseString =  newcomerCodec.encryptMessage(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE).get().toJSON();
+        // TrustAnchor accepts connection request
+        ConnectionResponse newcomerConnectionResponse = trustAnchor.acceptConnectionRequest(trustAnchorCodec.decryptMessage(connectionRequestMessageEnvelope).get()).get();
+        // TrustAnchor sends connection response
+        String newcomerConnectionResponseString =  trustAnchorCodec.encryptMessage(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE).get().toJSON();
 
-        // TrustAnchor receives the connectionResponse
-        ConnectionResponse connectionResponse = trustAnchorCodec.decryptMessage(MessageEnvelope.parseFromString(newcomerConnectionResponseString, CONNECTION_RESPONSE)).get();
+
+        MessageEnvelope<ConnectionResponse> connectionResponseMessageEnvelope = MessageEnvelope.parseFromString(newcomerConnectionResponseString, CONNECTION_RESPONSE);
+        // Newcomer accepts connection response
+        ConnectionResponse connectionResponse = newcomerCodec.decryptMessage(MessageEnvelope.parseFromString(newcomerConnectionResponseString, CONNECTION_RESPONSE)).get();
         // TrustAnchor accepts the connectionResponse from the newcomer
-        String newcomerDid = trustAnchor.acceptConnectionResponse(connectionResponse).get();
+        newcomer.acceptConnectionResponse(connectionResponse, connectionRequestMessageEnvelope.getDidOrNonce()).get();
 
 
-        // Test connection by sending encrypted connection acknowledgement
-        String acknowledgementEnvelope = trustAnchorCodec.encryptMessage(new AuthcryptableString("connected", connectionResponse.getDid()), CONNECTION_ACKNOWLEDGEMENT).get().toJSON();
-
-        // Decrypt connection acknowledgement and test content
-        AuthcryptableString acknowledgement = newcomerCodec.decryptMessage(MessageEnvelope.parseFromString(acknowledgementEnvelope, CONNECTION_ACKNOWLEDGEMENT)).get();
-        assertThat(acknowledgement.getPayload(), is(equalTo("connected")));
-
-        return newcomerDid;
+        return newcomerConnectionRequest.getDid();
     }
 }

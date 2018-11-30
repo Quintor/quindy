@@ -1,5 +1,6 @@
 package nl.quintor.studybits.indy.wrapper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionRequest;
 import nl.quintor.studybits.indy.wrapper.dto.ConnectionResponse;
@@ -7,6 +8,7 @@ import nl.quintor.studybits.indy.wrapper.dto.Verinym;
 import nl.quintor.studybits.indy.wrapper.exception.IndyWrapperException;
 import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.did.Did;
+import org.hyperledger.indy.sdk.did.DidResults;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,31 +20,9 @@ import static org.hyperledger.indy.sdk.ledger.Ledger.buildNymRequest;
 
 @Slf4j
 public class TrustAnchor extends IndyWallet {
-    private Map<String, ConnectionRequest> openConnectionRequests = new HashMap<>();
-    private Map<String, String> rolesByDid = new HashMap<>();
-
     public TrustAnchor(IndyWallet wallet) {
         super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
         log.info("{}: Instantiated TrustAnchor: {}", name, name);
-    }
-
-    public CompletableFuture<ConnectionRequest> createConnectionRequest(String newcomerName, String role) throws IndyException {
-        log.info("'{}' -> Create and store in Wallet '{} {}'", name, name, newcomerName);
-        return createAndStoreMyDid(getWallet(), "{}")
-                .thenCompose(wrapException(
-                        (didResult) ->
-                                sendNym(didResult.getDid(), didResult.getVerkey(), role)
-                                        .thenApply(
-                                        // TODO: Generate requestNonce properly
-                                        (nymResponse) -> {
-                                            ConnectionRequest connectionRequest = new ConnectionRequest(didResult.getDid(), Long.toString(System.currentTimeMillis()), role, newcomerName, didResult.getVerkey());
-                                            log.debug("Returning ConnectionRequest: {}", connectionRequest);
-                                            openConnectionRequests.put(connectionRequest.getRequestNonce(), connectionRequest);
-                                            return connectionRequest;
-                                        }
-                                )
-                        )
-                );
     }
 
     public CompletableFuture<Void> setEndpoint(String endpoint) throws IndyException {
@@ -57,26 +37,23 @@ public class TrustAnchor extends IndyWallet {
 
     public CompletableFuture<String> acceptVerinymRequest(Verinym verinym) throws IndyException {
         log.debug("{} accepting verinym encrypted with targetDid {}", name, verinym.getDid());
-       return sendNym(verinym.getDid(), verinym.getVerkey(), rolesByDid.get(verinym.getTheirDid()));
+       return sendNym(verinym.getDid(), verinym.getVerkey(), "TRUST_ANCHOR");
     }
 
-    public CompletableFuture<String> acceptConnectionResponse(ConnectionResponse connectionResponse) throws IndyException {
-        if (!openConnectionRequests.containsKey(connectionResponse.getRequestNonce())) {
-            log.info("No open connection request for requestNonce {}", connectionResponse.getRequestNonce());
-            throw new IndyWrapperException("Nonce not found");
-        }
+    public CompletableFuture<ConnectionResponse> acceptConnectionRequest(ConnectionRequest connectionRequest) throws JsonProcessingException, IndyException {
+        log.debug("{} Called acceptConnectionRequest with {}", name, connectionRequest);
 
-        ConnectionRequest connectionRequest = openConnectionRequests.get(connectionResponse.getRequestNonce());
+        // Pairwise connections are always without a role
+        CompletableFuture<String> sendTheirNym = sendNym(connectionRequest.getDid(), connectionRequest.getVerkey(), null);
 
-        return sendNym(connectionResponse.getDid(), connectionResponse.getVerkey(), connectionRequest.getRole())
-                .thenCompose(wrapException((nymResponse) ->
-                        storeDidAndPairwise(connectionRequest.getDid(), connectionResponse.getDid())))
-                .thenApply((void_) -> {
-                    log.debug("Removing connectionRequest with requestNonce {}", connectionRequest.getRequestNonce());
-                    rolesByDid.put(connectionResponse.getDid(), connectionRequest.getRole());
-                    openConnectionRequests.remove(connectionRequest.getRequestNonce());
-                    return connectionResponse.getDid();
-                });
+        CompletableFuture<ConnectionResponse> createAndSendMyNym = newDid()
+                .thenCompose(wrapException(result ->
+                                storeDidAndPairwise(result.getDid(), connectionRequest.getDid())
+                        .thenCompose(wrapException(_void -> sendNym(result.getDid(), result.getVerkey(), null)))
+                        .thenApply(((_str) -> new ConnectionResponse(result.getDid(), connectionRequest.getDid())))));
+
+        return CompletableFuture.allOf(sendTheirNym, createAndSendMyNym)
+                .thenCompose(_void -> createAndSendMyNym);
     }
 
     CompletableFuture<String> sendNym(String newDid, String newKey, String role) throws IndyException {

@@ -10,14 +10,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ConnectionRequest implements Serializable {
+public class ConnectionRequest implements Serializable, AnonCryptable {
     private String did;
-    @JsonProperty("request_nonce")
-    private String requestNonce;
-    @JsonIgnore
-    private String role;
-    @JsonIgnore
-    private String newcomerName;
-    @JsonIgnore
     private String verkey;
+
+    @JsonIgnore
+    private String theirDid;
 }

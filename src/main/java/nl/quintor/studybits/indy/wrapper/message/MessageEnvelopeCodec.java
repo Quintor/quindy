@@ -80,6 +80,7 @@ public class MessageEnvelopeCodec {
             messageFuture = indyWallet.authDecrypt(Base64.decodeBase64(messageEnvelope.getEncodedMessage().asText().getBytes(Charset.forName("UTF8"))), didOrNonce, type.getValueType());
         }
         else if (type.getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
+            log.debug("Anondecrypting with did: {}", didOrNonce);
             messageFuture = indyWallet.anonDecrypt(Base64.decodeBase64(messageEnvelope.getEncodedMessage().asText().getBytes(Charset.forName("UTF8"))), didOrNonce, type.getValueType());
         }
         else {

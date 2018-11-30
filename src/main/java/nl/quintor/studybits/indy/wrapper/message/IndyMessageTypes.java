@@ -16,10 +16,10 @@ public class IndyMessageTypes {
     private static String SOVRIN_URN_PREFIX = "urn:indy:sov:agent:message_type:sovrin.org/";
 
     public static MessageType<ConnectionRequest> CONNECTION_REQUEST = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "connection/1.0/connection_request", MessageType.Encryption.PLAINTEXT, ConnectionRequest::getRequestNonce, ConnectionRequest.class);
+            SOVRIN_URN_PREFIX + "connection/1.0/connection_request", MessageType.Encryption.ANONCRYPTED, null, ConnectionRequest.class);
 
     public static MessageType<ConnectionResponse> CONNECTION_RESPONSE = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "connection/1.0/connection_response", MessageType.Encryption.ANONCRYPTED, ConnectionResponse::getRequestNonce, ConnectionResponse.class);
+            SOVRIN_URN_PREFIX + "connection/1.0/connection_response", MessageType.Encryption.ANONCRYPTED, null, ConnectionResponse.class);
 
 
     public static MessageType<Verinym> VERINYM = new StandardMessageType<>(
