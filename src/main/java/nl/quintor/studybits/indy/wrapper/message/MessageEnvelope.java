@@ -25,6 +25,9 @@ import java.io.IOException;
 @NoArgsConstructor
 public class MessageEnvelope<T> implements Serializable {
 
+    /**
+     * The did is the decentralized identifier used in the pairwise relation by the person sending the message.
+     */
     @Getter
     @JsonProperty("id")
     private String did;
