@@ -114,8 +114,8 @@ public class IndyWallet implements AutoCloseable {
         return Ledger.signAndSubmitRequest(pool, wallet, did, request);
     }
 
-    public CompletableFuture<ConnectionRequest> createConnectionRequest(String newcomerName, String theirDid) throws IndyException {
-        log.info("'{}' -> Create and store in Wallet '{} {}'", name, name, newcomerName);
+    public CompletableFuture<ConnectionRequest> createConnectionRequest(String theirDid) throws IndyException {
+        log.info("'{}' -> Creating connection request with new pairwise did", name);
         return createAndStoreMyDid(getWallet(), "{}")
                 .thenApply(wrapException(
                         didResult -> new ConnectionRequest(didResult.getDid(), didResult.getVerkey(), theirDid)

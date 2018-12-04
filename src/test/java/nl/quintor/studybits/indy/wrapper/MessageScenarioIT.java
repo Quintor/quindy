@@ -346,7 +346,7 @@ public class MessageScenarioIT {
         // We revert the order from the tutorial, since we use the anoncryption from the verinym
 
         // Create connection request for steward
-        String connectionRequestString = newcomerCodec.encryptMessage(newcomer.createConnectionRequest(newcomer.getName(), steward.getMainDid()).get(),
+        String connectionRequestString = newcomerCodec.encryptMessage(newcomer.createConnectionRequest(steward.getMainDid()).get(),
                 IndyMessageTypes.CONNECTION_REQUEST).get().toJSON();
 
         // Steward decrypts connection request
@@ -379,7 +379,7 @@ public class MessageScenarioIT {
         MessageEnvelopeCodec trustAnchorCodec = new MessageEnvelopeCodec(trustAnchor);
         MessageEnvelopeCodec newcomerCodec = new MessageEnvelopeCodec(newcomer);
 
-        ConnectionRequest newcomerConnectionRequest = newcomer.createConnectionRequest(newcomer.getName(), trustAnchor.getMainDid()).get();
+        ConnectionRequest newcomerConnectionRequest = newcomer.createConnectionRequest(trustAnchor.getMainDid()).get();
         // Newcomer creates connection request for trust anchor
         String newcomerConnectionRequestString = newcomerCodec.encryptMessage(newcomerConnectionRequest, IndyMessageTypes.CONNECTION_REQUEST).get().toJSON();
         // Newcomer sends connectionRequest to trustAnchor
