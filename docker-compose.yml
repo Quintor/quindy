@@ -5,7 +5,7 @@ services:
       context: .
     network_mode: "host"
     environment:
-    - RUST_LOG=debug
+    - RUST_LOG=info
     - TEST_POOL_IP=$TEST_POOL_IP
   pool:
     build:
