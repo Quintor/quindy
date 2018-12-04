@@ -396,7 +396,7 @@ public class MessageScenarioIT {
         // Newcomer accepts connection response
         ConnectionResponse connectionResponse = newcomerCodec.decryptMessage(MessageEnvelope.parseFromString(newcomerConnectionResponseString, CONNECTION_RESPONSE)).get();
         // TrustAnchor accepts the connectionResponse from the newcomer
-        newcomer.acceptConnectionResponse(connectionResponse, connectionRequestMessageEnvelope.getDidOrNonce()).get();
+        newcomer.acceptConnectionResponse(connectionResponse, connectionResponseMessageEnvelope.getDidOrNonce()).get();
 
 
         return newcomerConnectionRequest.getDid();

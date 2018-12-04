@@ -123,7 +123,7 @@ public class IndyWallet implements AutoCloseable {
     }
 
     public CompletableFuture<Void> acceptConnectionResponse(ConnectionResponse connectionResponse, String myDid) throws IndyException {
-        return storeDidAndPairwise(connectionResponse.getDid(), myDid);
+        return storeDidAndPairwise(myDid, connectionResponse.getDid());
     }
 
     CompletableFuture<Void> storeDidAndPairwise(String myDid, String theirDid) throws IndyException {
