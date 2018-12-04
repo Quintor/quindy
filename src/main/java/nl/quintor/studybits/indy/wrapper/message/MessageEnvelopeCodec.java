@@ -1,7 +1,6 @@
 package nl.quintor.studybits.indy.wrapper.message;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.Data;
 import lombok.NonNull;
@@ -69,7 +68,7 @@ public class MessageEnvelopeCodec {
             throw new IndyWrapperException("Cannot decrypt message without wallet");
         }
 
-        String didOrNonce = messageEnvelope.getDidOrNonce();
+        String didOrNonce = messageEnvelope.getDid();
         MessageType<S> type = messageEnvelope.getMessageType();
 
         CompletableFuture<S> messageFuture;

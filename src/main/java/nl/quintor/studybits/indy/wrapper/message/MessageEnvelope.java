@@ -3,25 +3,16 @@ package nl.quintor.studybits.indy.wrapper.message;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
-import nl.quintor.studybits.indy.wrapper.dto.AnonCryptable;
-import nl.quintor.studybits.indy.wrapper.dto.AuthCryptable;
-import nl.quintor.studybits.indy.wrapper.dto.EncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.dto.Serializable;
-import nl.quintor.studybits.indy.wrapper.exception.IndyWrapperException;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
-import org.apache.commons.codec.binary.Base64;
-import org.hyperledger.indy.sdk.IndyException;
 
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * The MessageEnvelope class is responsible for wrapping content to be sent, possibly encrypted.
@@ -36,7 +27,7 @@ public class MessageEnvelope<T> implements Serializable {
 
     @Getter
     @JsonProperty("id")
-    private String didOrNonce;
+    private String did;
 
     @JsonProperty("type")
     @Getter(value = AccessLevel.PACKAGE)
@@ -50,7 +41,7 @@ public class MessageEnvelope<T> implements Serializable {
     @JsonCreator
     MessageEnvelope(@JsonProperty("id") String id, @JsonProperty("type") String type, @JsonProperty("message") JsonNode message) {
         this.type = type;
-        this.didOrNonce = id;
+        this.did = id;
         this.encodedMessage = message;
     }
 

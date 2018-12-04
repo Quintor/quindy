@@ -17,7 +17,6 @@ import java.util.concurrent.ExecutionException;
 
 import static nl.quintor.studybits.indy.wrapper.TestUtil.removeIndyClientDirectory;
 import static nl.quintor.studybits.indy.wrapper.message.IndyMessageTypes.*;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -365,7 +364,7 @@ public class MessageScenarioIT {
         ConnectionResponse connectionResponse = newcomerCodec.decryptMessage(connectionResponseEnvelope).get();
 
         // Newcomer accepts connection response
-        newcomer.acceptConnectionResponse(connectionResponse, connectionResponseEnvelope.getDidOrNonce()).get();
+        newcomer.acceptConnectionResponse(connectionResponse, connectionResponseEnvelope.getDid()).get();
 
         // Faber needs a new DID to interact with identity owners, thus create a new DID request steward to write on ledger
         String verinymRequest = newcomerCodec.encryptMessage(newcomer.createVerinymRequest(connectionResponse.getDid()), IndyMessageTypes.VERINYM).get().toJSON();
@@ -396,7 +395,7 @@ public class MessageScenarioIT {
         // Newcomer accepts connection response
         ConnectionResponse connectionResponse = newcomerCodec.decryptMessage(MessageEnvelope.parseFromString(newcomerConnectionResponseString, CONNECTION_RESPONSE)).get();
         // TrustAnchor accepts the connectionResponse from the newcomer
-        newcomer.acceptConnectionResponse(connectionResponse, connectionResponseMessageEnvelope.getDidOrNonce()).get();
+        newcomer.acceptConnectionResponse(connectionResponse, connectionResponseMessageEnvelope.getDid()).get();
 
 
         return newcomerConnectionRequest.getDid();
