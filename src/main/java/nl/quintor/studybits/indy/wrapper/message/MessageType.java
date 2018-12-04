@@ -11,6 +11,6 @@ public interface MessageType<T> {
     public Class<T> getValueType();
 
     public enum Encryption {
-        PLAINTEXT, ANONCRYPTED, AUTHCRYPTED
+        ANONCRYPTED, AUTHCRYPTED
     }
 }
