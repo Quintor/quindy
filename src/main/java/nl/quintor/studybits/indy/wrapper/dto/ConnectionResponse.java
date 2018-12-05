@@ -11,9 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ConnectionResponse implements AnonCryptable, Serializable {
     private String did;
-    private String verkey;
-    @JsonProperty("request_nonce")
-    private String requestNonce;
     @JsonIgnore
     private String theirDid;
 }

@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static nl.quintor.studybits.indy.wrapper.util.AsyncUtil.wrapException;
+import static org.hyperledger.indy.sdk.did.Did.createAndStoreMyDid;
 
 /**
  * The IndyWallet is responsible for interfacing with the HyperLedger Indy APIs, through indy-sdk.
@@ -113,16 +114,16 @@ public class IndyWallet implements AutoCloseable {
         return Ledger.signAndSubmitRequest(pool, wallet, did, request);
     }
 
-    public CompletableFuture<ConnectionResponse> acceptConnectionRequest(ConnectionRequest connectionRequest) throws JsonProcessingException, IndyException {
-        log.debug("{} Called acceptConnectionRequest with {}, {}, {}", name, pool, wallet, connectionRequest);
+    public CompletableFuture<ConnectionRequest> createConnectionRequest(String theirDid) throws IndyException {
+        log.info("'{}' -> Creating connection request with new pairwise did", name);
+        return createAndStoreMyDid(getWallet(), "{}")
+                .thenApply(wrapException(
+                        didResult -> new ConnectionRequest(didResult.getDid(), didResult.getVerkey(), theirDid)
+                ));
+    }
 
-        return newDid()
-                .thenApply(
-                        (myDid) -> new ConnectionResponse(myDid.getDid(), myDid.getVerkey(), connectionRequest.getRequestNonce(), connectionRequest
-                                .getDid()))
-                .thenCompose(wrapException((ConnectionResponse connectionResponse) ->
-                        storeDidAndPairwise(connectionResponse.getDid(), connectionRequest.getDid())
-                                .thenApply((_void) -> connectionResponse)));
+    public CompletableFuture<Void> acceptConnectionResponse(ConnectionResponse connectionResponse, String myDid) throws IndyException {
+        return storeDidAndPairwise(myDid, connectionResponse.getDid());
     }
 
     CompletableFuture<Void> storeDidAndPairwise(String myDid, String theirDid) throws IndyException {
@@ -206,7 +207,11 @@ public class IndyWallet implements AutoCloseable {
     public <T> CompletableFuture<T> anonDecrypt(byte[] message, String myDid, Class<T> valueType) throws IndyException {
         log.debug("{} Called anonDecrypt", name);
         return getKeyForDid(myDid)
-                .thenCompose(wrapException(key -> Crypto.anonDecrypt(wallet, key, message)))
+                .thenCompose(wrapException(key -> {
+                    log.debug("{} Got key for decryption {}", name, key);
+                    log.trace("{} Calling anonDecrypt with {}, {}, {}", name, wallet, key, message);
+                    return Crypto.anonDecrypt(wallet, key, message);
+                }))
                 .thenApply(wrapException((decryptedMessage) -> JSONUtil.mapper.readValue(new String(decryptedMessage, Charset
                         .forName("utf8")), valueType)));
     }

@@ -1,9 +1,9 @@
 package nl.quintor.studybits.indy.wrapper.message;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.Data;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
 import nl.quintor.studybits.indy.wrapper.dto.AnonCryptable;
@@ -20,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 @Data
 @Slf4j
 public class MessageEnvelopeCodec {
+    @NonNull
     private final IndyWallet indyWallet;
 
     /**
@@ -35,7 +36,7 @@ public class MessageEnvelopeCodec {
      * @throws IndyException
      */
     public <S> CompletableFuture<MessageEnvelope<S>> encryptMessage(S message, MessageType<S> type) throws JsonProcessingException, IndyException {
-        if (!type.getEncryption().equals(MessageType.Encryption.PLAINTEXT) && indyWallet == null) {
+        if (indyWallet == null) {
             throw new IndyWrapperException("Cannot encrypt message without wallet");
         }
 
@@ -43,47 +44,47 @@ public class MessageEnvelopeCodec {
 
 
         CompletableFuture<EncryptedMessage> encryptedMessageFuture = null;
-        if (type.getEncryption().equals(MessageType.Encryption.AUTHCRYPTED)) {
-            String did = ((AuthCryptable) message).getTheirDid();
-            encryptedMessageFuture = indyWallet.authEncrypt(JSONUtil.mapper.writeValueAsBytes(message), did);
-        }
-        else if (type.getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
-            String did = ((AnonCryptable) message).getTheirDid();
-            encryptedMessageFuture = indyWallet.anonEncrypt(JSONUtil.mapper.writeValueAsBytes(message), did);
-        }
-
-        CompletableFuture<MessageEnvelope<S>> envelopeFuture;
-
-        if (encryptedMessageFuture == null) {
-            envelopeFuture = CompletableFuture.<JsonNode>completedFuture(JSONUtil.mapper.valueToTree(message))
-                    .thenApply(encodedMessage -> new MessageEnvelope<S>(type.getIdProvider().apply(message), type.getURN(), encodedMessage));
-        }
-        else {
-            envelopeFuture = encryptedMessageFuture.thenApply(encryptedMessage ->
-                    new MessageEnvelope<>(encryptedMessage.getTargetDid(), type.getURN(),
-                            new TextNode(new String(Base64.encodeBase64(encryptedMessage.getMessage()), Charset.forName("UTF8")))));
+        switch (type.getEncryption()) {
+            case AUTHCRYPTED: {
+                String did = ((AuthCryptable) message).getTheirDid();
+                encryptedMessageFuture = indyWallet.authEncrypt(JSONUtil.mapper.writeValueAsBytes(message), did);
+                break;
+            }
+            case ANONCRYPTED: {
+                String did = ((AnonCryptable) message).getTheirDid();
+                encryptedMessageFuture = indyWallet.anonEncrypt(JSONUtil.mapper.writeValueAsBytes(message), did);
+                break;
+            }
+            default: throw new IllegalArgumentException("Unsupported encryption type");
         }
 
-        return envelopeFuture;
+        return encryptedMessageFuture.thenApply(encryptedMessage ->
+            new MessageEnvelope<>(encryptedMessage.getTargetDid(), type.getURN(),
+            new TextNode(new String(Base64.encodeBase64(encryptedMessage.getMessage()), Charset.forName("UTF8")))));
     }
 
     public <S> CompletableFuture<S> decryptMessage(MessageEnvelope<S> messageEnvelope) throws IndyException, JsonProcessingException {
-        if (!messageEnvelope.getMessageType().getEncryption().equals(MessageType.Encryption.PLAINTEXT) && indyWallet == null) {
+        if (indyWallet == null) {
             throw new IndyWrapperException("Cannot decrypt message without wallet");
         }
 
-        String didOrNonce = messageEnvelope.getDidOrNonce();
+        String didOrNonce = messageEnvelope.getDid();
         MessageType<S> type = messageEnvelope.getMessageType();
 
         CompletableFuture<S> messageFuture;
-        if (type.getEncryption().equals(MessageType.Encryption.AUTHCRYPTED)) {
-            messageFuture = indyWallet.authDecrypt(Base64.decodeBase64(messageEnvelope.getEncodedMessage().asText().getBytes(Charset.forName("UTF8"))), didOrNonce, type.getValueType());
-        }
-        else if (type.getEncryption().equals(MessageType.Encryption.ANONCRYPTED)) {
-            messageFuture = indyWallet.anonDecrypt(Base64.decodeBase64(messageEnvelope.getEncodedMessage().asText().getBytes(Charset.forName("UTF8"))), didOrNonce, type.getValueType());
-        }
-        else {
-            messageFuture = CompletableFuture.completedFuture(JSONUtil.mapper.treeToValue(messageEnvelope.getEncodedMessage(), type.getValueType()));
+
+        switch (type.getEncryption()) {
+            case AUTHCRYPTED: {
+                messageFuture = indyWallet.authDecrypt(Base64.decodeBase64(messageEnvelope.getEncodedMessage().asText().getBytes(Charset.forName("UTF8"))), didOrNonce, type.getValueType());
+                break;
+            }
+            case ANONCRYPTED: {
+                log.debug("Anondecrypting with did: {}", didOrNonce);
+                messageFuture = indyWallet.anonDecrypt(Base64.decodeBase64(messageEnvelope.getEncodedMessage().asText().getBytes(Charset.forName("UTF8"))), didOrNonce, type.getValueType());
+
+                break;
+            }
+            default: throw new IllegalArgumentException("Unsupported encryption type");
         }
 
         return messageFuture;

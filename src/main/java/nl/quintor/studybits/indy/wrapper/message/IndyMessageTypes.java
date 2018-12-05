@@ -3,12 +3,8 @@ package nl.quintor.studybits.indy.wrapper.message;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.*;
-import org.hyperledger.indy.sdk.anoncreds.ProofRejectedException;
-import sun.net.ConnectionResetException;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 
 @Slf4j
 public class IndyMessageTypes {
@@ -16,35 +12,35 @@ public class IndyMessageTypes {
     private static String SOVRIN_URN_PREFIX = "urn:indy:sov:agent:message_type:sovrin.org/";
 
     public static MessageType<ConnectionRequest> CONNECTION_REQUEST = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "connection/1.0/connection_request", MessageType.Encryption.PLAINTEXT, ConnectionRequest::getRequestNonce, ConnectionRequest.class);
+            SOVRIN_URN_PREFIX + "connection/1.0/connection_request", MessageType.Encryption.ANONCRYPTED, ConnectionRequest.class);
 
     public static MessageType<ConnectionResponse> CONNECTION_RESPONSE = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "connection/1.0/connection_response", MessageType.Encryption.ANONCRYPTED, ConnectionResponse::getRequestNonce, ConnectionResponse.class);
+            SOVRIN_URN_PREFIX + "connection/1.0/connection_response", MessageType.Encryption.ANONCRYPTED, ConnectionResponse.class);
 
 
     public static MessageType<Verinym> VERINYM = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "connection/1.0/verinym", MessageType.Encryption.AUTHCRYPTED, null, Verinym.class);
+            SOVRIN_URN_PREFIX + "connection/1.0/verinym", MessageType.Encryption.AUTHCRYPTED, Verinym.class);
 
     public static MessageType<AuthcryptableString> CONNECTION_ACKNOWLEDGEMENT = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "connection/1.0/connection_acknowledgement", MessageType.Encryption.AUTHCRYPTED, null, AuthcryptableString.class);
+            SOVRIN_URN_PREFIX + "connection/1.0/connection_acknowledgement", MessageType.Encryption.AUTHCRYPTED, AuthcryptableString.class);
 
     public static MessageType<CredentialOffer> CREDENTIAL_OFFER = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "credential/1.0/credential_offer", MessageType.Encryption.AUTHCRYPTED, null, CredentialOffer.class);
+            SOVRIN_URN_PREFIX + "credential/1.0/credential_offer", MessageType.Encryption.AUTHCRYPTED, CredentialOffer.class);
 
     public static MessageType<CredentialOfferList> CREDENTIAL_OFFERS = new StandardMessageType<> (
-            SOVRIN_URN_PREFIX + "credential/1.0/credential_offers", MessageType.Encryption.AUTHCRYPTED, null, CredentialOfferList.class);
+            SOVRIN_URN_PREFIX + "credential/1.0/credential_offers", MessageType.Encryption.AUTHCRYPTED, CredentialOfferList.class);
 
     public static MessageType<CredentialRequest> CREDENTIAL_REQUEST = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "credential/1.0/credential_request", MessageType.Encryption.AUTHCRYPTED, null, CredentialRequest.class);
+            SOVRIN_URN_PREFIX + "credential/1.0/credential_request", MessageType.Encryption.AUTHCRYPTED, CredentialRequest.class);
 
     public static MessageType<CredentialWithRequest> CREDENTIAL = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "credential/1.0/credential", MessageType.Encryption.AUTHCRYPTED, null, CredentialWithRequest.class);
+            SOVRIN_URN_PREFIX + "credential/1.0/credential", MessageType.Encryption.AUTHCRYPTED, CredentialWithRequest.class);
 
     public static MessageType<ProofRequest> PROOF_REQUEST = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "proof/1.0/proof_request", MessageType.Encryption.AUTHCRYPTED, null, ProofRequest.class);
+            SOVRIN_URN_PREFIX + "proof/1.0/proof_request", MessageType.Encryption.AUTHCRYPTED, ProofRequest.class);
 
     public static MessageType<Proof> PROOF = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "proof/1.0/proof", MessageType.Encryption.AUTHCRYPTED, null, Proof.class);
+            SOVRIN_URN_PREFIX + "proof/1.0/proof", MessageType.Encryption.AUTHCRYPTED, Proof.class);
 
     static {
         init();
@@ -72,13 +68,11 @@ public class IndyMessageTypes {
     public static class StandardMessageType<T> implements MessageType<T> {
         private final String URN;
         private final Encryption encryption;
-        private final Function<T, String> idProvider;
         private final Class<T> valueType;
 
-        public StandardMessageType(String URN, Encryption encryption, Function<T, String> idProvider, Class<T> valueType) {
+        public StandardMessageType(String URN, Encryption encryption, Class<T> valueType) {
             this.URN = URN;
             this.encryption = encryption;
-            this.idProvider = idProvider;
             this.valueType = valueType;
         }
     }
