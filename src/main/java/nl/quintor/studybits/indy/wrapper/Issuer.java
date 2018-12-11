@@ -74,7 +74,6 @@ public class Issuer extends TrustAnchor {
                         wrapBiFunctionException((credentialOfferJson, pairwiseResult) -> {
                             log.debug("{} Created credentialOffer: {}", name, credentialOfferJson);
                             CredentialOffer credentialOffer = JSONUtil.mapper.readValue(credentialOfferJson, CredentialOffer.class);
-                            credentialOffer.setTheirDid(targetDid);
                             log.debug("{} Created credentialOffer object (toJSON()): {}", name, credentialOffer.toJSON());
                             return credentialOffer;
                         }));
@@ -87,8 +86,7 @@ public class Issuer extends TrustAnchor {
                 .thenApply(wrapException((issuerCreateCredentialResult) -> {
                     log.debug("{} Created credential json: {}", name, issuerCreateCredentialResult.getCredentialJson());
                     Credential credential = JSONUtil.mapper.readValue(issuerCreateCredentialResult.getCredentialJson(), Credential.class);
-                    credential.setTheirDid(credentialRequest.getTheirDid());
-                    return new CredentialWithRequest(credential, credentialRequest, credentialRequest.getTheirDid());
+                    return new CredentialWithRequest(credential, credentialRequest);
                 }));
     }
 

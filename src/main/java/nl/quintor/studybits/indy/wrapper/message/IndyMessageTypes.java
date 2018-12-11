@@ -17,7 +17,6 @@ public class IndyMessageTypes {
     public static MessageType<ConnectionResponse> CONNECTION_RESPONSE = new StandardMessageType<>(
             SOVRIN_URN_PREFIX + "connection/1.0/connection_response", MessageType.Encryption.ANONCRYPTED, ConnectionResponse.class);
 
-
     public static MessageType<Verinym> VERINYM = new StandardMessageType<>(
             SOVRIN_URN_PREFIX + "connection/1.0/verinym", MessageType.Encryption.AUTHCRYPTED, Verinym.class);
 
@@ -42,6 +41,9 @@ public class IndyMessageTypes {
     public static MessageType<Proof> PROOF = new StandardMessageType<>(
             SOVRIN_URN_PREFIX + "proof/1.0/proof", MessageType.Encryption.AUTHCRYPTED, Proof.class);
 
+    public static MessageType<String> GET_REQUEST = new StandardMessageType<>(
+            SOVRIN_URN_PREFIX + "get/1.0/get_request", MessageType.Encryption.AUTHCRYPTED, String.class);
+
     static {
         init();
     }
@@ -61,6 +63,7 @@ public class IndyMessageTypes {
                 MessageTypes.registerType(CREDENTIAL);
                 MessageTypes.registerType(PROOF_REQUEST);
                 MessageTypes.registerType(PROOF);
+                MessageTypes.registerType(GET_REQUEST);
             }
         }
     }

@@ -26,11 +26,11 @@ public class Verifier extends IndyWallet {
         super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
     }
 
-    public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof) {
+    public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof, String theirDid) {
 
-        return  validateProof(proofRequest, proof)
+        return  validateProof(proofRequest, proof, theirDid)
                 .thenAccept(result -> validateResult(result, "Invalid proof: verifierVerifyProof failed."))
-                .thenRun(() -> validateProofEncodings(proof))
+                .thenRun(() -> validateProofEncodings(proof, theirDid))
                 .thenApply(v -> extractProofAttributes(proofRequest, proof));
     }
 
@@ -41,7 +41,7 @@ public class Verifier extends IndyWallet {
         }
     }
 
-    public CompletableFuture<Boolean> validateProof(ProofRequest proofRequest, Proof proof) {
+    public CompletableFuture<Boolean> validateProof(ProofRequest proofRequest, Proof proof, String theirDid) {
         Map<String, CredentialIdentifier> identifierMap = proof.getIdentifiers()
                 .stream()
                 .collect(Collectors.toMap(CredentialIdentifier::getCredDefId, Function.identity()));
@@ -56,14 +56,14 @@ public class Verifier extends IndyWallet {
         }));
     }
 
-    private void validateProofEncodings(Proof proof) {
+    private void validateProofEncodings(Proof proof, String theirDid) {
         boolean valid = proof
                 .getRequestedProof()
                 .getRevealedAttributes()
                 .entrySet()
                 .stream()
                 .filter(entry -> !IntegerEncodingUtil.validateProofEncoding(entry.getValue()))
-                .peek(entry -> log.error("Wallet '{}': Invalid proof received from theirDid '{}', entry '{}'", getName(), proof.getTheirDid(), entry))
+                .peek(entry -> log.error("Wallet '{}': Invalid proof received from theirDid '{}', entry '{}'", getName(), theirDid, entry))
                 .count() == 0;
 
         validateResult(valid, "Invalid proof: encodings invalid");

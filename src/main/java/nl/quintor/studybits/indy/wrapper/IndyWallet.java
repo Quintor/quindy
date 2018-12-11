@@ -118,7 +118,7 @@ public class IndyWallet implements AutoCloseable {
         log.info("'{}' -> Creating connection request with new pairwise did", name);
         return createAndStoreMyDid(getWallet(), "{}")
                 .thenApply(wrapException(
-                        didResult -> new ConnectionRequest(didResult.getDid(), didResult.getVerkey(), theirDid)
+                        didResult -> new ConnectionRequest(didResult.getDid(), didResult.getVerkey())
                 ));
     }
 
@@ -237,9 +237,6 @@ public class IndyWallet implements AutoCloseable {
                                 .thenApply(wrapException((decryptedMessage) -> {
                                     T decryptedObject = JSONUtil.mapper.readValue(new String(decryptedMessage.getDecryptedMessage(), Charset
                                             .forName("utf8")), valueType);
-                                    if (decryptedObject instanceof AuthCryptable) {
-                                        ((AuthCryptable) decryptedObject).setTheirDid(theirDid);
-                                    }
                                     return decryptedObject;
                                 }))))))
                 ;

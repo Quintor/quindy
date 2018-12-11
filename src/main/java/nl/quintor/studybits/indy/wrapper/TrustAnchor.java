@@ -32,7 +32,7 @@ public class TrustAnchor extends IndyWallet {
     public Verinym createVerinymRequest( String targetDid ) {
         log.info("{} Creating verinym request for targetDid: {}", name, targetDid);
 
-        return new Verinym(getMainDid(), getMainKey(), targetDid);
+        return new Verinym(getMainDid(), getMainKey());
     }
 
     public CompletableFuture<String> acceptVerinymRequest(Verinym verinym) throws IndyException {
@@ -50,7 +50,7 @@ public class TrustAnchor extends IndyWallet {
                 .thenCompose(wrapException(result ->
                                 storeDidAndPairwise(result.getDid(), connectionRequest.getDid())
                         .thenCompose(wrapException(_void -> sendNym(result.getDid(), result.getVerkey(), null)))
-                        .thenApply(((_str) -> new ConnectionResponse(result.getDid(), connectionRequest.getDid())))));
+                        .thenApply(((_str) -> new ConnectionResponse(result.getDid())))));
 
         return CompletableFuture.allOf(sendTheirNym, createAndSendMyNym)
                 .thenCompose(_void -> createAndSendMyNym);

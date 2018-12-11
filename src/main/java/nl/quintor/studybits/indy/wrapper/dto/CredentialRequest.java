@@ -1,8 +1,5 @@
 package nl.quintor.studybits.indy.wrapper.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,11 +7,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @NoArgsConstructor
-public class CredentialRequest implements Serializable, AuthCryptable {
+public class CredentialRequest implements Serializable {
     private String request;
     private String metadata;
     private CredentialOffer credentialOffer;
-
-    @JsonIgnore
-    private String theirDid;
 }

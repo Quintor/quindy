@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.IndyWallet;
-import nl.quintor.studybits.indy.wrapper.dto.AnonCryptable;
-import nl.quintor.studybits.indy.wrapper.dto.AuthCryptable;
 import nl.quintor.studybits.indy.wrapper.dto.EncryptedMessage;
 import nl.quintor.studybits.indy.wrapper.exception.IndyWrapperException;
 import nl.quintor.studybits.indy.wrapper.util.JSONUtil;
@@ -35,7 +33,7 @@ public class MessageEnvelopeCodec {
      * @throws JsonProcessingException
      * @throws IndyException
      */
-    public <S> CompletableFuture<MessageEnvelope<S>> encryptMessage(S message, MessageType<S> type) throws JsonProcessingException, IndyException {
+    public <S> CompletableFuture<MessageEnvelope<S>> encryptMessage(S message, MessageType<S> type, String did) throws JsonProcessingException, IndyException {
         if (indyWallet == null) {
             throw new IndyWrapperException("Cannot encrypt message without wallet");
         }
@@ -46,12 +44,10 @@ public class MessageEnvelopeCodec {
         CompletableFuture<EncryptedMessage> encryptedMessageFuture = null;
         switch (type.getEncryption()) {
             case AUTHCRYPTED: {
-                String did = ((AuthCryptable) message).getTheirDid();
                 encryptedMessageFuture = indyWallet.authEncrypt(JSONUtil.mapper.writeValueAsBytes(message), did);
                 break;
             }
             case ANONCRYPTED: {
-                String did = ((AnonCryptable) message).getTheirDid();
                 encryptedMessageFuture = indyWallet.anonEncrypt(JSONUtil.mapper.writeValueAsBytes(message), did);
                 break;
             }
