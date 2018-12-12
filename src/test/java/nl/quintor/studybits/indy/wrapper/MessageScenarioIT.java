@@ -203,7 +203,7 @@ public class MessageScenarioIT {
                 ));
 
         // ACME Validates proof
-        boolean isValidProof = new Verifier(acmeWallet).validateProof(jobApplicationProofRequest, decryptedProof, aliceAcmeDid).get();
+        boolean isValidProof = new Verifier(acmeWallet).validateProof(jobApplicationProofRequest, decryptedProof).get();
         System.out.println("Degree validation: " + isValidProof);
 
         Assert.assertTrue(isValidProof);
@@ -289,7 +289,7 @@ public class MessageScenarioIT {
         ));
 
         // Thrift Validates proof
-        Boolean jobIsValidProof = new Verifier(thriftWallet).validateProof(loanApplicationProofRequest, decryptedJobProof, aliceThriftDid).get();
+        Boolean jobIsValidProof = new Verifier(thriftWallet).validateProof(loanApplicationProofRequest, decryptedJobProof).get();
         System.out.println("Job validation: " + jobIsValidProof);
 
         Assert.assertTrue(jobIsValidProof);
@@ -329,7 +329,7 @@ public class MessageScenarioIT {
         System.out.println(KYCAttributes);
 
         // Thrift Validates proof
-        Boolean KYCIsValidProof = new Verifier(thriftWallet).validateProof(loanApplicationProofRequest, decryptedJobProof, aliceThriftDid).get();
+        Boolean KYCIsValidProof = new Verifier(thriftWallet).validateProof(loanApplicationProofRequest, decryptedJobProof).get();
         System.out.println("KYC Validation: " + KYCIsValidProof);
 
         Assert.assertTrue(KYCIsValidProof);

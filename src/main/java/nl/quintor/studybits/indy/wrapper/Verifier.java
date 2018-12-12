@@ -28,9 +28,9 @@ public class Verifier extends IndyWallet {
 
     public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof, String theirDid) {
 
-        return  validateProof(proofRequest, proof, theirDid)
+        return  validateProof(proofRequest, proof)
                 .thenAccept(result -> validateResult(result, "Invalid proof: verifierVerifyProof failed."))
-                .thenRun(() -> validateProofEncodings(proof, theirDid))
+                .thenRun(() -> validateProofEncodings(proof))
                 .thenApply(v -> extractProofAttributes(proofRequest, proof));
     }
 
@@ -41,7 +41,7 @@ public class Verifier extends IndyWallet {
         }
     }
 
-    public CompletableFuture<Boolean> validateProof(ProofRequest proofRequest, Proof proof, String theirDid) {
+    public CompletableFuture<Boolean> validateProof(ProofRequest proofRequest, Proof proof) {
         Map<String, CredentialIdentifier> identifierMap = proof.getIdentifiers()
                 .stream()
                 .collect(Collectors.toMap(CredentialIdentifier::getCredDefId, Function.identity()));
@@ -56,14 +56,14 @@ public class Verifier extends IndyWallet {
         }));
     }
 
-    private void validateProofEncodings(Proof proof, String theirDid) {
+    private void validateProofEncodings(Proof proof) {
         boolean valid = proof
                 .getRequestedProof()
                 .getRevealedAttributes()
                 .entrySet()
                 .stream()
                 .filter(entry -> !IntegerEncodingUtil.validateProofEncoding(entry.getValue()))
-                .peek(entry -> log.error("Wallet '{}': Invalid proof received from theirDid '{}', entry '{}'", getName(), theirDid, entry))
+                .peek(entry -> log.error("Wallet '{}': Invalid proof received, entry '{}'", getName(), entry))
                 .count() == 0;
 
         validateResult(valid, "Invalid proof: encodings invalid");
