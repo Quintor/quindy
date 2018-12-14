@@ -44,13 +44,9 @@ public class Prover extends IndyWallet {
                         }))
                         .thenApply(proverCreateCredentialRequestResult -> {
                            log.debug("{} created credential request. Json: {}, metadata {} ", name, proverCreateCredentialRequestResult.getCredentialRequestJson(), proverCreateCredentialRequestResult.getCredentialRequestMetadataJson());
-                           return new CredentialRequest(proverCreateCredentialRequestResult.getCredentialRequestJson(), proverCreateCredentialRequestResult.getCredentialRequestMetadataJson(), credentialOffer, theirDid);
+                           return new CredentialRequest(proverCreateCredentialRequestResult.getCredentialRequestJson(), proverCreateCredentialRequestResult.getCredentialRequestMetadataJson(), credentialOffer);
                         })
                 ));
-    }
-
-    public CompletableFuture<CredentialRequest> createCredentialRequest(CredentialOffer credentialOffer) throws IndyException, JsonProcessingException {
-        return createCredentialRequest(credentialOffer.getTheirDid(), credentialOffer);
     }
 
     /**
@@ -69,7 +65,7 @@ public class Prover extends IndyWallet {
                     return JSONUtil.mapper.readValue(credentialsForProofReqJson, CredentialsForRequest.class);
                 }))
                 //Create proof from existing (and available) credentials and self-attested attributes
-                .thenCompose(wrapException(credentialsForRequest -> createProofFromCredentials(proofRequest, credentialsForRequest, attributes, proofRequest.getTheirDid())))
+                .thenCompose(wrapException(credentialsForRequest -> createProofFromCredentials(proofRequest, credentialsForRequest, attributes)))
                 //Return the proof object
                 .thenApply(wrapException(proof -> {
                     log.debug("{}: Created proof {}", name, proof.toJSON());
@@ -77,7 +73,7 @@ public class Prover extends IndyWallet {
                 }));
     }
 
-    CompletableFuture<Proof> createProofFromCredentials(ProofRequest proofRequest, CredentialsForRequest credentialsForRequest, Map<String, String> attributes, String theirDid) throws JsonProcessingException {
+    CompletableFuture<Proof> createProofFromCredentials(ProofRequest proofRequest, CredentialsForRequest credentialsForRequest, Map<String, String> attributes) throws JsonProcessingException {
         log.debug("{} Creating proof using credentials: {}", name, credentialsForRequest.toJSON());
         // Collect the names and values of all self-attested attributes. Throw an exception if one is not specified.
 
@@ -127,7 +123,6 @@ public class Prover extends IndyWallet {
                 .thenApply(wrapException(proofJson -> {
                     log.debug("{} Obtained proof: {}", name, proofJson);
                     Proof proof = JSONUtil.mapper.readValue(proofJson, Proof.class);
-                    proof.setTheirDid(theirDid);
                     return proof;
                 }));
     }

@@ -1,8 +1,5 @@
 package nl.quintor.studybits.indy.wrapper.dto;
 
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,10 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ConnectionRequest implements Serializable, AnonCryptable {
+public class ConnectionRequest implements Serializable {
     private String did;
     private String verkey;
-
-    @JsonIgnore
-    private String theirDid;
 }
