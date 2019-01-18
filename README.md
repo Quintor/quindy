@@ -18,3 +18,7 @@ or build from source and set `LD_LIBRARY_PATH` to a folder with `libindy.so`.
 
 ## Debugging
 In order to get logging from the lower level sdk, set `RUST_LOG=info` in your environment
+
+## Releasing
+In order to release to bintray, run: `TEST_POOL_IP=127.0.0.1 DEPLOY=true docker-compose up --build --force-recreate --exit-code-from wrapper pool wrapper`
+This requires configuring username/api key for bintray-repo-maven-quintor in your local settings.xml (and permissions to that maven repository)
