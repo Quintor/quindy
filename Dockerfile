@@ -19,4 +19,4 @@ RUN apt-get update && apt-get install -y libindy=$LIBINDY_VERSION
 ADD pom.xml /
 RUN mvn package
 ADD . /
-CMD mvn verify
+CMD sh -e -c "if $DEPLOY; then mvn clean package verify deploy; else mvn verify; fi"
