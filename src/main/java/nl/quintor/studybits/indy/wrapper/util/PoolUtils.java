@@ -75,7 +75,7 @@ public class PoolUtils {
 		return poolName;
 	}
 
-	public static String createPoolLedgerConfig(String[] txns, String poolName) throws IOException, InterruptedException, java.util.concurrent.ExecutionException, IndyException {
+	public static String createPoolLedgerConfigFromTxns(String[] txns, String poolName) throws IOException, InterruptedException, java.util.concurrent.ExecutionException, IndyException {
 		File genesisTxnFile = createGenesisTxnFile("temp.txn", txns);
 		PoolJSONParameters.CreatePoolLedgerConfigJSONParameter createPoolLedgerConfigJSONParameter
 				= new PoolJSONParameters.CreatePoolLedgerConfigJSONParameter(genesisTxnFile.getAbsolutePath());
