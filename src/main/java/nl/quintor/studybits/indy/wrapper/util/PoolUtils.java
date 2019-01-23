@@ -45,12 +45,38 @@ public class PoolUtils {
 		return file;
 	}
 
+	private static File createGenesisTxnFile(String filename, String[] txns) throws IOException {
+		String path = EnvironmentUtils.getTmpPath(filename);
+
+		File file = new File(path);
+
+		FileUtils.forceMkdirParent(file);
+
+		FileWriter fw = new FileWriter(file);
+		for (String txn : txns) {
+			fw.write(txn);
+			fw.write("\n");
+		}
+
+		fw.close();
+
+		return file;
+	}
+
 	public static String createPoolLedgerConfig(String testPoolIP) throws IOException, InterruptedException, java.util.concurrent.ExecutionException, IndyException {
 		return createPoolLedgerConfig(testPoolIP, DEFAULT_POOL_NAME);
 	}
 
 	public static String createPoolLedgerConfig(String testPoolIP, String poolName) throws IOException, InterruptedException, java.util.concurrent.ExecutionException, IndyException {
 		File genesisTxnFile = createGenesisTxnFile("temp.txn", testPoolIP);
+		PoolJSONParameters.CreatePoolLedgerConfigJSONParameter createPoolLedgerConfigJSONParameter
+				= new PoolJSONParameters.CreatePoolLedgerConfigJSONParameter(genesisTxnFile.getAbsolutePath());
+		Pool.createPoolLedgerConfig(poolName, createPoolLedgerConfigJSONParameter.toJson()).get();
+		return poolName;
+	}
+
+	public static String createPoolLedgerConfig(String[] txns, String poolName) throws IOException, InterruptedException, java.util.concurrent.ExecutionException, IndyException {
+		File genesisTxnFile = createGenesisTxnFile("temp.txn", txns);
 		PoolJSONParameters.CreatePoolLedgerConfigJSONParameter createPoolLedgerConfigJSONParameter
 				= new PoolJSONParameters.CreatePoolLedgerConfigJSONParameter(genesisTxnFile.getAbsolutePath());
 		Pool.createPoolLedgerConfig(poolName, createPoolLedgerConfigJSONParameter.toJson()).get();
