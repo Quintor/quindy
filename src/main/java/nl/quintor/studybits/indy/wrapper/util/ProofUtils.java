@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 @Slf4j
 public class ProofUtils {
 
-    public static CompletableFuture<List<ProofAttribute>> extractVerifiedProofAttributes(ProofRequest proofRequest, Proof proof, EntitiesFromLedger entitiesFromLedger) throws IndyException, JsonProcessingException {
+    public static CompletableFuture<List<ProofAttribute>> extractVerifiedProofAttributes(ProofRequest proofRequest, Proof proof, EntitiesFromLedger entitiesFromLedger, String did) throws IndyException, JsonProcessingException {
         String proofRequestJson = proofRequest.toJSON();
         String proofJson = proof.toJSON();
         String schemaJson = JSONUtil.mapper.writeValueAsString(entitiesFromLedger.getSchemas());
@@ -27,7 +27,7 @@ public class ProofUtils {
         return Anoncreds
                 .verifierVerifyProof(proofRequestJson, proofJson, schemaJson, credentialDefsJson, "{}", "{}")
                 .thenAccept(result -> ValidateResult(result, "Invalid proof: verifierVerifyProof failed."))
-                .thenApply(_void -> validateProofEncodings(proof))
+                .thenApply(_void -> validateProofEncodings(proof, did))
                 .thenAccept(result -> ValidateResult(result, "Invalid proof: encodings invalid"))
                 .thenApply(_void -> extractProofAttributes(proofRequest, proof));
     }
@@ -38,14 +38,14 @@ public class ProofUtils {
         }
     }
 
-    private static boolean validateProofEncodings(Proof proof) {
+    private static boolean validateProofEncodings(Proof proof, String did) {
         return proof
                 .getRequestedProof()
                 .getRevealedAttributes()
                 .entrySet()
                 .stream()
                 .filter(entry -> !IntegerEncodingUtil.validateProofEncoding(entry.getValue()))
-                .peek(entry -> log.error("Invalid proof received from theirDid '{}', entry '{}'", proof.getTheirDid(), entry))
+                .peek(entry -> log.error("Invalid proof received from theirDid '{}', entry '{}'", did, entry))
                 .count() == 0;
     }
 

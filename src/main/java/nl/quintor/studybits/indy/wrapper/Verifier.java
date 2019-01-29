@@ -26,7 +26,7 @@ public class Verifier extends IndyWallet {
         super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
     }
 
-    public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof) {
+    public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof, String theirDid) {
 
         return  validateProof(proofRequest, proof)
                 .thenAccept(result -> validateResult(result, "Invalid proof: verifierVerifyProof failed."))
@@ -63,7 +63,7 @@ public class Verifier extends IndyWallet {
                 .entrySet()
                 .stream()
                 .filter(entry -> !IntegerEncodingUtil.validateProofEncoding(entry.getValue()))
-                .peek(entry -> log.error("Wallet '{}': Invalid proof received from theirDid '{}', entry '{}'", getName(), proof.getTheirDid(), entry))
+                .peek(entry -> log.error("Wallet '{}': Invalid proof received, entry '{}'", getName(), entry))
                 .count() == 0;
 
         validateResult(valid, "Invalid proof: encodings invalid");

@@ -40,7 +40,6 @@ public class MessageEnvelope<T> implements Serializable {
     @Getter(value = AccessLevel.PACKAGE)
     private JsonNode encodedMessage;
 
-
     @JsonCreator
     MessageEnvelope(@JsonProperty("id") String id, @JsonProperty("type") String type, @JsonProperty("message") JsonNode message) {
         this.type = type;

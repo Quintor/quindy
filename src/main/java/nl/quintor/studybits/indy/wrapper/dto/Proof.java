@@ -1,6 +1,5 @@
 package nl.quintor.studybits.indy.wrapper.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
@@ -13,14 +12,11 @@ import java.util.Map;
 @AllArgsConstructor
 @Data
 @NoArgsConstructor
-public class Proof implements Serializable, AuthCryptable {
+public class Proof implements Serializable {
     private JsonNode proof;
     @JsonProperty( "requested_proof" )
     private RequestedProof requestedProof;
     private List<CredentialIdentifier> identifiers;
-
-    @JsonIgnore
-    private String theirDid;
 
     @AllArgsConstructor
     @Data

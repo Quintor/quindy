@@ -114,11 +114,11 @@ public class IndyWallet implements AutoCloseable {
         return Ledger.signAndSubmitRequest(pool, wallet, did, request);
     }
 
-    public CompletableFuture<ConnectionRequest> createConnectionRequest(String theirDid) throws IndyException {
+    public CompletableFuture<ConnectionRequest> createConnectionRequest() throws IndyException {
         log.info("'{}' -> Creating connection request with new pairwise did", name);
         return createAndStoreMyDid(getWallet(), "{}")
                 .thenApply(wrapException(
-                        didResult -> new ConnectionRequest(didResult.getDid(), didResult.getVerkey(), theirDid)
+                        didResult -> new ConnectionRequest(didResult.getDid(), didResult.getVerkey())
                 ));
     }
 
@@ -237,9 +237,6 @@ public class IndyWallet implements AutoCloseable {
                                 .thenApply(wrapException((decryptedMessage) -> {
                                     T decryptedObject = JSONUtil.mapper.readValue(new String(decryptedMessage.getDecryptedMessage(), Charset
                                             .forName("utf8")), valueType);
-                                    if (decryptedObject instanceof AuthCryptable) {
-                                        ((AuthCryptable) decryptedObject).setTheirDid(theirDid);
-                                    }
                                     return decryptedObject;
                                 }))))))
                 ;

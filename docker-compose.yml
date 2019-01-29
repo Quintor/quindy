@@ -7,6 +7,9 @@ services:
     environment:
     - RUST_LOG=info
     - TEST_POOL_IP=$TEST_POOL_IP
+    - DEPLOY=${DEPLOY:-false}
+    volumes:
+      - $HOME/.m2/settings.xml:/root/.m2/settings.xml
   pool:
     build:
       context: ci/
