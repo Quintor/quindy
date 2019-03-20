@@ -24,7 +24,7 @@
     <repositories>
         <repository>
             <id>evernym</id>
-            <url>https://repo.evernym.com/artifactory/libindy-maven-local</url>
+            <url>https://repo.sovrin.org/repository/maven-public</url>
         </repository>
     </repositories>
 
