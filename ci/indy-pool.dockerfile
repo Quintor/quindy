@@ -1,4 +1,4 @@
-# This dockerfile originates from indy-sdk: https://github.com/hyperledger/indy-sdk/blob/v1.6.6/ci/indy-pool.dockerfile
+# This dockerfile originates from indy-sdk: https://github.com/hyperledger/indy-sdk/blob/v1.8.2/ci/indy-pool.dockerfile
 
 FROM ubuntu:16.04
 
@@ -26,11 +26,11 @@ RUN echo "deb https://repo.sovrin.org/deb xenial $indy_stream" >> /etc/apt/sourc
 
 RUN useradd -ms /bin/bash -u $uid indy
 
-ARG indy_plenum_ver=1.6.520
+ARG indy_plenum_ver=1.6.726
 ARG indy_anoncreds_ver=1.0.32
-ARG indy_node_ver=1.6.576
-ARG python3_indy_crypto_ver=0.4.3
-ARG indy_crypto_ver=0.4.3
+ARG indy_node_ver=1.6.862
+ARG python3_indy_crypto_ver=0.4.5
+ARG indy_crypto_ver=0.4.5
 
 RUN apt-get update -y && apt-get install -y \
         indy-plenum=${indy_plenum_ver} \
