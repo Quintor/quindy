@@ -23,7 +23,7 @@
 
     <repositories>
         <repository>
-            <id>evernym</id>
+            <id>sovrin</id>
             <url>https://repo.sovrin.org/repository/maven-public</url>
         </repository>
     </repositories>
@@ -86,7 +86,7 @@
         <dependency>
             <groupId>org.hyperledger</groupId>
             <artifactId>indy</artifactId>
-            <version>1.6.6</version>
+            <version>1.8.2</version>
         </dependency>
 
         <dependency>
