@@ -1,9 +1,0 @@
-sudo: enabled
-script: ./.travis.sh 
-notifications:
-  webhooks:
-    urls:
-      - https://webhooks.gitter.im/e/2cf91b077a397dac1d32
-    on_success: always  # options: [always|never|change] default: always
-    on_failure: always  # options: [always|never|change] default: always
-    on_start: never     # options: [always|never|change] default: always
