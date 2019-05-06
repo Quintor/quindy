@@ -2,7 +2,7 @@
 
 read -p "Release version? (N/y) $1" -n 1 -r
 echo    # (optional) move to a new line
-if [[ ! $REPLY =~ ^[Yy]$ ]]
+if [[ $REPLY =~ ^[Yy]$ ]]
 then
     mvn versions:set -DnewVersion=$1
 
