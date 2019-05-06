@@ -8,6 +8,10 @@ needs low level control over the communication, or a procedural API is more suit
 [indy-sdk](https://github.com/hyperledger/indy-sdk), for Java specifically to the 
 [Java wrapper](https://github.com/hyperledger/indy-sdk/tree/master/wrappers/java) that indy-sdk provides
 
+## Pre-requisites
+
+The tests use a base image, which you can build locally with `docker build -t studybits/base-image:local -f ci/base-image.dockefile ci/`
+
 ## Running in docker
 In order to test, run: `TEST_POOL_IP=127.0.0.1 docker-compose up --build --force-recreate --exit-code-from wrapper pool wrapper`
 

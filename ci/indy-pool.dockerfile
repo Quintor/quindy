@@ -87,10 +87,6 @@ USER indy
 RUN awk '{if (index($1, "NETWORK_NAME") != 0) {print("NETWORK_NAME = \"sandbox\"")} else print($0)}' /etc/indy/indy_config.py> /tmp/indy_config.py
 RUN mv /tmp/indy_config.py /etc/indy/indy_config.py
 
-ARG pool_ip=127.0.0.1
-
-RUN generate_indy_pool_transactions --nodes 4 --clients 5 --nodeNum 1 2 3 4 --ips="$pool_ip,$pool_ip,$pool_ip,$pool_ip"
-
 EXPOSE 9701 9702 9703 9704 9705 9706 9707 9708
 
-CMD ["/usr/bin/supervisord"]
+CMD [ "sh", "-c", "generate_indy_pool_transactions --nodes 4 --clients 5 --nodeNum 1 2 3 4 --ips=$TEST_POOL_IP,$TEST_POOL_IP,$TEST_POOL_IP,$TEST_POOL_IP && /usr/bin/supervisord" ]

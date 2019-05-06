@@ -11,11 +11,9 @@ services:
     volumes:
       - $HOME/.m2/settings.xml:/root/.m2/settings.xml
   pool:
-    build:
-      context: ci/
-      dockerfile: indy-pool.dockerfile
-      args:
-        pool_ip: $TEST_POOL_IP
+    image: studybits/indy-pool:local
+    environment:
+    - TEST_POOL_IP=$TEST_POOL_IP
     ports:
     - "9701-9708:9701-9708"
     # Host networking is used, because we need to know the pool IP at build time, which is kind-of tricky
