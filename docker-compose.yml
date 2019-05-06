@@ -11,7 +11,10 @@ services:
     volumes:
       - $HOME/.m2/settings.xml:/root/.m2/settings.xml
   pool:
-    image: studybits/indy-pool:local
+    image: studybits/indy-pool:latest
+    build:
+        context: ci/
+        dockerfile: indy-pool.dockerfile
     environment:
     - TEST_POOL_IP=$TEST_POOL_IP
     ports:

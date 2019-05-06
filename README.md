@@ -8,13 +8,13 @@ needs low level control over the communication, or a procedural API is more suit
 [indy-sdk](https://github.com/hyperledger/indy-sdk), for Java specifically to the 
 [Java wrapper](https://github.com/hyperledger/indy-sdk/tree/master/wrappers/java) that indy-sdk provides
 
-## Pre-requisites
-
-The tests use a base image, which you can build locally with `docker build -t studybits/base-image:local -f ci/base-image.dockerfile ci/`
-In addition, the ledger is run in a docker container, which can be built with `docker build -t studybits/indy-pool:local -f ci/indy-poool.dockerfile ci/`
 
 ## Running in docker
+
 In order to test, run: `TEST_POOL_IP=127.0.0.1 docker-compose up --build --force-recreate --exit-code-from wrapper pool wrapper`
+
+The tests use a base image, which you can build locally with `docker build -t studybits/base-image:latest -f ci/base-image.dockerfile ci/`
+This is needed if you want to use an updated version of libindy
 
 ## Running locally
 In order to run locally, install libindy with the version matching the indy-sdk in the `pom.xml` 
