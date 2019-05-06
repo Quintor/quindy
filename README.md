@@ -10,7 +10,8 @@ needs low level control over the communication, or a procedural API is more suit
 
 ## Pre-requisites
 
-The tests use a base image, which you can build locally with `docker build -t studybits/base-image:local -f ci/base-image.dockefile ci/`
+The tests use a base image, which you can build locally with `docker build -t studybits/base-image:local -f ci/base-image.dockerfile ci/`
+In addition, the ledger is run in a docker container, which can be built with `docker build -t studybits/indy-pool:local -f ci/indy-poool.dockerfile ci/`
 
 ## Running in docker
 In order to test, run: `TEST_POOL_IP=127.0.0.1 docker-compose up --build --force-recreate --exit-code-from wrapper pool wrapper`
