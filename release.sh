@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-read -p "Release version? $1" -n 1 -r
+read -p "Release version (y/N)? $1" -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
