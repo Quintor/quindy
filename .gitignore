@@ -29,3 +29,6 @@ hs_err_pid*
 # build directory
 target/
 LOG_FILE_IS_UNDEFINED
+
+# maven version plugin backup
+*.versionsBackup
