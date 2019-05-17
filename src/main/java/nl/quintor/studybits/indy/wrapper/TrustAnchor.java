@@ -43,17 +43,10 @@ public class TrustAnchor extends IndyWallet {
     public CompletableFuture<ConnectionResponse> acceptConnectionRequest(ConnectionRequest connectionRequest) throws JsonProcessingException, IndyException {
         log.debug("{} Called acceptConnectionRequest with {}", name, connectionRequest);
 
-        // Pairwise connections are always without a role
-        CompletableFuture<String> sendTheirNym = sendNym(connectionRequest.getDid(), connectionRequest.getVerkey(), null);
-
-        CompletableFuture<ConnectionResponse> createAndSendMyNym = newDid()
+        return newDid()
                 .thenCompose(wrapException(result ->
-                                storeDidAndPairwise(result.getDid(), connectionRequest.getDid())
-                        .thenCompose(wrapException(_void -> sendNym(result.getDid(), result.getVerkey(), null)))
-                        .thenApply(((_str) -> new ConnectionResponse(result.getDid())))));
-
-        return CompletableFuture.allOf(sendTheirNym, createAndSendMyNym)
-                .thenCompose(_void -> createAndSendMyNym);
+                        storeDidAndPairwise(result.getDid(), connectionRequest.getDid(), connectionRequest.getVerkey())
+                                .thenApply(((_str) -> new ConnectionResponse(result.getDid(), result.getVerkey())))));
     }
 
     CompletableFuture<String> sendNym(String newDid, String newKey, String role) throws IndyException {

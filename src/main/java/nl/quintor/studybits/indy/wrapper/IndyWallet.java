@@ -122,14 +122,17 @@ public class IndyWallet implements AutoCloseable {
                 ));
     }
 
-    public CompletableFuture<Void> acceptConnectionResponse(ConnectionResponse connectionResponse, String myDid) throws IndyException {
-        return storeDidAndPairwise(myDid, connectionResponse.getDid());
+    public CompletableFuture<Void> acceptConnectionResponse(ConnectionResponse connectionResponse, String myDid) throws IndyException, JsonProcessingException {
+        return storeDidAndPairwise(myDid, connectionResponse.getDid(), connectionResponse.getVerkey());
     }
 
-    CompletableFuture<Void> storeDidAndPairwise(String myDid, String theirDid) throws IndyException {
+    CompletableFuture<Void> storeDidAndPairwise(String myDid, String theirDid, String theirKey) throws IndyException, JsonProcessingException {
         log.debug("{} Called storeDidAndPairwise: myDid: {}, theirDid: {}", name, myDid, theirDid);
 
-        return WalletRecord.add(wallet, "pairwise", theirDid, myDid, "{}");
+        CompletableFuture<Void> storeDidFuture = Did.storeTheirDid(wallet, new TheirDidInfo(theirDid, theirKey).toJSON());
+        CompletableFuture<Void> walletRecordFuture = WalletRecord.add(wallet, "pairwise", theirDid, myDid, "{}");
+
+        return CompletableFuture.allOf(storeDidFuture, walletRecordFuture);
     }
 
     CompletableFuture<GetPairwiseResult> getPairwiseByTheirDid(String theirDid) throws IndyException {

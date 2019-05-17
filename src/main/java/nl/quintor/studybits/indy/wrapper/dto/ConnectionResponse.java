@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ConnectionResponse implements Serializable {
     private String did;
+    private String verkey;
 }
