@@ -170,7 +170,7 @@ public class MessageScenarioIT {
         String jobApplicationProofRequestString = acmeCodec.encryptMessage(jobApplicationProofRequest, IndyMessageTypes.PROOF_REQUEST, aliceAcmeDid).get().toJSON();
         MessageEnvelope<ProofRequest> jobApplicationProofRequestEnvelope = MessageEnvelope.parseFromString(jobApplicationProofRequestString, PROOF_REQUEST);
 
-        Map<String, Object> selfAttestedAttributes = new HashMap<>();
+        Map<String, String> selfAttestedAttributes = new HashMap<>();
         selfAttestedAttributes.put("first_name", "Alice");
         selfAttestedAttributes.put("last_name", "Garcia");
         selfAttestedAttributes.put("phone_number", "123phonenumber");
@@ -262,7 +262,7 @@ public class MessageScenarioIT {
         String loanApplicationProofRequestEnvelope = thriftCodec.encryptMessage(loanApplicationProofRequest, IndyMessageTypes.PROOF_REQUEST, aliceThriftDid).get().toJSON();
 
 
-        Map<String, Object> emptyMap = new HashMap<>();
+        Map<String, String> emptyMap = new HashMap<>();
 
         MessageEnvelope<ProofRequest> convertedLoanApplicationEnvelope = MessageEnvelope.parseFromString(loanApplicationProofRequestEnvelope, PROOF_REQUEST);
 

@@ -59,7 +59,7 @@ public class Prover extends IndyWallet {
      * @param attributes   This map is used to get the correct credentials, if multiple referents are present, or to provide self-attested attributes
      * @return
      */
-    public CompletableFuture<Proof> fulfillProofRequest(ProofRequest proofRequest, Map<String, Object> attributes) throws JsonProcessingException, IndyException {
+    public CompletableFuture<Proof> fulfillProofRequest(ProofRequest proofRequest, Map<String, String> attributes) throws JsonProcessingException, IndyException {
         log.debug("{} Proving proof request: {}", name, proofRequest.toJSON());
         //Get available credentials for this proof request
         return Anoncreds.proverGetCredentialsForProofReq(getWallet(), proofRequest.toJSON())
@@ -77,7 +77,7 @@ public class Prover extends IndyWallet {
     }
 
     CompletableFuture<Proof> createProofFromCredentials(ProofRequest proofRequest, CredentialsForRequest credentialsForRequest,
-                                                        Map<String, Object> attributes) throws JsonProcessingException {
+                                                        Map<String, String> attributes) throws JsonProcessingException {
         log.debug("{} Creating proof using credentials: {}", name, credentialsForRequest.toJSON());
         // Collect the names and values of all self-attested attributes. Throw an exception if one is not specified.
 
@@ -131,7 +131,7 @@ public class Prover extends IndyWallet {
                 }));
     }
 
-    private Map<String, CredentialReferent> findNeededCredentialReferents(ProofRequest proofRequest, CredentialsForRequest credentialsForRequest, Map<String, Object> attributes) {
+    private Map<String, CredentialReferent> findNeededCredentialReferents(ProofRequest proofRequest, CredentialsForRequest credentialsForRequest, Map<String, String> attributes) {
         // We find all the CredentialReferents that we are going to use. The cases:
         // 1. The referent is for an attribute and a value is provided -> Find any that matches the provided value
         // 2. The referent is for an attribute and no value is provided -> Find any

@@ -80,7 +80,7 @@ public class IntegerProofIT {
                 .requestedAttribute("attr1_referent", new AttributeInfo("number", Optional.of(filter)))
                 .build();
 
-        Map<String, Object> emptyAttributes = new HashMap<String, Object>();
+        Map<String, String> emptyAttributes = new HashMap<>();
 
         Proof proof = alice.fulfillProofRequest(proofRequest, emptyAttributes).get();
 
