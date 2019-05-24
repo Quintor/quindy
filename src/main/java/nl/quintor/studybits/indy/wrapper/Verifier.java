@@ -26,7 +26,7 @@ public class Verifier extends IndyWallet {
         super(wallet.getName(), wallet.getMainDid(), wallet.getMainKey(), wallet.getPool(), wallet.getWallet());
     }
 
-    public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof, String theirDid) {
+    public CompletableFuture<List<ProofAttribute>> getVerifiedProofAttributes(ProofRequest proofRequest, Proof proof) {
 
         return  validateProof(proofRequest, proof)
                 .thenAccept(result -> validateResult(result, "Invalid proof: verifierVerifyProof failed."))

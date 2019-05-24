@@ -3,6 +3,7 @@ package nl.quintor.studybits.indy.wrapper.util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import nl.quintor.studybits.indy.wrapper.dto.Proof;
 
 import java.io.UnsupportedEncodingException;
@@ -12,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class IntegerEncodingUtil {
     private static final byte INT_MARKER = (byte) 0x01;
     private static final byte STRING_MARKER = (byte) 0x02;
@@ -42,8 +44,10 @@ public class IntegerEncodingUtil {
 
         switch (bytesEncoding[0]) {
             case INT_MARKER:
+                log.debug("Decoding integer");
                 return new BigInteger(bytesMarkerStripped).intValue();
             case STRING_MARKER:
+                log.debug("Decoding string");
                 return new String(bytesMarkerStripped, Charset.forName("utf8"));
                 default: throw new IllegalArgumentException("Marker byte invalid");
         }
@@ -52,8 +56,13 @@ public class IntegerEncodingUtil {
     public static boolean validateProofEncoding( Proof.RevealedValue value ) {
         String plainValue = value.getRaw();
         String encoding = value.getEncoded();
+        Object decoded = decode(new BigInteger(encoding));
 
-        return plainValue.equals(decode(new BigInteger(encoding)));
+        if (decoded instanceof Integer) {
+            return (Integer) decoded == Integer.parseInt(plainValue);
+        }
+
+        return plainValue.equals(decoded);
     }
 
     public static JsonNode credentialValuesFromMap(Map<String, Object> valueMap) throws UnsupportedEncodingException {
