@@ -44,10 +44,8 @@ public class IntegerEncodingUtil {
 
         switch (bytesEncoding[0]) {
             case INT_MARKER:
-                log.debug("Decoding integer");
                 return new BigInteger(bytesMarkerStripped).intValue();
             case STRING_MARKER:
-                log.debug("Decoding string");
                 return new String(bytesMarkerStripped, Charset.forName("utf8"));
                 default: throw new IllegalArgumentException("Marker byte invalid");
         }
