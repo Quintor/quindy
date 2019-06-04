@@ -11,7 +11,10 @@ import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.anoncreds.Anoncreds;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -43,8 +46,8 @@ public class Prover extends IndyWallet {
                                     credentialOffer.toJSON(), credentialDefJson.toJSON(), this.masterSecretName);
                         }))
                         .thenApply(proverCreateCredentialRequestResult -> {
-                           log.debug("{} created credential request. Json: {}, metadata {} ", name, proverCreateCredentialRequestResult.getCredentialRequestJson(), proverCreateCredentialRequestResult.getCredentialRequestMetadataJson());
-                           return new CredentialRequest(proverCreateCredentialRequestResult.getCredentialRequestJson(), proverCreateCredentialRequestResult.getCredentialRequestMetadataJson(), credentialOffer);
+                            log.debug("{} created credential request. Json: {}, metadata {} ", name, proverCreateCredentialRequestResult.getCredentialRequestJson(), proverCreateCredentialRequestResult.getCredentialRequestMetadataJson());
+                            return new CredentialRequest(proverCreateCredentialRequestResult.getCredentialRequestJson(), proverCreateCredentialRequestResult.getCredentialRequestMetadataJson(), credentialOffer);
                         })
                 ));
     }
@@ -73,11 +76,12 @@ public class Prover extends IndyWallet {
                 }));
     }
 
-    CompletableFuture<Proof> createProofFromCredentials(ProofRequest proofRequest, CredentialsForRequest credentialsForRequest, Map<String, String> attributes) throws JsonProcessingException {
+    CompletableFuture<Proof> createProofFromCredentials(ProofRequest proofRequest, CredentialsForRequest credentialsForRequest,
+                                                        Map<String, String> attributes) throws JsonProcessingException {
         log.debug("{} Creating proof using credentials: {}", name, credentialsForRequest.toJSON());
         // Collect the names and values of all self-attested attributes. Throw an exception if one is not specified.
 
-        Map<String, String> selfAttestedAttributes = proofRequest.getRequestedAttributes()
+        Map<String, Object> selfAttestedAttributes = proofRequest.getRequestedAttributes()
                 .entrySet()
                 .stream()
                 .filter(stringAttributeInfoEntry -> !stringAttributeInfoEntry.getValue()
@@ -88,10 +92,10 @@ public class Prover extends IndyWallet {
                         .entrySet()
                         .stream()
                         .filter(credAttr -> credAttr.getValue().isEmpty())
-                        .collect(Collectors.toMap(Map.Entry::getKey,Map.Entry::getValue))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
                         .containsKey(attr.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
-                    String value = attributes.get(entry.getValue().getName());
+                    Object value = attributes.get(entry.getValue().getName());
                     if (value == null) {
                         throw new IllegalArgumentException("Self attested attribute was not provided");
                     }
@@ -162,7 +166,7 @@ public class Prover extends IndyWallet {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private JsonNode createRequestedCredentialsJson(ProofRequest proofRequest, Map<String, String> selfAttestedAttributes, Map<String, CredentialReferent> credentialByReferentKey) {
+    private JsonNode createRequestedCredentialsJson(ProofRequest proofRequest, Map<String, Object> selfAttestedAttributes, Map<String, CredentialReferent> credentialByReferentKey) {
 
         Map<String, ProvingCredentialKey> requestedAttributes = proofRequest.getRequestedAttributes()
                 .entrySet()

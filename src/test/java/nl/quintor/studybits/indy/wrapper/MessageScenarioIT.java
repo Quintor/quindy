@@ -6,14 +6,11 @@ import nl.quintor.studybits.indy.wrapper.message.MessageEnvelope;
 import nl.quintor.studybits.indy.wrapper.message.MessageEnvelopeCodec;
 import nl.quintor.studybits.indy.wrapper.util.PoolUtils;
 import nl.quintor.studybits.indy.wrapper.util.SeedUtil;
-import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.pool.Pool;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 import static nl.quintor.studybits.indy.wrapper.TestUtil.removeIndyClientDirectory;
 import static nl.quintor.studybits.indy.wrapper.message.IndyMessageTypes.*;
@@ -56,13 +53,13 @@ public class MessageScenarioIT {
         // #Step 4
         // Onboard the issuers (onboard -> verinym -> issuerDids)
         // Onboard the TrustAnchor
-        onboardIssuer(steward, government);
+        TestUtil.onboardIssuer(steward, government);
 
         // #Step 4.1.7 & 4.1.8
         // Create new wallet (with DID and VerKey) for Faber (TrustAnchor)
         Issuer faber = new Issuer(IndyWallet.create(indyPool, "faber", SeedUtil.generateSeed()));
         // Onboard the TrustAnchor
-        onboardIssuer(steward, faber);
+        TestUtil.onboardIssuer(steward, faber);
 
         MessageEnvelopeCodec faberCodec = new MessageEnvelopeCodec(faber);
 
@@ -70,7 +67,7 @@ public class MessageScenarioIT {
         IndyWallet acmeWallet = IndyWallet.create(indyPool, "acme", SeedUtil.generateSeed());
         Issuer acme = new Issuer(acmeWallet);
         // Onboard the TrustAnchor
-        onboardIssuer(steward, acme);
+        TestUtil.onboardIssuer(steward, acme);
 
         MessageEnvelopeCodec acmeCodec = new MessageEnvelopeCodec(acme);
 
@@ -78,7 +75,7 @@ public class MessageScenarioIT {
         Issuer thriftWallet = new Issuer(IndyWallet.create(indyPool, "thrift", SeedUtil.generateSeed()));
         Issuer thrift = new Issuer(thriftWallet);
         // Onboard the TrustAnchor
-        onboardIssuer(steward, thrift);
+        TestUtil.onboardIssuer(steward, thrift);
 
         MessageEnvelopeCodec thriftCodec = new MessageEnvelopeCodec(thrift);
 
@@ -88,13 +85,13 @@ public class MessageScenarioIT {
         MessageEnvelopeCodec aliceCodec = new MessageEnvelopeCodec(alice);
 
         // Onboard alice to Faber. Creates connection request with Faber
-        String aliceFaberDid = onboardWalletOwner(faber, alice);
+        String aliceFaberDid = TestUtil.onboardWalletOwner(faber, alice);
         // Create master secret for alice (Prover / Identity owner)
         alice.init();
         // Onboard alice to ACME. Creates connection request with ACME
-        String aliceAcmeDid = onboardWalletOwner(acme, alice);
+        String aliceAcmeDid = TestUtil.onboardWalletOwner(acme, alice);
         // Onboard alice to Thrift. Creates connection request with Thrift
-        String aliceThriftDid = onboardWalletOwner(thrift, alice);
+        String aliceThriftDid = TestUtil.onboardWalletOwner(thrift, alice);
 
         // #Step 5.1 & 5.2
         // Government creates schemas for Job certificate
@@ -189,7 +186,7 @@ public class MessageScenarioIT {
         // ACME receives proof
         Proof decryptedProof = acmeCodec.decryptMessage(MessageEnvelope.parseFromString(proofEnvelope, PROOF)).get();
 
-        List<ProofAttribute> attributes = new Verifier(acmeWallet).getVerifiedProofAttributes(jobApplicationProofRequest, decryptedProof, aliceAcmeDid).get();
+        List<ProofAttribute> attributes = new Verifier(acmeWallet).getVerifiedProofAttributes(jobApplicationProofRequest, decryptedProof).get();
 
         System.out.println(attributes);
         // ACME Validates proof
@@ -280,7 +277,7 @@ public class MessageScenarioIT {
         // Thrift receives proof
         Proof decryptedJobProof = thriftCodec.decryptMessage(MessageEnvelope.parseFromString(jobProofEnvelope, PROOF)).get();
 
-        List<ProofAttribute> jobAttributes = new Verifier(thriftWallet).getVerifiedProofAttributes(loanApplicationProofRequest, decryptedJobProof, aliceThriftDid).get();
+        List<ProofAttribute> jobAttributes = new Verifier(thriftWallet).getVerifiedProofAttributes(loanApplicationProofRequest, decryptedJobProof).get();
 
         System.out.println(jobAttributes);
         // Thrift Validates proof
@@ -324,7 +321,7 @@ public class MessageScenarioIT {
         // Thrift receives proof
         Proof decryptedKYCProof = thriftCodec.decryptMessage(MessageEnvelope.parseFromString(KYCProofEnvelope, PROOF)).get();
 
-        List<ProofAttribute> KYCAttributes = new Verifier(thriftWallet).getVerifiedProofAttributes(loanApplicationPersonalDetailsProofRequest, decryptedKYCProof, aliceThriftDid).get();
+        List<ProofAttribute> KYCAttributes = new Verifier(thriftWallet).getVerifiedProofAttributes(loanApplicationPersonalDetailsProofRequest, decryptedKYCProof).get();
 
         System.out.println(KYCAttributes);
 
@@ -335,71 +332,4 @@ public class MessageScenarioIT {
         Assert.assertTrue(KYCIsValidProof);
     }
 
-    public static void onboardIssuer(TrustAnchor steward, Issuer newcomer) throws InterruptedException, ExecutionException, IndyException, IOException {
-        // Create Codecs to facilitate encryption/decryption
-        MessageEnvelopeCodec stewardCodec = new MessageEnvelopeCodec(steward);
-        MessageEnvelopeCodec newcomerCodec = new MessageEnvelopeCodec(newcomer);
-
-        // Connecting newcomer with Steward
-
-        // We revert the order from the tutorial, since we use the anoncryption from the verinym
-
-        // Create connection request for steward
-        String connectionRequestString = newcomerCodec.encryptMessage(newcomer.createConnectionRequest().get(),
-                IndyMessageTypes.CONNECTION_REQUEST, steward.getMainDid()).get().toJSON();
-
-        // Steward decrypts connection request
-        ConnectionRequest connectionRequest = stewardCodec.decryptMessage(MessageEnvelope.parseFromString(connectionRequestString, CONNECTION_REQUEST)).get();
-
-        // Steward accepts connection request
-        ConnectionResponse newcomerConnectionResponse = steward.acceptConnectionRequest(connectionRequest).get();
-
-        // Steward sends a connection response
-        String newcomerConnectionResponseString =  stewardCodec.encryptMessage(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE, connectionRequest.getDid()).get().toJSON();
-
-
-        MessageEnvelope<ConnectionResponse> connectionResponseEnvelope = MessageEnvelope.parseFromString(newcomerConnectionResponseString, CONNECTION_RESPONSE);
-        // Newcomer decrypts the connection response
-        ConnectionResponse connectionResponse = newcomerCodec.decryptMessage(connectionResponseEnvelope).get();
-
-        // Newcomer accepts connection response
-        newcomer.acceptConnectionResponse(connectionResponse, connectionResponseEnvelope.getDid()).get();
-
-        // Faber needs a new DID to interact with identity owners, thus create a new DID request steward to write on ledger
-        String verinymRequest = newcomerCodec.encryptMessage(newcomer.createVerinymRequest(connectionResponse.getDid()), IndyMessageTypes.VERINYM, connectionResponse.getDid()).get().toJSON();
-
-        // #step 4.2.5 t/m 4.2.8
-        // Steward accepts verinym request from Faber and thus writes the new DID on the ledger
-        steward.acceptVerinymRequest(stewardCodec.decryptMessage(MessageEnvelope.parseFromString(verinymRequest, VERINYM)).get()).get();
-    }
-
-    private static String onboardWalletOwner(TrustAnchor trustAnchor, IndyWallet newcomer) throws IndyException, ExecutionException, InterruptedException, IOException {
-        // Create Codecs to facilitate encryption/decryption
-        MessageEnvelopeCodec trustAnchorCodec = new MessageEnvelopeCodec(trustAnchor);
-        MessageEnvelopeCodec newcomerCodec = new MessageEnvelopeCodec(newcomer);
-
-        ConnectionRequest newcomerConnectionRequest = newcomer.createConnectionRequest().get();
-        // Newcomer creates connection request for trust anchor
-        String newcomerConnectionRequestString = newcomerCodec.encryptMessage(newcomerConnectionRequest, IndyMessageTypes.CONNECTION_REQUEST, trustAnchor.getMainDid()).get().toJSON();
-        // Newcomer sends connectionRequest to trustAnchor
-        MessageEnvelope<ConnectionRequest> connectionRequestMessageEnvelope = MessageEnvelope.parseFromString(newcomerConnectionRequestString, IndyMessageTypes.CONNECTION_REQUEST);
-
-        //TrustAnchor decrypts message from newcomer
-        ConnectionRequest connectionRequest = trustAnchorCodec.decryptMessage(connectionRequestMessageEnvelope).get();
-
-        // TrustAnchor accepts connection request
-        ConnectionResponse newcomerConnectionResponse = trustAnchor.acceptConnectionRequest(connectionRequest).get();
-        // TrustAnchor sends connection response
-        String newcomerConnectionResponseString = trustAnchorCodec.encryptMessage(newcomerConnectionResponse, IndyMessageTypes.CONNECTION_RESPONSE, connectionRequest.getDid()).get().toJSON();
-
-
-        MessageEnvelope<ConnectionResponse> connectionResponseMessageEnvelope = MessageEnvelope.parseFromString(newcomerConnectionResponseString, CONNECTION_RESPONSE);
-        // Newcomer accepts connection response
-        ConnectionResponse connectionResponse = newcomerCodec.decryptMessage(MessageEnvelope.parseFromString(newcomerConnectionResponseString, CONNECTION_RESPONSE)).get();
-        // TrustAnchor accepts the connectionResponse from the newcomer
-        newcomer.acceptConnectionResponse(connectionResponse, connectionResponseMessageEnvelope.getDid()).get();
-
-
-        return newcomerConnectionRequest.getDid();
-    }
 }
