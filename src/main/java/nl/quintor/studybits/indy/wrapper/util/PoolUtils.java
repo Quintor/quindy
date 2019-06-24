@@ -36,13 +36,12 @@ public class PoolUtils {
 
 		FileUtils.forceMkdirParent(file);
 
-		FileWriter fw = new FileWriter(file);
-		for (String txn : txns) {
-			fw.write(txn);
-			fw.write("\n");
+		try (FileWriter fw = new FileWriter(file)) {
+			for (String txn : txns) {
+				fw.write(txn);
+				fw.write("\n");
+			}
 		}
-
-		fw.close();
 
 		return file;
 	}
