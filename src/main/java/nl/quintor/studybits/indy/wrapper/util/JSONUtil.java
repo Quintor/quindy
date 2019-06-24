@@ -6,7 +6,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import java.io.IOException;
 
 public class JSONUtil {
-    public static ObjectMapper mapper = new ObjectMapper();
+    public static final ObjectMapper mapper = new ObjectMapper();
 
     static {
         mapper.registerModule(new Jdk8Module());
