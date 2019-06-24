@@ -6,6 +6,9 @@ public class SeedUtil {
 
     private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
+    private SeedUtil() {
+    }
+
     private static String randomAlphaNumeric(int count) {
         StringBuilder builder = new StringBuilder();
         SecureRandom secureRandom = new SecureRandom();

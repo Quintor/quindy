@@ -18,6 +18,9 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class ProofUtils {
+    private ProofUtils() {
+        
+    }
 
     public static CompletableFuture<List<ProofAttribute>> extractVerifiedProofAttributes(ProofRequest proofRequest, Proof proof, EntitiesFromLedger entitiesFromLedger, String did) throws IndyException, JsonProcessingException {
         String proofRequestJson = proofRequest.toJSON();
