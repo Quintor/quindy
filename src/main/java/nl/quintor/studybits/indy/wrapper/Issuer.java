@@ -79,14 +79,14 @@ public class Issuer extends TrustAnchor {
                         }));
     }
 
-    public CompletableFuture<CredentialWithRequest> createCredential(CredentialRequest credentialRequest, Map<String, Object> values) throws UnsupportedEncodingException, JsonProcessingException, IndyException {
+    public CompletableFuture<Credential> createCredential(CredentialRequest credentialRequest, Map<String, Object> values) throws UnsupportedEncodingException, JsonProcessingException, IndyException {
         JsonNode credentialValueJson = IntegerEncodingUtil.credentialValuesFromMap(values);
         log.debug("{} Creating credential for: credentialOffer {}, claimRequest {}", name, credentialRequest.getCredentialOffer().toJSON(), credentialRequest.getRequest());
         return Anoncreds.issuerCreateCredential(getWallet(), credentialRequest.getCredentialOffer().toJSON(), credentialRequest.getRequest(), credentialValueJson.toString(), null, -1)
                 .thenApply(wrapException((issuerCreateCredentialResult) -> {
                     log.debug("{} Created credential json: {}", name, issuerCreateCredentialResult.getCredentialJson());
                     Credential credential = JSONUtil.mapper.readValue(issuerCreateCredentialResult.getCredentialJson(), Credential.class);
-                    return new CredentialWithRequest(credential, credentialRequest);
+                    return credential;
                 }));
     }
 
