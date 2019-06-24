@@ -43,10 +43,13 @@ public class ProofUtils {
                 .getRequestedProof()
                 .getRevealedAttributes()
                 .entrySet()
-                .stream()
-                .filter(entry -> !IntegerEncodingUtil.validateProofEncoding(entry.getValue()))
-                .peek(entry -> log.error("Invalid proof received from theirDid '{}', entry '{}'", did, entry))
-                .count() == 0;
+                .stream().noneMatch(entry -> {
+                    boolean result = !IntegerEncodingUtil.validateProofEncoding(entry.getValue());
+                    if (result) {
+                        log.error("Invalid proof received from theirDid '{}', entry '{}'", did, entry);
+                    }
+                    return result;
+                });
     }
 
     private static List<ProofAttribute> extractProofAttributes(ProofRequest proofRequest, Proof proof) {
