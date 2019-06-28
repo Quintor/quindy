@@ -1,6 +1,7 @@
 FROM studybits/base-image
-
-ADD pom.xml /
+RUN mkdir /quindy
+WORKDIR /quindy
+ADD pom.xml /quindy/
 RUN mvn package
-ADD . /
-CMD sh -e -c "if $DEPLOY; then mvn clean package verify deploy; else mvn verify; fi"
+ADD . /quindy/
+CMD sh ./test.sh
