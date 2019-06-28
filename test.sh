@@ -7,9 +7,18 @@ else
 fi;
 
 if [ -n "$SONAR_CLOUD_TOKEN" ]; then
-    mvn sonar:sonar \
-  -Dsonar.projectKey=Quintor_quindy \
-  -Dsonar.organization=quintor \
-  -Dsonar.host.url=https://sonarcloud.io \
-  -Dsonar.login=$SONAR_CLOUD_TOKEN
+    if [ "$SONAR_BRANCH" = "master" ]; then
+        mvn sonar:sonar \
+        -Dsonar.projectKey=Quintor_quindy \
+        -Dsonar.organization=quintor \
+        -Dsonar.host.url=https://sonarcloud.io \
+        -Dsonar.login=$SONAR_CLOUD_TOKEN
+    else
+        mvn sonar:sonar \
+        -Dsonar.projectKey=Quintor_quindy \
+        -Dsonar.organization=quintor \
+        -Dsonar.host.url=https://sonarcloud.io \
+        -Dsonar.login=$SONAR_CLOUD_TOKEN
+        -Dsonar.branch.name=$SONAR_BRANCH
+    fi;
 fi;
