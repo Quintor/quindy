@@ -18,7 +18,7 @@ if [ -n "$SONAR_CLOUD_TOKEN" ]; then
         -Dsonar.projectKey=Quintor_quindy \
         -Dsonar.organization=quintor \
         -Dsonar.host.url=https://sonarcloud.io \
-        -Dsonar.login=$SONAR_CLOUD_TOKEN
+        -Dsonar.login=$SONAR_CLOUD_TOKEN \
         -Dsonar.branch.name=$SONAR_BRANCH
     fi;
 fi;
