@@ -193,11 +193,10 @@ public class Prover extends IndyWallet {
     }
 
 
-    public CompletableFuture<String> storeCredential(CredentialWithRequest credentialWithRequest) throws JsonProcessingException, IndyException {
-        Credential credential = credentialWithRequest.getCredential();
+    public CompletableFuture<String> storeCredential(CredentialRequest credentialRequest, Credential credential) throws JsonProcessingException, IndyException {
         return getCredentialDef(getMainDid(), credential.getCredDefId())
                 .thenCompose(wrapException(
-                        credentialDef -> Anoncreds.proverStoreCredential(getWallet(), null, credentialWithRequest.getCredentialRequest().getMetadata(), credential.toJSON(), credentialDef.toJSON(), null
+                        credentialDef -> Anoncreds.proverStoreCredential(getWallet(), null, credentialRequest.getMetadata(), credential.toJSON(), credentialDef.toJSON(), null
                         ))
                 ).thenApply(returnValue -> {
                     log.debug("{} return from storeCredential: {}", name, returnValue);

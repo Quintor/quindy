@@ -32,8 +32,8 @@ public class IndyMessageTypes {
     public static final MessageType<CredentialRequest> CREDENTIAL_REQUEST = new StandardMessageType<>(
             SOVRIN_URN_PREFIX + "credential/1.0/credential_request", MessageType.Encryption.AUTHCRYPTED, CredentialRequest.class);
 
-    public static final MessageType<CredentialWithRequest> CREDENTIAL = new StandardMessageType<>(
-            SOVRIN_URN_PREFIX + "credential/1.0/credential", MessageType.Encryption.AUTHCRYPTED, CredentialWithRequest.class);
+    public static MessageType<Credential> CREDENTIAL = new StandardMessageType<>(
+            SOVRIN_URN_PREFIX + "credential/1.0/credential", MessageType.Encryption.AUTHCRYPTED, Credential.class);
 
     public static final MessageType<ProofRequest> PROOF_REQUEST = new StandardMessageType<>(
             SOVRIN_URN_PREFIX + "proof/1.0/proof_request", MessageType.Encryption.AUTHCRYPTED, ProofRequest.class);

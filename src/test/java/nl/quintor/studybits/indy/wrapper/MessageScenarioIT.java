@@ -137,12 +137,12 @@ public class MessageScenarioIT {
         // Faber receives the credential request from Alice
         CredentialRequest credentialRequest = faberCodec.decryptMessage(MessageEnvelope.parseFromString(transcriptCredentialRequestMessageEnvelope, CREDENTIAL_REQUEST)).get();
         // Faber creates a new credential for Alice and sends it to her
-        CredentialWithRequest credential = faber.createCredential(credentialRequest, credentialValues).get();
+        Credential credential = faber.createCredential(credentialRequest, credentialValues).get();
         String credentialMessageEnvelope = faberCodec.encryptMessage(credential, IndyMessageTypes.CREDENTIAL, aliceFaberDid).get().toJSON();
 
         // Alice receives her credential and stores it inside her wallet
-        CredentialWithRequest decryptedCredential = aliceCodec.decryptMessage(MessageEnvelope.parseFromString(credentialMessageEnvelope, CREDENTIAL)).get();
-        alice.storeCredential(decryptedCredential).get();
+        Credential decryptedCredential = aliceCodec.decryptMessage(MessageEnvelope.parseFromString(credentialMessageEnvelope, CREDENTIAL)).get();
+        alice.storeCredential(transcriptCredentialRequest, decryptedCredential).get();
 
         // ---------------------Apply for a Job---------------------
         // DEBUG: Check credentials
@@ -229,12 +229,12 @@ public class MessageScenarioIT {
         // ACME receives the credential request from Alice
         CredentialRequest jobCredentialRequest = acmeCodec.decryptMessage(MessageEnvelope.parseFromString(jobCertificateCredentialRequestMessageEnvelope, CREDENTIAL_REQUEST)).get();
         // ACME creates a new credential for Alice and sends it to her
-        CredentialWithRequest jobCredential = acme.createCredential(jobCredentialRequest, jobCredentialValues).get();
+        Credential jobCredential = acme.createCredential(jobCredentialRequest, jobCredentialValues).get();
         String jobCredentialMessageEnvelope = acmeCodec.encryptMessage(jobCredential, IndyMessageTypes.CREDENTIAL, aliceAcmeDid).get().toJSON();
 
         // Alice receives her credential and stores it inside her wallet
-        CredentialWithRequest decryptedJobCredential = aliceCodec.decryptMessage(MessageEnvelope.parseFromString(jobCredentialMessageEnvelope, CREDENTIAL)).get();
-        alice.storeCredential(decryptedJobCredential).get();
+        Credential decryptedJobCredential = aliceCodec.decryptMessage(MessageEnvelope.parseFromString(jobCredentialMessageEnvelope, CREDENTIAL)).get();
+        alice.storeCredential(jobCertificateCredentialRequest, decryptedJobCredential).get();
 
 
         // DEBUG: Check credentials again

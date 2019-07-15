@@ -8,8 +8,8 @@ services:
     - RUST_LOG=info
     - TEST_POOL_IP=$TEST_POOL_IP
     - DEPLOY=${DEPLOY:-false}
-    - SONAR_CLOUD_TOKEN=${SONAR_CLOUD_TOKEN:-""}
-    - SONAR_BRANCH=${CIRCLE_BRANCH:-""}
+    - SONAR_CLOUD_TOKEN=${SONAR_CLOUD_TOKEN}
+    - SONAR_BRANCH=${CIRCLE_BRANCH}
     volumes:
       - $HOME/.m2/settings.xml:/root/.m2/settings.xml
   pool:

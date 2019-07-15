@@ -67,9 +67,9 @@ public class IntegerProofIT {
         credentialValues.put("number", 5);
 
 
-        CredentialWithRequest credential = stewardIssuer.createCredential(credentialRequest, credentialValues).get();
+        Credential credential = stewardIssuer.createCredential(credentialRequest, credentialValues).get();
 
-        alice.storeCredential(credential).get();
+        alice.storeCredential(credentialRequest, credential).get();
 
 
         List<Filter> filter = Collections.singletonList(new Filter(credentialDefinitionId));
