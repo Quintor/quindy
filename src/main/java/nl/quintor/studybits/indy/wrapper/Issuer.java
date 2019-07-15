@@ -27,12 +27,12 @@ public class Issuer extends TrustAnchor {
         super(wallet);
     }
 
-    public CompletableFuture<String> createAndSendSchema( String schemaName, String schemaVersion, String... schemaAttributes ) throws IndyException, JsonProcessingException, ExecutionException, InterruptedException {
-        AnoncredsResults.IssuerCreateSchemaResult schema = issuerCreateSchema(getMainDid(), schemaName, schemaVersion, new JSONArray(schemaAttributes).toString()).get();
-        return createAndSendSchema(schema);
+    public CompletableFuture<String> createAndSendSchema( String schemaName, String schemaVersion, String... schemaAttributes ) throws IndyException {
+        return issuerCreateSchema(getMainDid(), schemaName, schemaVersion, new JSONArray(schemaAttributes).toString())
+        .thenCompose(wrapException(createSchemaResult -> createAndSendSchema(createSchemaResult)));
     }
 
-    public CompletableFuture<String> createAndSendSchema( AnoncredsResults.IssuerCreateSchemaResult createSchemaResult ) throws IndyException, JsonProcessingException {
+    public CompletableFuture<String> createAndSendSchema( AnoncredsResults.IssuerCreateSchemaResult createSchemaResult ) throws IndyException {
         return Ledger.buildSchemaRequest(getMainDid(), createSchemaResult.getSchemaJson())
                      .thenCompose(wrapException(request -> {
                          log.debug("{}: Submitting buildSchema request {}", this.name, request);

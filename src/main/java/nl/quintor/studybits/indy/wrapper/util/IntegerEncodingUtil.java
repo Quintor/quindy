@@ -18,6 +18,8 @@ public class IntegerEncodingUtil {
     private static final byte INT_MARKER = (byte) 0x01;
     private static final byte STRING_MARKER = (byte) 0x02;
 
+    private IntegerEncodingUtil() {
+    }
 
     public static BigInteger encode(Object o) throws UnsupportedEncodingException {
         if (o instanceof Integer) {

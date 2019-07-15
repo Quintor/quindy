@@ -18,6 +18,9 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class ProofUtils {
+    private ProofUtils() {
+        
+    }
 
     public static CompletableFuture<List<ProofAttribute>> extractVerifiedProofAttributes(ProofRequest proofRequest, Proof proof, EntitiesFromLedger entitiesFromLedger, String did) throws IndyException, JsonProcessingException {
         String proofRequestJson = proofRequest.toJSON();
@@ -43,10 +46,13 @@ public class ProofUtils {
                 .getRequestedProof()
                 .getRevealedAttributes()
                 .entrySet()
-                .stream()
-                .filter(entry -> !IntegerEncodingUtil.validateProofEncoding(entry.getValue()))
-                .peek(entry -> log.error("Invalid proof received from theirDid '{}', entry '{}'", did, entry))
-                .count() == 0;
+                .stream().noneMatch(entry -> {
+                    boolean result = !IntegerEncodingUtil.validateProofEncoding(entry.getValue());
+                    if (result) {
+                        log.error("Invalid proof received from theirDid '{}', entry '{}'", did, entry);
+                    }
+                    return result;
+                });
     }
 
     private static List<ProofAttribute> extractProofAttributes(ProofRequest proofRequest, Proof proof) {
